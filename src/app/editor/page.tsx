@@ -1,6 +1,7 @@
+
 "use client"
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -9,16 +10,46 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, toggleEffect, undo, redo } = usePresetStore();
-  const { status } = useMidiStore();
+  const { activePreset, updateParameter, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
+  const { status, sendControlChange, sendProgramChange } = useMidiStore();
+
+  // Mapping di esempio CC per MG-30 (questi variano a seconda del blocco attivo)
+  // In una versione reale, servirebbe una mappa completa per ogni modello di Amp/FX
+  const CC_MAP: Record<string, number> = {
+    'amp-gain': 10,
+    'amp-bass': 11,
+    'amp-mid': 12,
+    'amp-treble': 13,
+    'amp-volume': 14,
+    'delay-mix': 20,
+    'reverb-mix': 30,
+  };
 
   const handleParamChange = (effectId: string, param: string, value: number) => {
     updateParameter(effectId, param, value);
-    // In a real implementation, this would send MIDI here too
+    
+    // Invia comando MIDI se il device è connesso
+    if (status === 'connected') {
+      const ccKey = `${effectId}-${param}`;
+      if (CC_MAP[ccKey]) {
+        sendControlChange(CC_MAP[ccKey], value);
+      } else {
+        // Fallback: molti parametri su MG-30 richiedono SysEx per modifiche granulari
+        // Qui potremmo inviare un SysEx di parametro se avessimo la mappa completa
+      }
+    }
+  };
+
+  const handleSlotChange = (direction: 'next' | 'prev') => {
+    let nextSlot = activePreset.slot + (direction === 'next' ? 1 : -1);
+    if (nextSlot < 1) nextSlot = 56;
+    if (nextSlot > 56) nextSlot = 1;
+    
+    sendProgramChange(nextSlot - 1);
+    setActivePreset({ ...activePreset, slot: nextSlot });
   };
 
   const ampEffect = activePreset.effects.find(e => e.type === 'amp');
@@ -31,14 +62,22 @@ export default function EditorPage() {
         {/* Preset Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">
-              {activePreset.slot.toString().padStart(2, '0')}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => handleSlotChange('prev')} className="h-8 w-8">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">
+                {activePreset.slot.toString().padStart(2, '0')}
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => handleSlotChange('next')} className="h-8 w-8">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
             <div>
               <h3 className="text-xl font-bold">{activePreset.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="text-[10px] uppercase">{activePreset.category}</Badge>
-                <span className="text-[10px] text-muted-foreground">LAST MODIFIED: {activePreset.lastModified.toLocaleTimeString()}</span>
+                <span className="text-[10px] text-muted-foreground">MIDI STATUS: {status.toUpperCase()}</span>
               </div>
             </div>
           </div>
@@ -66,7 +105,11 @@ export default function EditorPage() {
               {activePreset.effects.map((effect, idx) => (
                 <React.Fragment key={effect.id}>
                   <div 
-                    onClick={() => toggleEffect(effect.id)}
+                    onClick={() => {
+                      toggleEffect(effect.id);
+                      // Invia CC per abilitare/disabilitare l'effetto (bypass)
+                      // sendControlChange(EFFECT_BYPASS_CC[effect.type], effect.enabled ? 0 : 127);
+                    }}
                     className={`
                       relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all
                       ${effect.enabled ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(103,58,183,0.2)]' : 'border-border bg-secondary/20 opacity-60'}
@@ -94,7 +137,6 @@ export default function EditorPage() {
 
         {/* Editor Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Amp Section */}
           <Card className="lg:col-span-2 border-primary/20 bg-primary/[0.02]">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/50">
               <CardTitle className="text-lg">AMPLIFIER SECTION</CardTitle>
@@ -142,9 +184,7 @@ export default function EditorPage() {
             </CardContent>
           </Card>
 
-          {/* Side Effects Control */}
           <div className="space-y-6">
-             {/* Delay Section */}
             <Card className="border-border bg-card">
               <CardHeader className="py-4 border-b border-border flex flex-row items-center justify-between">
                 <CardTitle className="text-sm">DELAY</CardTitle>
@@ -180,7 +220,6 @@ export default function EditorPage() {
               </CardContent>
             </Card>
 
-            {/* Reverb Section */}
             <Card className="border-border bg-card">
               <CardHeader className="py-4 border-b border-border flex flex-row items-center justify-between">
                 <CardTitle className="text-sm">REVERB</CardTitle>
