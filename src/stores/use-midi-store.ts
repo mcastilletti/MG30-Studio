@@ -18,7 +18,7 @@ interface MidiStore {
   sendProgramChange: (pc: number) => void;
   sendSysEx: (data: number[]) => void;
   refreshDevices: () => void;
-  syncPresets: () => void;
+  syncPresets: () => Promise<void>;
   updatePresetName: (slot: number, newName: string) => void;
 }
 
@@ -81,12 +81,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (message) => {
             const data = message.data;
-            // Esempio di parsing SysEx per NUX MG-30
-            // Header: F0 00 20 6B ...
-            if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x6B) {
-              // Logica di cattura nomi se il payload contiene caratteri ASCII
-              // Questo è un placeholder per il parsing reale del protocollo NUX
-              console.log("Ricevuto SysEx NUX:", data);
+            // Log di tutti i messaggi SysEx in arrivo per analisi
+            if (data[0] === 0xF0) {
+              const hexString = Array.from(data)
+                .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+                .join(' ');
+              console.log("%c[MIDI IN] SysEx:", "color: #8E24AA; font-weight: bold", hexString);
+              
+              // Esempio: tenta di estrarre testo se presente (caratteri ASCII stampabili)
+              const chars = Array.from(data)
+                .filter(b => b >= 32 && b <= 126)
+                .map(b => String.fromCharCode(b))
+                .join('');
+              if (chars.length > 3) {
+                console.log("%c[MIDI IN] Text Found:", "color: #4CAF50", chars);
+              }
             }
           };
           
@@ -95,7 +104,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           if (get().devicePresets.length === 0) {
             const emptyPresets = Array.from({ length: 56 }).map((_, i) => ({
               id: i + 1,
-              name: `Preset ${i + 1}`,
+              name: `Slot ${i + 1}`,
               slot: i + 1,
               category: 'Hardware',
               tags: [],
@@ -120,38 +129,53 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
-  syncPresets: () => {
+  syncPresets: async () => {
     const { output, status } = get();
     if (status !== 'connected' || !output) return;
 
     set({ isSyncing: true, syncProgress: 0 });
 
-    // Richiesta Dump alla pedaliera
-    output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x00, 0xF7]);
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+    // Comandi di prova per richiedere il preset dump (come suggerito)
+    // Usiamo lo slot 0 (primo preset) come test
+    const slotNumber = 0;
+    const testCommands = [
+      [0xF0, 0x00, 0x20, 0x6B, 0x00, 0x01, slotNumber, 0xF7], // Standard dump
+      [0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x01, slotNumber, 0xF7], // With device ID
+      [0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7],                   // Device Inquiry
+      [0xF0, 0x00, 0x20, 0x6B, 0x00, 0x00, 0xF7],             // Bulk request
+    ];
+
+    console.log("%c[MIDI OUT] Starting Hardware Sync Trials...", "color: #FF9800; font-weight: bold");
+
+    for (let i = 0; i < testCommands.length; i++) {
+      const cmd = testCommands[i];
+      console.log(`Sending dump request ${i + 1}:`, cmd.map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+      output.send(cmd);
+      
+      // Aggiorniamo la progress bar basandoci sui tentativi
+      set({ syncProgress: Math.round(((i + 1) / testCommands.length) * 100) });
+      
+      await sleep(500); // Aspetta tra un comando e l'altro
+    }
+
+    // Simuliamo un caricamento riuscito per ora, in attesa di catturare il SysEx corretto
     const factoryNames = [
       "HermansLead", "Studio Lead 01A", "Plexi Crunch 01B", "Jazz Clean 01C",
       "Recto High", "Blues Mood", "Twin Reverb", "Acoustic Sim", 
       "Brit 800", "Friedman", "Uberschall", "Diesel", "Bogner"
     ];
 
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 5;
-      set({ syncProgress: progress });
-      if (progress >= 100) {
-        clearInterval(interval);
-        set({ isSyncing: false });
-        
-        const updatedPresets = get().devicePresets.map((p, i) => {
-          if (i < factoryNames.length) {
-            return { ...p, name: factoryNames[i], ampModel: factoryNames[i].includes('Lead') ? 'High Gain' : 'Classic Modeling' };
-          }
-          return p;
-        });
-        set({ devicePresets: updatedPresets });
+    const updatedPresets = get().devicePresets.map((p, i) => {
+      if (i < factoryNames.length) {
+        return { ...p, name: factoryNames[i], ampModel: factoryNames[i].includes('Lead') ? 'High Gain' : 'Classic Modeling' };
       }
-    }, 100);
+      return p;
+    });
+
+    set({ devicePresets: updatedPresets, isSyncing: false });
+    console.log("%c[MIDI OUT] Sync Trial Complete. Check console for NUX responses.", "color: #4CAF50; font-weight: bold");
   },
 
   updatePresetName: (slot, newName) => {
