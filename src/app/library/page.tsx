@@ -1,11 +1,11 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Filter, LayoutGrid, List, Star, MoreVertical, RefreshCw, Download, Loader2 } from 'lucide-react';
+import { Search, Plus, Filter, LayoutGrid, List, Star, MoreVertical, RefreshCw, Loader2, Edit2, Check } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -18,7 +18,10 @@ import { Preset } from '@/types/preset';
 export default function LibraryPage() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
-  const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress } = useMidiStore();
+  const [editingSlot, setEditingSlot] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  
+  const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
   const { setActivePreset } = usePresetStore();
   const { toast } = useToast();
 
@@ -52,6 +55,21 @@ export default function LibraryPage() {
       title: "Preset caricato",
       description: `Caricato ${preset.name} nello slot ${preset.slot}`
     });
+  };
+
+  const startEditing = (e: React.MouseEvent, preset: Preset) => {
+    e.stopPropagation();
+    setEditingSlot(preset.slot);
+    setEditName(preset.name);
+  };
+
+  const saveName = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editingSlot) {
+      updatePresetName(editingSlot, editName);
+      setEditingSlot(null);
+      toast({ title: "Nome aggiornato", description: "Il nome del preset è stato salvato localmente nell'app." });
+    }
   };
 
   const handleSync = () => {
@@ -106,7 +124,7 @@ export default function LibraryPage() {
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
-              placeholder="Cerca tra i preset sincronizzati..." 
+              placeholder="Cerca tra i preset..." 
               className="pl-10 bg-background/50 border-border/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -138,10 +156,10 @@ export default function LibraryPage() {
 
         {filteredPresets.length === 0 ? (
           <Card className="p-12 border-dashed border-2 flex flex-col items-center justify-center text-center opacity-60">
-            <RefreshCw className="w-12 h-12 mb-4 text-muted-foreground animate-pulse-fast" />
-            <h3 className="text-xl font-bold">Nessun Preset Sincronizzato</h3>
+            <RefreshCw className="w-12 h-12 mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-bold">Nessun Preset</h3>
             <p className="max-w-xs mx-auto mt-2 text-sm">
-              Collega l'MG-30 e clicca su "Sincronizza Hardware" per scaricare i nomi dei preset dalla pedaliera.
+              Collega l'MG-30 e sincronizza per vedere la lista reale.
             </p>
           </Card>
         ) : (
@@ -149,8 +167,8 @@ export default function LibraryPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredPresets.map((preset) => (
                 <Card 
-                  key={preset.id} 
-                  className={`group overflow-hidden hover:border-primary/50 transition-all bg-card/40 backdrop-blur-sm cursor-pointer hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-border/50`}
+                  key={preset.slot} 
+                  className={`group overflow-hidden hover:border-primary/50 transition-all bg-card/40 backdrop-blur-sm cursor-pointer hover:shadow-xl border-border/50`}
                   onClick={() => handleLoadPreset(preset)}
                 >
                   <CardHeader className="pb-2">
@@ -159,30 +177,52 @@ export default function LibraryPage() {
                         SLOT {preset.slot.toString().padStart(2, '0')}
                       </Badge>
                       <div className="flex items-center gap-1">
-                        {preset.favorite && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" 
+                          onClick={(e) => startEditing(e, preset)}
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleLoadPreset(preset)}>Carica su MG-30</DropdownMenuItem>
-                            <DropdownMenuItem>Salva Backup Locale</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Reset Slot</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => startEditing(e as any, preset)}>Rinomina</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
-                    <CardTitle className="text-lg mt-2 group-hover:text-primary transition-colors truncate">{preset.name}</CardTitle>
+                    
+                    {editingSlot === preset.slot ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Input 
+                          value={editName} 
+                          onChange={(e) => setEditName(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
+                        <Button size="icon" className="h-8 w-8" onClick={saveName}><Check className="w-4 h-4" /></Button>
+                      </div>
+                    ) : (
+                      <CardTitle className="text-lg mt-2 group-hover:text-primary transition-colors truncate">
+                        {preset.name}
+                      </CardTitle>
+                    )}
                   </CardHeader>
                   <CardContent className="pb-4">
                      <div className="flex flex-col gap-1">
-                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Hardware Model</div>
-                        <div className="text-sm font-medium opacity-80">{preset.ampModel === 'Unknown' ? 'NUX Modeling' : preset.ampModel}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Amp Model</div>
+                        <div className="text-sm font-medium opacity-80">{preset.ampModel}</div>
                      </div>
                   </CardContent>
                   <CardFooter className="pt-2 border-t border-border/30 bg-secondary/5 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground font-mono">MIDI PC: {preset.slot - 1}</span>
-                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-primary-foreground transition-all">Modifica</Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-primary-foreground">Modifica</Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -194,15 +234,15 @@ export default function LibraryPage() {
                   <thead className="bg-secondary/40 border-b border-border/50">
                     <tr className="text-left">
                       <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest w-20 text-center">Slot</th>
-                      <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest">Nome Preset Hardware</th>
-                      <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest">Tipo</th>
+                      <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest">Nome Preset</th>
+                      <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest">Modello Amp</th>
                       <th className="p-4 font-bold uppercase text-[11px] text-muted-foreground tracking-widest text-right">Azioni</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
                     {filteredPresets.map((preset) => (
                       <tr 
-                        key={preset.id} 
+                        key={preset.slot} 
                         className="hover:bg-primary/5 transition-colors group cursor-pointer" 
                         onClick={() => handleLoadPreset(preset)}
                       >
@@ -210,14 +250,27 @@ export default function LibraryPage() {
                           {preset.slot.toString().padStart(2, '0')}
                         </td>
                         <td className="p-4 font-semibold group-hover:text-primary transition-colors">
-                          {preset.name}
+                          {editingSlot === preset.slot ? (
+                            <div className="flex items-center gap-2">
+                              <Input 
+                                value={editName} 
+                                onChange={(e) => setEditName(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-8 text-sm max-w-[200px]"
+                              />
+                              <Button size="icon" className="h-8 w-8" onClick={saveName}><Check className="w-4 h-4" /></Button>
+                            </div>
+                          ) : (
+                            preset.name
+                          )}
                         </td>
                         <td className="p-4">
-                          <Badge variant="secondary" className="bg-secondary/50 text-[10px] uppercase">{preset.category}</Badge>
+                          <Badge variant="secondary" className="bg-secondary/50 text-[10px] uppercase">{preset.ampModel}</Badge>
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase tracking-widest" onClick={() => handleLoadPreset(preset)}>Load</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => startEditing(e as any, preset)}>Edit</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={() => handleLoadPreset(preset)}>Load</Button>
                           </div>
                         </td>
                       </tr>

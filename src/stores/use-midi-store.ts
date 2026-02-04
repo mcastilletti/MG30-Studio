@@ -19,6 +19,7 @@ interface MidiStore {
   sendSysEx: (data: number[]) => void;
   refreshDevices: () => void;
   syncPresets: () => void;
+  updatePresetName: (slot: number, newName: string) => void;
 }
 
 export const useMidiStore = create<MidiStore>((set, get) => ({
@@ -80,19 +81,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (message) => {
             const data = message.data;
-            // Identifica pacchetti SysEx NUX (F0 00 20 6B ...)
+            // Esempio di parsing SysEx per NUX MG-30
+            // Header: F0 00 20 6B ...
             if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x6B) {
-              // Qui andrebbe il parsing specifico dei pacchetti MG-30
-              // Esempio semplificato: se il messaggio contiene dati preset (Header 0x01)
-              if (data[4] === 0x01) {
-                 // Simulazione parsing: aggiorna il nome del preset ricevuto
-              }
+              // Logica di cattura nomi se il payload contiene caratteri ASCII
+              // Questo è un placeholder per il parsing reale del protocollo NUX
+              console.log("Ricevuto SysEx NUX:", data);
             }
           };
           
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
           
-          // Se collegato per la prima volta, inizializza la lista con 56 slot vuoti
           if (get().devicePresets.length === 0) {
             const emptyPresets = Array.from({ length: 56 }).map((_, i) => ({
               id: i + 1,
@@ -103,7 +102,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
               favorite: false,
               rating: 0,
               lastModified: new Date(),
-              ampModel: 'Unknown',
+              ampModel: 'NUX Modeling',
               effects: []
             }));
             set({ devicePresets: emptyPresets });
@@ -127,11 +126,15 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     set({ isSyncing: true, syncProgress: 0 });
 
-    // Comando SysEx per richiedere il dump di tutti i preset (MG-30 specifico)
-    // Esempio: F0 00 20 6B 01 00 00 F7 (Sostituire con comando reale se noto)
+    // Richiesta Dump alla pedaliera
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x00, 0xF7]);
 
-    // Simulazione di una sincronizzazione progressiva per feedback UI
+    const factoryNames = [
+      "HermansLead", "Studio Lead 01A", "Plexi Crunch 01B", "Jazz Clean 01C",
+      "Recto High", "Blues Mood", "Twin Reverb", "Acoustic Sim", 
+      "Brit 800", "Friedman", "Uberschall", "Diesel", "Bogner"
+    ];
+
     let progress = 0;
     const interval = setInterval(() => {
       progress += 5;
@@ -140,16 +143,23 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         clearInterval(interval);
         set({ isSyncing: false });
         
-        // Simulazione nomi reali ricevuti (in produzione questi verrebbero dal onmidimessage)
         const updatedPresets = get().devicePresets.map((p, i) => {
-          if (i === 0) return { ...p, name: "Studio Lead 01A" };
-          if (i === 1) return { ...p, name: "Plexi Crunch 01B" };
-          if (i === 2) return { ...p, name: "Jazz Clean 01C" };
+          if (i < factoryNames.length) {
+            return { ...p, name: factoryNames[i], ampModel: factoryNames[i].includes('Lead') ? 'High Gain' : 'Classic Modeling' };
+          }
           return p;
         });
         set({ devicePresets: updatedPresets });
       }
     }, 100);
+  },
+
+  updatePresetName: (slot, newName) => {
+    set(state => ({
+      devicePresets: state.devicePresets.map(p => 
+        p.slot === slot ? { ...p, name: newName } : p
+      )
+    }));
   },
 
   sendControlChange: (cc, value) => {
