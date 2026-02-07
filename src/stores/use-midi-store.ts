@@ -4,7 +4,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass definitiva (1=ON, 65=OFF)
+// Mappatura Bypass Definitiva (1=ON, 65=OFF)
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
@@ -17,7 +17,7 @@ const BYPASS_CC: Record<string, number> = {
   'ir': 9
 };
 
-// Mappatura Parametri specifica per ogni blocco (Schermata 1 e 2)
+// Mappatura Parametri specifica per ogni blocco basata sulla tabella fornita
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],
@@ -140,6 +140,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
+          console.log('%c[MIDI] Connesso a NUX MG-30', 'color: #4CAF50; font-weight: bold');
         } else {
           set({ status: 'disconnected' });
         }
@@ -157,6 +158,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
+    // Log per debug (viola per messaggi in ingresso)
+    console.log(`%c[MIDI IN] Len:${data.length} | ${Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, 'color: #9C27B0');
+
+    // Bypass sync da hardware
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
@@ -168,6 +173,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
+    // Parsing Nomi Preset dai dati dump
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -187,6 +193,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         }
       }
       if (foundName && currentSyncSlot !== null) {
+        console.log(`%c[MG-30] Nome Preset Trovato: ${foundName}`, 'color: #4CAF50; font-weight: bold; background: #E8F5E9; padding: 2px 5px; border-radius: 3px');
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -202,6 +209,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendProgramChange: (pc) => {
     const { output } = get();
     if (output) {
+      console.log(`%c[MIDI OUT] Program Change: ${pc}`, 'color: #2196F3');
       output.send([0xC0, pc]);
     }
   },
@@ -232,11 +240,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output, sendProgramChange } = get();
     if (!output) return;
     
+    console.log('%c[MG-30] Inizio Sincronizzazione Avanzata...', 'color: #FF9800; font-weight: bold');
     set({ isSyncing: true, syncProgress: 0 });
     
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       sendProgramChange(i - 1);
+      
+      // Richiesta Dump specifica per NUX
+      get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
+      get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
+      
       await new Promise(r => setTimeout(r, 450));
     }
     
