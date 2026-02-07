@@ -15,6 +15,12 @@ import { usePresetStore } from '@/stores/use-preset-store';
 import { useToast } from '@/hooks/use-toast';
 import { Preset } from '@/types/preset';
 
+const formatSlotLabel = (slot: number) => {
+  const group = Math.floor((slot - 1) / 4) + 1;
+  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
+  return `${String(group).padStart(2, '0')}${letter}`;
+};
+
 export default function LibraryPage() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
@@ -27,7 +33,7 @@ export default function LibraryPage() {
 
   const filteredPresets = devicePresets.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.category.toLowerCase().includes(search.toLowerCase())
+    formatSlotLabel(p.slot).toLowerCase().includes(search.toLowerCase())
   );
 
   const handleLoadPreset = (preset: Preset) => {
@@ -45,15 +51,21 @@ export default function LibraryPage() {
     setActivePreset({
       ...preset,
       effects: preset.effects.length > 0 ? preset.effects : [
-        { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 50, volume: 50, bass: 50, mid: 50, treble: 50 } },
-        { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20 } },
-        { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, mix: 15 } }
+        { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
+        { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
+        { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50, level: 50, bass: 50, extra: 0 } },
+        { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50, sag: 50, bias: 50 } },
+        { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80, distance: 0 } },
+        { id: 'eq', type: 'eq', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50 } },
+        { id: 'mod', type: 'modulation', enabled: false, parameters: { rate: 30, depth: 50, width: 50, regen: 20, mix: 50 } },
+        { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20, level: 50, tone: 50, mod: 50, rate: 50, width: 50 } },
+        { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, tone: 50, mix: 15, level: 50 } }
       ]
     });
 
     toast({
       title: "Preset caricato",
-      description: `Caricato ${preset.name} nello slot ${preset.slot}`
+      description: `Caricato ${preset.name} nello slot ${formatSlotLabel(preset.slot)}`
     });
   };
 
@@ -90,7 +102,7 @@ export default function LibraryPage() {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Libreria Preset</h2>
-            <p className="text-muted-foreground">Sincronizza e gestisci gli slot della tua pedaliera MG-30.</p>
+            <p className="text-muted-foreground">Sincronizza e gestisci i 128 slot (01A-32D) della tua pedaliera MG-30.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -174,7 +186,7 @@ export default function LibraryPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-[10px] font-mono border-primary/20 text-primary bg-primary/5">
-                        SLOT {preset.slot.toString().padStart(2, '0')}
+                        SLOT {formatSlotLabel(preset.slot)}
                       </Badge>
                       <div className="flex items-center gap-1">
                         <Button 
@@ -247,7 +259,7 @@ export default function LibraryPage() {
                         onClick={() => handleLoadPreset(preset)}
                       >
                         <td className="p-4 font-mono font-bold text-primary text-center">
-                          {preset.slot.toString().padStart(2, '0')}
+                          {formatSlotLabel(preset.slot)}
                         </td>
                         <td className="p-4 font-semibold group-hover:text-primary transition-colors">
                           {editingSlot === preset.slot ? (

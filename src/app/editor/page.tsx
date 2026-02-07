@@ -13,6 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const formatSlotLabel = (slot: number) => {
+  const group = Math.floor((slot - 1) / 4) + 1;
+  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
+  return `${String(group).padStart(2, '0')}${letter}`;
+};
+
 export default function EditorPage() {
   const { activePreset, updateParameter, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
   const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
@@ -44,8 +50,8 @@ export default function EditorPage() {
 
   const handleSlotChange = (direction: 'next' | 'prev') => {
     let nextSlot = activePreset.slot + (direction === 'next' ? 1 : -1);
-    if (nextSlot < 1) nextSlot = 56;
-    if (nextSlot > 56) nextSlot = 1;
+    if (nextSlot < 1) nextSlot = 128;
+    if (nextSlot > 128) nextSlot = 1;
     
     sendProgramChange(nextSlot - 1);
     setActivePreset({ ...activePreset, slot: nextSlot });
@@ -62,8 +68,8 @@ export default function EditorPage() {
               <Button variant="ghost" size="icon" onClick={() => handleSlotChange('prev')} className="h-8 w-8">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">
-                {activePreset.slot.toString().padStart(2, '0')}
+              <div className="w-16 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">
+                {formatSlotLabel(activePreset.slot)}
               </div>
               <Button variant="ghost" size="icon" onClick={() => handleSlotChange('next')} className="h-8 w-8">
                 <ChevronRight className="w-4 h-4" />
@@ -72,7 +78,7 @@ export default function EditorPage() {
             <div>
               <h3 className="text-xl font-bold">{activePreset.name}</h3>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-[10px] uppercase">Slot {activePreset.slot}</Badge>
+                <Badge variant="secondary" className="text-[10px] uppercase">Slot {formatSlotLabel(activePreset.slot)}</Badge>
                 <Badge variant="outline" className="text-[10px] text-muted-foreground">MIDI {status.toUpperCase()}</Badge>
               </div>
             </div>

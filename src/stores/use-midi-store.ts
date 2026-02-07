@@ -4,21 +4,18 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass Corretta in base ai test dell'utente
-// 1=ON, 65=OFF
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
+  'eq': 6,
+  'modulation': 9,
   'noise-gate': 4,
   'delay': 5,
-  'eq': 6,
   'reverb': 7,
-  'ir': 8,
-  'modulation': 9
+  'ir': 8
 };
 
-// Mappatura Parametri specifica per ogni blocco fornita dall'utente
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],
@@ -46,11 +43,16 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
 
 const VAL_ON = 1;
 const VAL_OFF = 65;
-const CC_VOLUME = 11;
 
-const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
+const formatSlotLabel = (slot: number) => {
+  const group = Math.floor((slot - 1) / 4) + 1;
+  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
+  return `${String(group).padStart(2, '0')}${letter}`;
+};
+
+const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   slot: i + 1,
-  name: `Slot ${String(i + 1).padStart(2, '0')}`,
+  name: `Preset ${formatSlotLabel(i + 1)}`,
   category: 'User',
   tags: [],
   favorite: false,
@@ -158,7 +160,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Bypass sync da hardware
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
@@ -170,7 +171,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // Parsing Nomi Preset dai dati dump
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -237,11 +237,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     
     set({ isSyncing: true, syncProgress: 0 });
     
-    for (let i = 1; i <= 56; i++) {
-      set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
+    for (let i = 1; i <= 128; i++) {
+      set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
-      // Richiesta Dump specifica per NUX
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { AppShell } from '@/components/layout/app-shell';
@@ -83,14 +84,14 @@ export default function HomePage() {
                   <Database className="w-4 h-4 text-primary" />
                   <span className="text-sm">Total Presets</span>
                 </div>
-                <span className="font-mono font-bold">124</span>
+                <span className="font-mono font-bold">128</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
                 <div className="flex items-center gap-2">
                   <Library className="w-4 h-4 text-accent" />
-                  <span className="text-sm">User Categories</span>
+                  <span className="text-sm">Banks (Groups)</span>
                 </div>
-                <span className="font-mono font-bold">12</span>
+                <span className="font-mono font-bold">32</span>
               </div>
               <Button asChild className="w-full mt-2" variant="secondary">
                 <Link href="/library">Manage Library</Link>
@@ -149,7 +150,7 @@ export default function HomePage() {
               </div>
               <div className="text-center">
                 <h4 className="font-bold">Bulk Backup</h4>
-                <p className="text-xs text-muted-foreground">Backup all 56 slots</p>
+                <p className="text-xs text-muted-foreground">Backup all 128 slots</p>
               </div>
             </CardContent>
           </Card>
