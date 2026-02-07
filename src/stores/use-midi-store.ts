@@ -6,6 +6,7 @@ import { Preset } from '@/types/preset';
 const NUX_HEADER = [0x00, 0x20, 0x6B];
 const DEVICE_ID = 0x01;
 
+// ID per parametri SysEx (Mappatura standard MG-30)
 const BLOCK_IDS = {
   'noise-gate': 0x01,
   'compressor': 0x02,
@@ -17,15 +18,22 @@ const BLOCK_IDS = {
   'reverb': 0x08
 };
 
+// Mappatura CC aggiornata basata sui log dell'utente
+// CC 1 = Compressor, CC 2 = EFX, ecc.
 const BYPASS_CC = {
-  'efx': 36,
-  'amp': 37,
-  'noise-gate': 38,
-  'eq': 39,
-  'modulation': 40,
-  'delay': 41,
-  'reverb': 42
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'noise-gate': 4,
+  'eq': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8
 };
+
+// Valori bypass specifici rilevati dall'utente
+const VAL_ON = 65;
+const VAL_OFF = 1;
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
   slot: i + 1,
@@ -140,20 +148,18 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
     
-    // Scansione aggressiva per nomi preset
+    // Scansione per nomi preset nei messaggi lunghi
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
       
       for (let i = 0; i < data.length; i++) {
         const byte = data[i];
-        // Caratteri ASCII stampabili
         if (byte >= 32 && byte <= 126) {
           tempName += String.fromCharCode(byte);
         } else {
           if (tempName.trim().length >= 4) {
             const candidate = tempName.trim();
-            // Escludiamo stringhe tecniche note
             if (!["NUX", "MG-30", "VER", "HDR", "EDIT"].includes(candidate.toUpperCase())) {
               foundName = candidate;
               break; 
@@ -172,13 +178,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   sendControlChange: (cc, value) => {
     const { output } = get();
-    if (output) output.send([0xB0, cc, Math.min(127, Math.max(0, value))]);
+    if (output) {
+      console.log(`%c[MIDI OUT] CC ${cc} Value ${value}`, "color: #2196F3; font-weight: bold;");
+      output.send([0xB0, cc, value]);
+    }
   },
 
   sendProgramChange: (pc) => {
     const { output } = get();
     if (output) {
-      console.log(`[MIDI OUT] Program Change: ${pc}`);
+      console.log(`%c[MIDI OUT] Program Change: ${pc}`, "color: #2196F3; font-weight: bold;");
       output.send([0xC0, pc]);
     }
   },
@@ -193,8 +202,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType as keyof typeof BYPASS_CC];
-    if (cc) {
-      get().sendControlChange(cc, enabled ? 127 : 0);
+    if (cc !== undefined) {
+      const val = enabled ? VAL_ON : VAL_OFF;
+      get().sendControlChange(cc, val);
     }
   },
 
@@ -208,21 +218,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       
-      // 1. Cambio Slot
       sendProgramChange(i - 1);
       
-      // 2. Attesa caricamento hardware (fondamentale per evitare echo)
+      // Attesa caricamento hardware
       await new Promise(r => setTimeout(r, 450));
       
-      // 3. Richiesta Dump Preset Corrente con formati multipli
-      // Formato standard NUX per i nomi
+      // Richiesta Dump Preset Corrente (proviamo diversi formati)
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
-      
-      // Formato alternativo
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
       
-      // 4. Pausa extra per permettere alla pedaliera di rispondere
       await new Promise(r => setTimeout(r, 300)); 
     }
     
