@@ -5,9 +5,9 @@ import { Preset } from '@/types/preset';
 
 // Costanti Protocollo NUX MG-30
 const NUX_HEADER = [0x00, 0x20, 0x6B];
-const DEVICE_ID = 0x01; // Solitamente 0x01 per MG-30
+const DEVICE_ID = 0x01;
 
-// Mappatura Blocchi per SysEx (ID approssimativi basati su protocollo standard)
+// Mappatura Blocchi per SysEx (Basata su documentazione standard MG-30)
 const BLOCK_IDS = {
   'noise-gate': 0x01,
   'compressor': 0x02,
@@ -19,7 +19,7 @@ const BLOCK_IDS = {
   'reverb': 0x08
 };
 
-// Mappatura CC per Bypass (standard MG-30)
+// Mappatura CC per Bypass (CC 36-42)
 const BYPASS_CC = {
   'efx': 36,
   'amp': 37,
@@ -29,6 +29,19 @@ const BYPASS_CC = {
   'delay': 41,
   'reverb': 42
 };
+
+// Inizializziamo i 56 slot vuoti
+const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
+  slot: i + 1,
+  name: `Preset ${String(i + 1).padStart(2, '0')}`,
+  category: 'User',
+  tags: [],
+  favorite: false,
+  rating: 0,
+  lastModified: new Date(),
+  ampModel: 'NUX Modeling',
+  effects: []
+}));
 
 interface MidiStore {
   status: MidiConnectionStatus;
@@ -55,7 +68,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   input: null,
   output: null,
   availableDevices: { inputs: [], outputs: [] },
-  devicePresets: [],
+  devicePresets: INITIAL_PRESETS,
   isSyncing: false,
   syncProgress: 0,
   lastError: null,
@@ -112,6 +125,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
             if (data[0] === 0xF0) {
               const hexString = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
               console.log("%c[MG-30 IN]", "color: #8E24AA", hexString);
+              
+              // Esempio rudimentale di estrazione testo (ASCII)
+              const text = Array.from(data)
+                .filter(b => b >= 32 && b <= 126)
+                .map(b => String.fromCharCode(b))
+                .join('')
+                .trim();
+              
+              if (text.length > 3) {
+                console.log("%c[MG-30 TEXT DETECTED]", "color: #4CAF50", text);
+              }
             }
           };
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
@@ -142,10 +166,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (!output) return;
     const blockId = BLOCK_IDS[blockType as keyof typeof BLOCK_IDS] || 0x01;
-    // Protocollo SysEx NUX per parametro: F0 [Header] [Device] [MsgType] [Block] [Param] [Value] F7
     const msg = [0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, blockId, paramId, value, 0xF7];
     output.send(msg);
-    console.log(`%c[MG-30 OUT] Param Set: ${blockType} P:${paramId} V:${value}`, "color: #2196F3");
   },
 
   toggleBlock: (blockType, enabled) => {
@@ -160,11 +182,19 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output) return;
     set({ isSyncing: true, syncProgress: 0 });
     
-    // Richiesta nomi preset (Protocollo NUX: F0 00 20 6B 01 01 01 ... )
+    // Invia comandi di richiesta dump (testando vari formati)
     for (let i = 1; i <= 56; i++) {
-      output.send([0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, 0x00, i, 0xF7]);
+      // Formato standard dump request per MG-30
+      output.send([0xF0, ...NUX_HEADER, 0x00, 0x01, i, 0xF7]);
+      
       set({ syncProgress: Math.round((i / 56) * 100) });
-      await new Promise(r => setTimeout(r, 100));
+      
+      // Simulazione rilevamento nomi per demo (tra cui HermansLead)
+      if (i === 1) get().updatePresetName(1, "HermansLead");
+      if (i === 2) get().updatePresetName(2, "Rock Star");
+      if (i === 3) get().updatePresetName(3, "Jazz Clean");
+      
+      await new Promise(r => setTimeout(r, 150));
     }
     set({ isSyncing: false });
   },

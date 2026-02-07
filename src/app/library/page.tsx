@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Filter, LayoutGrid, List, Star, MoreVertical, RefreshCw, Loader2, Edit2, Check } from 'lucide-react';
+import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, RefreshCw, Loader2, Edit2, Check } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -96,7 +96,7 @@ export default function LibraryPage() {
             <Button 
               onClick={handleSync} 
               variant={isSyncing ? "secondary" : "outline"} 
-              className="gap-2 min-w-[180px]"
+              className="gap-2 min-w-[200px]"
               disabled={isSyncing}
             >
               {isSyncing ? (
@@ -157,9 +157,9 @@ export default function LibraryPage() {
         {filteredPresets.length === 0 ? (
           <Card className="p-12 border-dashed border-2 flex flex-col items-center justify-center text-center opacity-60">
             <RefreshCw className="w-12 h-12 mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-bold">Nessun Preset</h3>
+            <h3 className="text-xl font-bold">Nessun Preset trovato</h3>
             <p className="max-w-xs mx-auto mt-2 text-sm">
-              Collega l'MG-30 e sincronizza per vedere la lista reale.
+              I preset dovrebbero apparire automaticamente. Se non li vedi, riavvia l'app o ricarica la pagina.
             </p>
           </Card>
         ) : (
@@ -216,7 +216,7 @@ export default function LibraryPage() {
                   </CardHeader>
                   <CardContent className="pb-4">
                      <div className="flex flex-col gap-1">
-                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Amp Model</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Modello Amp</div>
                         <div className="text-sm font-medium opacity-80">{preset.ampModel}</div>
                      </div>
                   </CardContent>
