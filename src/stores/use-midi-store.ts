@@ -141,33 +141,35 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Log avanzato per debug
+    // Log completo per debugging dei dati in arrivo
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
     
-    // Se è un messaggio SysEx lungo, probabilmente contiene il nome
-    if (data[0] === 0xF0 && data.length > 10) {
-      console.log(`%c[MIDI DATA] Ricevuto pacchetto lungo (${data.length} bytes)`, "color: #9C27B0; font-weight: bold;");
-      
+    // Cerchiamo stringhe ASCII nei messaggi (solitamente i dati preset sono > 50 byte)
+    if (data.length > 20) {
       let foundName = "";
       let tempName = "";
       
-      // Scansione alla ricerca di stringhe ASCII (almeno 4 caratteri stampabili consecutivi)
+      // Scansione per trovare sequenze di caratteri stampabili
       for (let i = 0; i < data.length; i++) {
         const byte = data[i];
         if (byte >= 32 && byte <= 126) {
           tempName += String.fromCharCode(byte);
         } else {
           if (tempName.trim().length >= 4) {
-            foundName = tempName.trim();
-            // Evitiamo nomi tecnici come "NUX" o header
-            if (foundName !== "NUX" && foundName.length > 2) break;
+            // Filtriamo nomi tecnici e header
+            const candidate = tempName.trim();
+            if (!["NUX", "MG-30", "VER", "HDR"].includes(candidate.toUpperCase())) {
+              foundName = candidate;
+              break; 
+            }
           }
           tempName = "";
         }
       }
 
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] Nome estratto: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #FF9800; font-weight: bold;");
+        console.log(`%c[MG-30] NOME TROVATO: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #00E676; font-weight: bold; padding: 2px; border: 1px solid #00E676;");
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -206,31 +208,29 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output) return;
     
     set({ isSyncing: true, syncProgress: 0 });
-    console.log("%c[MG-30] Inizio Sincronizzazione Totale...", "color: #2196F3; font-weight: bold;");
+    console.log("%c[MG-30] Inizio Sincronizzazione Avanzata...", "color: #FFEA00; font-weight: bold;");
     
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       
-      // 1. Cambiamo slot (fondamentale: l'MG-30 spesso spara i dati al cambio PC)
+      // 1. Cambio Slot
       sendProgramChange(i - 1);
       
-      // 2. Attendiamo il caricamento (tempo più lungo per stabilità)
-      await new Promise(r => setTimeout(r, 150));
+      // 2. Attesa caricamento hardware (molto importante)
+      await new Promise(r => setTimeout(r, 400));
       
-      // 3. Proviamo diversi comandi di Dump Request se il precedente falliva
-      // Comando A: Get Current Preset (0x40 0x00)
+      // 3. Richiesta Dump Preset Corrente (standard MG-30)
+      // Proviamo sia con Device ID 01 che con 7F (broadcast)
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7]);
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 100));
+      output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
       
-      // Comando B: Get Preset Name (0x00 0x01 - comune su alcune versioni)
-      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
-      
-      // 4. Pausa tra i preset
-      await new Promise(r => setTimeout(r, 200)); 
+      // 4. Pausa per evitare saturazione buffer
+      await new Promise(r => setTimeout(r, 300)); 
     }
     
     set({ isSyncing: false, currentSyncSlot: null });
-    console.log("%c[MG-30] Sincronizzazione completata.", "color: #4CAF50; font-weight: bold;");
+    console.log("%c[MG-30] Sincronizzazione terminata.", "color: #00E676; font-weight: bold;");
   },
 
   updatePresetName: (slot, newName) => {
