@@ -4,20 +4,20 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass (CC 1-9) basata sui test dell'utente
+// Mappatura Bypass (CC 1-9) definitiva basata sui test dell'utente
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
   'eq': 4,
-  'noise-gate': 5, // Assunto come 5 per esclusione
+  'noise-gate': 5,
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
   'ir': 9
 };
 
-// Valori specifici di ON/OFF per ogni blocco
+// Valori specifici di ON/OFF catturati dall'utente
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'compressor': { on: 1, off: 65 },
   'efx': { on: 1, off: 65 },
@@ -30,7 +30,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
-// Mappatura manopole fisiche (14-69) come fornito dall'utente
+// Mappatura manopole fisiche multi-schermata
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],

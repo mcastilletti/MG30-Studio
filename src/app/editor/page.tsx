@@ -41,8 +41,11 @@ export default function EditorPage() {
     }
   };
 
-  const handleSelectBlock = (effectId: string, type: string) => {
+  const handleSelectBlock = (effectId: string) => {
     setSelectedBlockId(effectId);
+  };
+
+  const handleHardwareSync = (type: string) => {
     if (status === 'connected') {
       selectBlock(type);
     }
@@ -98,7 +101,7 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Click to select (Edit Mode) • Toggle power to bypass</span>
+                <span className="text-[10px] text-muted-foreground italic">Single click to Edit UI • Double click for Hardware Edit (CC 78)</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -106,9 +109,10 @@ export default function EditorPage() {
               {activePreset.effects.map((effect, idx) => (
                 <React.Fragment key={effect.id}>
                   <div 
-                    onClick={() => handleSelectBlock(effect.id, effect.type)}
+                    onClick={() => handleSelectBlock(effect.id)}
+                    onDoubleClick={() => handleHardwareSync(effect.type)}
                     className={cn(
-                      "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0",
+                      "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
                       effect.enabled 
                         ? (selectedBlockId === effect.id ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(103,58,183,0.3)]' : 'border-primary/40 bg-primary/5')
                         : 'border-border bg-secondary/20 opacity-60',
@@ -183,8 +187,8 @@ export default function EditorPage() {
                 </div>
               )}
               <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center flex flex-col gap-1">
-                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera</span>
-                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()}</span>
+                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera (14-17, 18-21, etc.)</span>
+                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()} • Doppio click per Hardware Edit</span>
               </div>
             </CardContent>
           </Card>
