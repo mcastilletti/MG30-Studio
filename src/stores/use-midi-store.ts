@@ -24,12 +24,12 @@ const BYPASS_CC = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'noise-gate': 4,
-  'eq': 5,          // Corretto: EQ ora è CC 5
-  'ir': 6,          // Corretto: IR ora è CC 6
-  'modulation': 7,
-  'delay': 8,
-  'reverb': 9
+  'eq': 4,          // Corretto: EQ ora è CC 4
+  'noise-gate': 5,  // Corretto: GATE ora è CC 5
+  'modulation': 6,  // Corretto: MOD ora è CC 6
+  'delay': 7,       // Corretto: DLY ora è CC 7
+  'reverb': 8,      // Corretto: RVB ora è CC 8
+  'ir': 9           // Corretto: IR ora è CC 9
 };
 
 const VAL_ON = 1;
