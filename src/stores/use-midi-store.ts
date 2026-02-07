@@ -7,7 +7,7 @@ import { Preset } from '@/types/preset';
 const NUX_HEADER = [0x00, 0x20, 0x6B];
 const DEVICE_ID = 0x01;
 
-// Mappatura Blocchi per SysEx
+// Mappatura Blocchi per SysEx (Basata sullo schema MG-30)
 const BLOCK_IDS = {
   'noise-gate': 0x01,
   'compressor': 0x02,
@@ -31,7 +31,7 @@ const BYPASS_CC = {
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
   slot: i + 1,
-  name: `Preset ${String(i + 1).padStart(2, '0')}`,
+  name: `Slot ${String(i + 1).padStart(2, '0')}`,
   category: 'User',
   tags: [],
   favorite: false,
@@ -140,23 +140,29 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Riconoscimento SysEx NUX
-    if (data[0] === 0xF0 && data[1] === NUX_HEADER[0] && data[2] === NUX_HEADER[1] && data[3] === NUX_HEADER[2]) {
-      // Tenta di estrarre il nome (solitamente stringhe ASCII nei dati dump)
-      const asciiChars: string[] = [];
-      for (let i = 4; i < data.length - 1; i++) {
-        if (data[i] >= 32 && data[i] <= 126) {
-          asciiChars.push(String.fromCharCode(data[i]));
-        } else if (asciiChars.length > 0) {
-          // Se troviamo un carattere non ASCII dopo una sequenza, fermiamoci
+    // Riconoscimento SysEx NUX (Header F0 00 20 6B)
+    if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x6B) {
+      // Parser avanzato: Cerchiamo una stringa ASCII di almeno 3 caratteri nel payload
+      let foundName = "";
+      for (let i = 4; i < data.length - 3; i++) {
+        let potential = "";
+        let j = i;
+        // Un nome preset NUX MG-30 è lungo tipicamente 16 caratteri
+        while (j < data.length && data[j] >= 32 && data[j] <= 126 && potential.length < 16) {
+          potential += String.fromCharCode(data[j]);
+          j++;
+        }
+        
+        const trimmed = potential.trim();
+        if (trimmed.length >= 3) {
+          foundName = trimmed;
           break;
         }
       }
 
-      const extractedName = asciiChars.join('').trim();
-      if (extractedName.length >= 3 && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] Preset ${currentSyncSlot} Name Found: ${extractedName}`, "color: #4CAF50; font-weight: bold");
-        updatePresetName(currentSyncSlot, extractedName);
+      if (foundName && currentSyncSlot !== null) {
+        console.log(`%c[MG-30] Slot ${currentSyncSlot}: Nome rilevato -> ${foundName}`, "color: #8E24AA; font-weight: bold;");
+        updatePresetName(currentSyncSlot, foundName);
       }
     }
   },
@@ -175,6 +181,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (!output) return;
     const blockId = BLOCK_IDS[blockType as keyof typeof BLOCK_IDS] || 0x01;
+    // Messaggio SysEx per cambio parametro singolo
     const msg = [0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, blockId, paramId, value, 0xF7];
     output.send(msg);
   },
@@ -187,20 +194,26 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   syncPresets: async () => {
-    const { output } = get();
+    const { output, sendProgramChange } = get();
     if (!output) return;
     
     set({ isSyncing: true, syncProgress: 0 });
     
+    // Iteriamo su tutti i 56 slot
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       
-      // Comando ufficiale per richiedere il dump dello slot specifico (NUX MG-30 Protocol)
-      const cmd = [0xF0, ...NUX_HEADER, 0x00, 0x01, i - 1, 0xF7];
-      output.send(cmd);
+      // Metodo più affidabile per l'MG-30:
+      // 1. Cambiamo slot (Program Change)
+      sendProgramChange(i - 1);
       
-      // Aspetta che la pedaliera risponda prima di passare al prossimo slot
-      await new Promise(r => setTimeout(r, 60)); 
+      // 2. Chiediamo il dump dell'edit buffer (che ora contiene il preset i)
+      // Comando: F0 00 20 6B 01 40 00 F7
+      const dumpRequest = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7];
+      output.send(dumpRequest);
+      
+      // Aspettiamo che l'hardware risponda ed elabori
+      await new Promise(r => setTimeout(r, 150)); 
     }
     
     set({ isSyncing: false, currentSyncSlot: null });
