@@ -7,9 +7,9 @@ import { usePresetStore } from './use-preset-store';
 const NUX_HEADER = [0x00, 0x20, 0x6B];
 const DEVICE_ID = 0x01;
 
-// Mappatura CC definitiva fornita dall'utente
+// Mappatura CC definitiva basata sui test dell'utente
 // Valori: ON = 1, OFF = 65
-const BYPASS_CC = {
+const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
@@ -19,6 +19,20 @@ const BYPASS_CC = {
   'delay': 7,
   'reverb': 8,
   'ir': 9
+};
+
+// Mappatura per CC 78 (Selezione Blocco / Edit Mode)
+const SELECT_BLOCK_CC = 78;
+const BLOCK_INDEX_MAP: Record<string, number> = {
+  'noise-gate': 0,
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'eq': 4,
+  'modulation': 5,
+  'delay': 6,
+  'reverb': 7,
+  'ir': 8
 };
 
 const VAL_ON = 1;
@@ -52,6 +66,7 @@ interface MidiStore {
   sendProgramChange: (pc: number) => void;
   sendParameter: (blockId: string, paramId: number, value: number) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
+  selectBlock: (blockType: string) => void;
   refreshDevices: () => void;
   syncPresets: () => Promise<void>;
   updatePresetName: (slot: number, newName: string) => void;
@@ -116,6 +131,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
+          console.log("%c[MIDI] Connesso a NUX MG-30", "color: #4CAF50; font-weight: bold;");
         } else {
           set({ status: 'disconnected' });
         }
@@ -133,26 +149,23 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Log per debug (viola)
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-    if (data.length > 3) {
-       console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
-    }
-
-    // Analisi bypass via CC in arrivo (se la pedaliera lo invia quando premiamo i tasti fisici)
+    
+    // Log per messaggi CC in arrivo (ascolto cambiamenti hardware)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
-      const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key as keyof typeof BYPASS_CC] === cc);
+      
+      // Bypass detection
+      const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockType) {
         const isEnabled = val === VAL_ON;
         usePresetStore.getState().updateBlockStateLocally(blockType, isEnabled);
       }
     }
 
-    // Analisi SysEx per nomi e stati (Messaggi lunghi)
+    // Parsing SysEx per nomi (Scansione ASCII)
     if (data.length > 10) {
-      // Estrazione Nome
       let foundName = "";
       let tempName = "";
       for (let i = 0; i < data.length; i++) {
@@ -171,18 +184,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         }
       }
       if (foundName && currentSyncSlot !== null) {
+        console.log(`%c[MIDI] Trovato Nome Preset: ${foundName}`, "color: #00E676; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
       }
-      
-      // Analisi Bypass dallo dump SysEx (Heuristic basata su MG-30 dump structure)
-      // Nota: Gli offset reali dipendono dal dump esatto, ma integriamo la possibilità
-      // di aggiornare lo stato se il dump contiene i byte di stato.
     }
   },
 
   sendControlChange: (cc, value) => {
     const { output } = get();
     if (output) {
+      console.log(`%c[MIDI OUT] CC: ${cc} | Val: ${value}`, "color: #2196F3;");
       output.send([0xB0, cc, value]);
     }
   },
@@ -190,6 +201,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendProgramChange: (pc) => {
     const { output } = get();
     if (output) {
+      console.log(`%c[MIDI OUT] Program Change: ${pc}`, "color: #FF9800;");
       output.send([0xC0, pc]);
     }
   },
@@ -197,7 +209,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendParameter: (blockType, paramId, value) => {
     const { output } = get();
     if (!output) return;
-    // Mappatura blocchi SysEx standard
     const blockMap: Record<string, number> = { 'noise-gate': 0x01, 'compressor': 0x02, 'efx': 0x03, 'amp': 0x04, 'ir': 0x09, 'eq': 0x05, 'modulation': 0x06, 'delay': 0x07, 'reverb': 0x08 };
     const blockId = blockMap[blockType] || 0x01;
     const msg = [0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, blockId, paramId, value, 0xF7];
@@ -205,10 +216,18 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   toggleBlock: (blockType, enabled) => {
-    const cc = BYPASS_CC[blockType as keyof typeof BYPASS_CC];
+    const cc = BYPASS_CC[blockType];
     if (cc !== undefined) {
       const val = enabled ? VAL_ON : VAL_OFF;
       get().sendControlChange(cc, val);
+    }
+  },
+
+  selectBlock: (blockType) => {
+    const value = BLOCK_INDEX_MAP[blockType];
+    if (value !== undefined) {
+      console.log(`%c[MIDI OUT] Select Block (CC 78): ${blockType} (Val: ${value})`, "color: #9C27B0; font-weight: bold;");
+      get().sendControlChange(SELECT_BLOCK_CC, value);
     }
   },
 
@@ -217,13 +236,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output) return;
     
     set({ isSyncing: true, syncProgress: 0 });
+    console.log("%c[MG-30] Inizio Sincronizzazione Avanzata...", "color: #00BCD4; font-weight: bold;");
     
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       sendProgramChange(i - 1);
       
-      // Aspettiamo che la pedaliera carichi il preset e inviamo richiesta dump nomi
       await new Promise(r => setTimeout(r, 450));
+      // Richiesta dump nomi
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);

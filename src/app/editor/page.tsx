@@ -1,7 +1,7 @@
 
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -10,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// IDs dei parametri basati sul protocollo NUX MG-30 per il blocco AMP
+// Mappature ID parametri SysEx per il blocco AMP
 const AMP_PARAM_IDS = {
   gain: 0,
   bass: 1,
@@ -24,7 +25,9 @@ const AMP_PARAM_IDS = {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendParameter, toggleBlock } = useMidiStore();
+  const { status, sendProgramChange, sendParameter, toggleBlock, selectBlock } = useMidiStore();
+  
+  const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
 
   const handleParamChange = (effectType: string, param: string, value: number) => {
     updateParameter(effectType, param, value);
@@ -36,17 +39,24 @@ export default function EditorPage() {
           sendParameter('amp', paramId, value);
         }
       } else {
-        // Fallback per altri blocchi: implementare mappature parametri specifiche
-        // Per ora usiamo paramId 0 come placeholder
+        // Fallback per altri blocchi: ID 0 per ora
         sendParameter(effectType, 0, value);
       }
     }
   };
 
-  const handleToggleBlock = (effectId: string, type: string, enabled: boolean) => {
+  const handleToggleBlock = (e: React.MouseEvent, effectId: string, type: string, enabled: boolean) => {
+    e.stopPropagation();
     toggleEffect(effectId);
     if (status === 'connected') {
       toggleBlock(type, !enabled);
+    }
+  };
+
+  const handleSelectBlock = (effectId: string, type: string) => {
+    setSelectedBlockId(effectId);
+    if (status === 'connected') {
+      selectBlock(type);
     }
   };
 
@@ -59,9 +69,7 @@ export default function EditorPage() {
     setActivePreset({ ...activePreset, slot: nextSlot });
   };
 
-  const ampEffect = activePreset.effects.find(e => e.type === 'amp');
-  const delayEffect = activePreset.effects.find(e => e.type === 'delay');
-  const reverbEffect = activePreset.effects.find(e => e.type === 'reverb');
+  const selectedEffect = activePreset.effects.find(e => e.id === selectedBlockId);
 
   return (
     <AppShell>
@@ -104,28 +112,41 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
+                <span className="text-[10px] text-muted-foreground italic">Click to select (Enter Settings) • Toggle power to bypass</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
-            <div className="flex items-center justify-between max-w-5xl mx-auto overflow-x-auto gap-4 pb-2">
+            <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
               {activePreset.effects.map((effect, idx) => (
                 <React.Fragment key={effect.id}>
                   <div 
-                    onClick={() => handleToggleBlock(effect.id, effect.type, effect.enabled)}
-                    className={`
-                      relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all
-                      ${effect.enabled ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(103,58,183,0.2)]' : 'border-border bg-secondary/20 opacity-60'}
-                    `}
+                    onClick={() => handleSelectBlock(effect.id, effect.type)}
+                    className={cn(
+                      "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0",
+                      effect.enabled 
+                        ? (selectedBlockId === effect.id ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(103,58,183,0.3)]' : 'border-primary/40 bg-primary/5')
+                        : 'border-border bg-secondary/20 opacity-60',
+                      selectedBlockId === effect.id && !effect.enabled && 'border-accent bg-accent/10'
+                    )}
                   >
-                    <div className={`
-                      w-10 h-10 rounded flex items-center justify-center mb-1
-                      ${effect.enabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
-                    `}>
-                      <Power className="w-5 h-5" />
+                    <div className={cn(
+                      "w-10 h-10 rounded flex items-center justify-center mb-1 transition-colors",
+                      effect.enabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                      selectedBlockId === effect.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    )}>
+                      <Power 
+                        className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform" 
+                        onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+                      />
                     </div>
                     <span className="text-[9px] font-bold uppercase tracking-tighter text-center h-4 line-clamp-1">
                       {effect.type.replace('-', ' ')}
                     </span>
+                    {selectedBlockId === effect.id && (
+                      <div className="absolute -top-2 -right-2 bg-accent text-accent-foreground p-1 rounded-full shadow-lg">
+                        <Settings2 className="w-3 h-3" />
+                      </div>
+                    )}
                   </div>
                   {idx < activePreset.effects.length - 1 && (
                     <div className="flex-1 min-w-[20px] h-[2px] bg-gradient-to-r from-border via-primary/30 to-border" />
@@ -137,53 +158,51 @@ export default function EditorPage() {
         </Card>
 
         {/* Editor Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 border-primary/20 bg-primary/[0.02]">
+        <div className="grid grid-cols-1 gap-6">
+          <Card className="border-primary/20 bg-primary/[0.02]">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/50">
-              <CardTitle className="text-lg">AMPLIFIER SECTION</CardTitle>
-              <Badge className="bg-primary">{activePreset.ampModel}</Badge>
+              <div className="flex items-center gap-4">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <Settings2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase">{selectedEffect?.type.replace('-', ' ')} SECTION</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground font-normal">Editing parameters for {selectedEffect?.type}</CardTitle>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                   <span className="text-xs font-bold uppercase text-muted-foreground">Status</span>
+                   <Switch 
+                    checked={selectedEffect?.enabled} 
+                    onCheckedChange={(v) => toggleEffect(selectedEffect!.id)} 
+                   />
+                </div>
+                {selectedEffect?.type === 'amp' && <Badge className="bg-primary">{activePreset.ampModel}</Badge>}
+              </div>
             </CardHeader>
-            <CardContent className="p-8">
-              {ampEffect && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-y-10 gap-x-4">
-                  <RotaryKnob label="Gain" value={ampEffect.parameters.gain as number} onChange={(v) => handleParamChange('amp', 'gain', v)} size={72} />
-                  <RotaryKnob label="Bass" value={ampEffect.parameters.bass as number} onChange={(v) => handleParamChange('amp', 'bass', v)} size={64} />
-                  <RotaryKnob label="Mid" value={ampEffect.parameters.mid as number} onChange={(v) => handleParamChange('amp', 'mid', v)} size={64} />
-                  <RotaryKnob label="Treble" value={ampEffect.parameters.treble as number} onChange={(v) => handleParamChange('amp', 'treble', v)} size={64} />
-                  <RotaryKnob label="Presence" value={(ampEffect.parameters.presence as number) || 50} onChange={(v) => handleParamChange('amp', 'presence', v)} size={64} />
-                  <RotaryKnob label="Volume" value={ampEffect.parameters.volume as number} onChange={(v) => handleParamChange('amp', 'volume', v)} size={72} />
+            <CardContent className="p-10">
+              {selectedEffect && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-y-12 gap-x-8 justify-items-center">
+                  {Object.entries(selectedEffect.parameters).map(([key, value]) => (
+                    <RotaryKnob 
+                      key={key}
+                      label={key} 
+                      value={typeof value === 'number' ? value : 50} 
+                      onChange={(v) => handleParamChange(selectedEffect.type, key, v)} 
+                      size={72} 
+                    />
+                  ))}
+                  {/* Se il blocco ha pochi parametri, aggiungiamo degli slot vuoti per mantenere la griglia pulita */}
+                  {Object.keys(selectedEffect.parameters).length === 0 && (
+                    <div className="col-span-full py-12 text-center text-muted-foreground italic">
+                      No parameters available for this block in the current version.
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
-
-          <div className="space-y-6">
-            <Card className="border-border bg-card">
-              <CardHeader className="py-4 border-b border-border flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">DELAY</CardTitle>
-                <Switch checked={delayEffect?.enabled} onCheckedChange={() => handleToggleBlock('delay', 'delay', delayEffect?.enabled || false)} />
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex justify-around gap-4">
-                  <RotaryKnob label="Time" value={delayEffect?.parameters.time as number} max={2000} step={10} unit="ms" onChange={(v) => handleParamChange('delay', 'time', v)} size={50} />
-                  <RotaryKnob label="Mix" value={delayEffect?.parameters.mix as number} onChange={(v) => handleParamChange('delay', 'mix', v)} size={50} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border bg-card">
-              <CardHeader className="py-4 border-b border-border flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">REVERB</CardTitle>
-                <Switch checked={reverbEffect?.enabled} onCheckedChange={() => handleToggleBlock('reverb', 'reverb', reverbEffect?.enabled || false)} />
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex justify-around gap-4">
-                  <RotaryKnob label="Decay" value={reverbEffect?.parameters.decay as number} max={10} step={0.1} unit="s" onChange={(v) => handleParamChange('reverb', 'decay', v)} size={50} />
-                  <RotaryKnob label="Mix" value={reverbEffect?.parameters.mix as number} onChange={(v) => handleParamChange('reverb', 'mix', v)} size={50} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </AppShell>
