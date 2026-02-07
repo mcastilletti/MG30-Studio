@@ -13,35 +13,18 @@ import { Button } from '@/components/ui/button';
 import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mappature ID parametri SysEx per il blocco AMP
-const AMP_PARAM_IDS = {
-  gain: 0,
-  bass: 1,
-  mid: 2,
-  treble: 3,
-  presence: 4,
-  volume: 5
-};
-
 export default function EditorPage() {
   const { activePreset, updateParameter, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendParameter, toggleBlock, selectBlock } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
 
-  const handleParamChange = (effectType: string, param: string, value: number) => {
-    updateParameter(effectType, param, value);
+  const handleParamChange = (effectType: string, param: string, value: number, knobIndex: number) => {
+    updateParameter(selectedBlockId, param, value);
     
     if (status === 'connected') {
-      if (effectType === 'amp') {
-        const paramId = AMP_PARAM_IDS[param as keyof typeof AMP_PARAM_IDS];
-        if (paramId !== undefined) {
-          sendParameter('amp', paramId, value);
-        }
-      } else {
-        // Fallback per altri blocchi: ID 0 per ora
-        sendParameter(effectType, 0, value);
-      }
+      // Invia il valore tramite CC 14, 15, 16 o 17 in base alla posizione della manopola
+      sendKnobParameter(knobIndex, value);
     }
   };
 
@@ -170,7 +153,7 @@ export default function EditorPage() {
                   <CardTitle className="text-xs text-muted-foreground font-normal">Editing parameters for {selectedEffect?.type}</CardTitle>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
                    <span className="text-xs font-bold uppercase text-muted-foreground">Status</span>
                    <Switch 
@@ -184,16 +167,16 @@ export default function EditorPage() {
             <CardContent className="p-10">
               {selectedEffect && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-y-12 gap-x-8 justify-items-center">
-                  {Object.entries(selectedEffect.parameters).map(([key, value]) => (
+                  {Object.entries(selectedEffect.parameters).map(([key, value], index) => (
                     <RotaryKnob 
                       key={key}
                       label={key} 
                       value={typeof value === 'number' ? value : 50} 
-                      onChange={(v) => handleParamChange(selectedEffect.type, key, v)} 
+                      onChange={(v) => handleParamChange(selectedEffect.type, key, v, index)} 
                       size={72} 
+                      className={index < 4 ? "border-b-2 border-primary/20 pb-2" : ""}
                     />
                   ))}
-                  {/* Se il blocco ha pochi parametri, aggiungiamo degli slot vuoti per mantenere la griglia pulita */}
                   {Object.keys(selectedEffect.parameters).length === 0 && (
                     <div className="col-span-full py-12 text-center text-muted-foreground italic">
                       No parameters available for this block in the current version.
@@ -201,6 +184,9 @@ export default function EditorPage() {
                   )}
                 </div>
               )}
+              <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center">
+                I primi 4 parametri controllano le manopole fisiche (CC 14, 15, 16, 17)
+              </div>
             </CardContent>
           </Card>
         </div>

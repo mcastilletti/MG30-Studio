@@ -13,12 +13,12 @@ const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'eq': 4,
-  'noise-gate': 5,
-  'modulation': 6,
-  'delay': 7,
-  'reverb': 8,
-  'ir': 9
+  'eq': 5, // Invertito con IR come richiesto
+  'noise-gate': 4,
+  'modulation': 7,
+  'delay': 8,
+  'reverb': 9,
+  'ir': 6 // Invertito con EQ come richiesto
 };
 
 // Mappatura per CC 78 (Selezione Blocco / Edit Mode)
@@ -34,6 +34,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'reverb': 7,
   'ir': 8
 };
+
+// Manopole Parametri (Left to Right)
+const PARAM_KNOB_CCS = [14, 15, 16, 17];
 
 const VAL_ON = 1;
 const VAL_OFF = 65;
@@ -64,7 +67,7 @@ interface MidiStore {
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
   sendProgramChange: (pc: number) => void;
-  sendParameter: (blockId: string, paramId: number, value: number) => void;
+  sendKnobParameter: (knobIndex: number, value: number) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
   refreshDevices: () => void;
@@ -149,14 +152,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-    
     // Log per messaggi CC in arrivo (ascolto cambiamenti hardware)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
       
-      // Bypass detection
+      console.log(`%c[MIDI IN] CC: ${cc} | Val: ${val}`, "color: #9C27B0;");
+
+      // Bypass detection (Val 1=ON, Val 65=OFF)
       const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockType) {
         const isEnabled = val === VAL_ON;
@@ -184,7 +187,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         }
       }
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MIDI] Trovato Nome Preset: ${foundName}`, "color: #00E676; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -206,13 +208,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
-  sendParameter: (blockType, paramId, value) => {
-    const { output } = get();
-    if (!output) return;
-    const blockMap: Record<string, number> = { 'noise-gate': 0x01, 'compressor': 0x02, 'efx': 0x03, 'amp': 0x04, 'ir': 0x09, 'eq': 0x05, 'modulation': 0x06, 'delay': 0x07, 'reverb': 0x08 };
-    const blockId = blockMap[blockType] || 0x01;
-    const msg = [0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, blockId, paramId, value, 0xF7];
-    output.send(msg);
+  sendKnobParameter: (knobIndex, value) => {
+    if (knobIndex < 0 || knobIndex >= PARAM_KNOB_CCS.length) return;
+    const cc = PARAM_KNOB_CCS[knobIndex];
+    get().sendControlChange(cc, value);
   },
 
   toggleBlock: (blockType, enabled) => {
@@ -236,7 +235,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output) return;
     
     set({ isSyncing: true, syncProgress: 0 });
-    console.log("%c[MG-30] Inizio Sincronizzazione Avanzata...", "color: #00BCD4; font-weight: bold;");
     
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
