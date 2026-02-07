@@ -31,9 +31,9 @@ const BYPASS_CC = {
   'reverb': 8
 };
 
-// Valori bypass specifici rilevati dall'utente
-const VAL_ON = 65;
-const VAL_OFF = 1;
+// Valori bypass invertiti come richiesto dall'utente
+const VAL_ON = 1;
+const VAL_OFF = 65;
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
   slot: i + 1,
@@ -203,6 +203,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType as keyof typeof BYPASS_CC];
     if (cc !== undefined) {
+      // Usiamo i valori invertiti: ON = 1, OFF = 65
       const val = enabled ? VAL_ON : VAL_OFF;
       get().sendControlChange(cc, val);
     }
@@ -223,7 +224,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       // Attesa caricamento hardware
       await new Promise(r => setTimeout(r, 450));
       
-      // Richiesta Dump Preset Corrente (proviamo diversi formati)
+      // Richiesta Dump Preset Corrente
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
