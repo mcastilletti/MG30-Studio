@@ -3,11 +3,9 @@ import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 
-// Costanti Protocollo NUX MG-30
 const NUX_HEADER = [0x00, 0x20, 0x6B];
 const DEVICE_ID = 0x01;
 
-// Mappatura Blocchi per SysEx
 const BLOCK_IDS = {
   'noise-gate': 0x01,
   'compressor': 0x02,
@@ -80,8 +78,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       return;
     }
 
-    set({ status: 'connecting' });
-
     try {
       const midiAccess = await navigator.requestMIDIAccess({ sysex: true });
       
@@ -141,25 +137,24 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Log completo per debugging dei dati in arrivo
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
     
-    // Cerchiamo stringhe ASCII nei messaggi (solitamente i dati preset sono > 50 byte)
-    if (data.length > 20) {
+    // Scansione aggressiva per nomi preset
+    if (data.length > 10) {
       let foundName = "";
       let tempName = "";
       
-      // Scansione per trovare sequenze di caratteri stampabili
       for (let i = 0; i < data.length; i++) {
         const byte = data[i];
+        // Caratteri ASCII stampabili
         if (byte >= 32 && byte <= 126) {
           tempName += String.fromCharCode(byte);
         } else {
           if (tempName.trim().length >= 4) {
-            // Filtriamo nomi tecnici e header
             const candidate = tempName.trim();
-            if (!["NUX", "MG-30", "VER", "HDR"].includes(candidate.toUpperCase())) {
+            // Escludiamo stringhe tecniche note
+            if (!["NUX", "MG-30", "VER", "HDR", "EDIT"].includes(candidate.toUpperCase())) {
               foundName = candidate;
               break; 
             }
@@ -216,16 +211,18 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       // 1. Cambio Slot
       sendProgramChange(i - 1);
       
-      // 2. Attesa caricamento hardware (molto importante)
-      await new Promise(r => setTimeout(r, 400));
+      // 2. Attesa caricamento hardware (fondamentale per evitare echo)
+      await new Promise(r => setTimeout(r, 450));
       
-      // 3. Richiesta Dump Preset Corrente (standard MG-30)
-      // Proviamo sia con Device ID 01 che con 7F (broadcast)
-      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7]);
+      // 3. Richiesta Dump Preset Corrente con formati multipli
+      // Formato standard NUX per i nomi
+      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
+      
+      // Formato alternativo
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
       
-      // 4. Pausa per evitare saturazione buffer
+      // 4. Pausa extra per permettere alla pedaliera di rispondere
       await new Promise(r => setTimeout(r, 300)); 
     }
     
