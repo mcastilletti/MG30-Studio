@@ -4,7 +4,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass (CC 1-9) definitiva basata sui test dell'utente
+// Mappatura Bypass definitiva basata sui test dell'utente
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
@@ -30,7 +30,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
-// Mappatura manopole fisiche multi-schermata
+// Mappatura manopole fisiche multi-schermata per sezione
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],
@@ -172,6 +172,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
+    // Gestione messaggi CC in entrata (Bypass status sync)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
@@ -186,6 +187,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
+    // Gestione SysEx per nomi preset (Semplificata per il NUX)
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -257,6 +259,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
+      // Richiesta SysEx per il nome (Basata su dump tipico NUX)
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       
