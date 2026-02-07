@@ -1,7 +1,7 @@
+
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 
-// Catena del segnale standard MG-30 aggiornata
 const DEFAULT_PRESET: Preset = {
   name: 'New Custom Preset',
   slot: 1,
@@ -32,6 +32,7 @@ interface PresetStore {
   setActivePreset: (preset: Preset) => void;
   updateParameter: (effectId: string, param: string, value: number | string) => void;
   toggleEffect: (effectId: string) => void;
+  updateBlockStateLocally: (blockType: string, enabled: boolean) => void;
   undo: () => void;
   redo: () => void;
   saveToHistory: () => void;
@@ -69,6 +70,18 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     });
     set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
     get().saveToHistory();
+  },
+
+  // Nuova funzione per aggiornare lo stato dell'UI in base a messaggi MIDI in arrivo
+  updateBlockStateLocally: (blockType, enabled) => {
+    const { activePreset } = get();
+    const newEffects = activePreset.effects.map(e => {
+      if (e.type === blockType) {
+        return { ...e, enabled: enabled };
+      }
+      return e;
+    });
+    set({ activePreset: { ...activePreset, effects: newEffects } });
   },
 
   undo: () => {
