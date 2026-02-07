@@ -13,14 +13,14 @@ const DEFAULT_PRESET: Preset = {
   ampModel: 'Brit 800',
   effects: [
     { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-    { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, level: 50 } },
-    { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50 } },
-    { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, volume: 60, bass: 50, mid: 50, treble: 50 } },
-    { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, selection: '4x12' } },
-    { id: 'eq', type: 'eq', enabled: true, parameters: { low: 50, mid: 50, high: 50 } },
-    { id: 'mod', type: 'modulation', enabled: false, parameters: { speed: 30, depth: 50 } },
-    { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20 } },
-    { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, mix: 15 } }
+    { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
+    { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50, level: 50, bass: 50 } },
+    { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50 } },
+    { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80 } },
+    { id: 'eq', type: 'eq', enabled: true, parameters: { band1: 50, band2: 50, band3: 50, band4: 50 } },
+    { id: 'mod', type: 'modulation', enabled: false, parameters: { rate: 30, depth: 50, width: 50, regen: 20 } },
+    { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20, level: 50 } },
+    { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, tone: 50, mix: 15, level: 50 } }
   ]
 };
 
@@ -72,7 +72,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     get().saveToHistory();
   },
 
-  // Nuova funzione per aggiornare lo stato dell'UI in base a messaggi MIDI in arrivo
   updateBlockStateLocally: (blockType, enabled) => {
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {

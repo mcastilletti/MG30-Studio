@@ -5,7 +5,6 @@ import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
 const NUX_HEADER = [0x00, 0x20, 0x6B];
-const DEVICE_ID = 0x01;
 
 // Mappatura CC definitiva basata sui test dell'utente
 // Valori: ON = 1, OFF = 65
@@ -13,23 +12,23 @@ const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'eq': 5, // Invertito con IR come richiesto
-  'noise-gate': 4,
-  'modulation': 7,
-  'delay': 8,
-  'reverb': 9,
-  'ir': 6 // Invertito con EQ come richiesto
+  'eq': 4,
+  'modulation': 5,
+  'noise-gate': 6,
+  'delay': 7,
+  'reverb': 8,
+  'ir': 9
 };
 
 // Mappatura per CC 78 (Selezione Blocco / Edit Mode)
 const SELECT_BLOCK_CC = 78;
 const BLOCK_INDEX_MAP: Record<string, number> = {
-  'noise-gate': 0,
-  'compressor': 1,
-  'efx': 2,
-  'amp': 3,
-  'eq': 4,
-  'modulation': 5,
+  'compressor': 0,
+  'efx': 1,
+  'amp': 2,
+  'eq': 3,
+  'modulation': 4,
+  'noise-gate': 5,
   'delay': 6,
   'reverb': 7,
   'ir': 8
@@ -152,14 +151,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Log per messaggi CC in arrivo (ascolto cambiamenti hardware)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
       
-      console.log(`%c[MIDI IN] CC: ${cc} | Val: ${val}`, "color: #9C27B0;");
-
-      // Bypass detection (Val 1=ON, Val 65=OFF)
       const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockType) {
         const isEnabled = val === VAL_ON;
@@ -167,7 +162,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // Parsing SysEx per nomi (Scansione ASCII)
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -195,7 +189,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendControlChange: (cc, value) => {
     const { output } = get();
     if (output) {
-      console.log(`%c[MIDI OUT] CC: ${cc} | Val: ${value}`, "color: #2196F3;");
       output.send([0xB0, cc, value]);
     }
   },
@@ -203,7 +196,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendProgramChange: (pc) => {
     const { output } = get();
     if (output) {
-      console.log(`%c[MIDI OUT] Program Change: ${pc}`, "color: #FF9800;");
       output.send([0xC0, pc]);
     }
   },
@@ -211,7 +203,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendKnobParameter: (knobIndex, value) => {
     if (knobIndex < 0 || knobIndex >= PARAM_KNOB_CCS.length) return;
     const cc = PARAM_KNOB_CCS[knobIndex];
-    get().sendControlChange(cc, value);
+    get().sendControlChange(cc, Math.round(value));
   },
 
   toggleBlock: (blockType, enabled) => {
@@ -225,7 +217,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   selectBlock: (blockType) => {
     const value = BLOCK_INDEX_MAP[blockType];
     if (value !== undefined) {
-      console.log(`%c[MIDI OUT] Select Block (CC 78): ${blockType} (Val: ${value})`, "color: #9C27B0; font-weight: bold;");
       get().sendControlChange(SELECT_BLOCK_CC, value);
     }
   },
@@ -241,7 +232,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       sendProgramChange(i - 1);
       
       await new Promise(r => setTimeout(r, 450));
-      // Richiesta dump nomi
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
