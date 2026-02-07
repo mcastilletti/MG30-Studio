@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
@@ -12,14 +11,15 @@ const BLOCK_IDS = {
   'compressor': 0x02,
   'efx': 0x03,
   'amp': 0x04,
+  'ir': 0x09, // ID stimato per IR
   'eq': 0x05,
   'modulation': 0x06,
   'delay': 0x07,
   'reverb': 0x08
 };
 
-// Mappatura CC aggiornata basata sui log dell'utente
-// CC 1 = Compressor, CC 2 = EFX, ecc.
+// Mappatura CC basata sui log dell'utente
+// Valori: ON = 1, OFF = 65
 const BYPASS_CC = {
   'compressor': 1,
   'efx': 2,
@@ -28,10 +28,10 @@ const BYPASS_CC = {
   'eq': 5,
   'modulation': 6,
   'delay': 7,
-  'reverb': 8
+  'reverb': 8,
+  'ir': 9 // CC aggiuntivo stimato
 };
 
-// Valori bypass invertiti come richiesto dall'utente
 const VAL_ON = 1;
 const VAL_OFF = 65;
 
@@ -148,7 +148,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
     
-    // Scansione per nomi preset nei messaggi lunghi
+    // Scansione per nomi preset
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -170,7 +170,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
 
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] NOME TROVATO: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #00E676; font-weight: bold; padding: 2px; border: 1px solid #00E676;");
+        console.log(`%c[MG-30] NOME TROVATO: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #00E676; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -203,7 +203,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType as keyof typeof BYPASS_CC];
     if (cc !== undefined) {
-      // Usiamo i valori invertiti: ON = 1, OFF = 65
       const val = enabled ? VAL_ON : VAL_OFF;
       get().sendControlChange(cc, val);
     }
@@ -218,22 +217,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
-      
       sendProgramChange(i - 1);
       
-      // Attesa caricamento hardware
       await new Promise(r => setTimeout(r, 450));
-      
-      // Richiesta Dump Preset Corrente
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       await new Promise(r => setTimeout(r, 100));
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
-      
       await new Promise(r => setTimeout(r, 300)); 
     }
     
     set({ isSyncing: false, currentSyncSlot: null });
-    console.log("%c[MG-30] Sincronizzazione terminata.", "color: #00E676; font-weight: bold;");
   },
 
   updatePresetName: (slot, newName) => {

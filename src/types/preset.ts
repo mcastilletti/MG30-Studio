@@ -1,4 +1,4 @@
-export type EffectType = 'noise-gate' | 'compressor' | 'amp' | 'eq' | 'modulation' | 'delay' | 'reverb';
+export type EffectType = 'noise-gate' | 'compressor' | 'efx' | 'amp' | 'ir' | 'eq' | 'modulation' | 'delay' | 'reverb';
 
 export interface EffectState {
   id: string;

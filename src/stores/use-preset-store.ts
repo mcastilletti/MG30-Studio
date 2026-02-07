@@ -1,8 +1,7 @@
-
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 
-// Catena del segnale standard MG-30
+// Catena del segnale standard MG-30 aggiornata
 const DEFAULT_PRESET: Preset = {
   name: 'New Custom Preset',
   slot: 1,
@@ -14,8 +13,10 @@ const DEFAULT_PRESET: Preset = {
   ampModel: 'Brit 800',
   effects: [
     { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-    { id: 'efx', type: 'compressor', enabled: false, parameters: { sustain: 40, level: 50 } },
+    { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, level: 50 } },
+    { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50 } },
     { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, volume: 60, bass: 50, mid: 50, treble: 50 } },
+    { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, selection: '4x12' } },
     { id: 'eq', type: 'eq', enabled: true, parameters: { low: 50, mid: 50, high: 50 } },
     { id: 'mod', type: 'modulation', enabled: false, parameters: { speed: 30, depth: 50 } },
     { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20 } },
