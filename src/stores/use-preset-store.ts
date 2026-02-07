@@ -1,6 +1,8 @@
+
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 
+// Catena del segnale standard MG-30
 const DEFAULT_PRESET: Preset = {
   name: 'New Custom Preset',
   slot: 1,
@@ -9,11 +11,12 @@ const DEFAULT_PRESET: Preset = {
   favorite: false,
   rating: 0,
   lastModified: new Date(),
-  ampModel: 'Clean Machine',
+  ampModel: 'Brit 800',
   effects: [
     { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-    { id: 'comp', type: 'compressor', enabled: false, parameters: { sustain: 40, level: 50 } },
+    { id: 'efx', type: 'compressor', enabled: false, parameters: { sustain: 40, level: 50 } },
     { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, volume: 60, bass: 50, mid: 50, treble: 50 } },
+    { id: 'eq', type: 'eq', enabled: true, parameters: { low: 50, mid: 50, high: 50 } },
     { id: 'mod', type: 'modulation', enabled: false, parameters: { speed: 30, depth: 50 } },
     { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20 } },
     { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, mix: 15 } }
@@ -53,7 +56,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     });
 
     set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
-    // Debounced history save logic would go here
   },
 
   toggleEffect: (effectId) => {
@@ -71,20 +73,14 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
   undo: () => {
     const { history, historyIndex } = get();
     if (historyIndex > 0) {
-      set({
-        historyIndex: historyIndex - 1,
-        activePreset: history[historyIndex - 1]
-      });
+      set({ historyIndex: historyIndex - 1, activePreset: history[historyIndex - 1] });
     }
   },
 
   redo: () => {
     const { history, historyIndex } = get();
     if (historyIndex < history.length - 1) {
-      set({
-        historyIndex: historyIndex + 1,
-        activePreset: history[historyIndex + 1]
-      });
+      set({ historyIndex: historyIndex + 1, activePreset: history[historyIndex + 1] });
     }
   },
 
@@ -92,13 +88,7 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     const { activePreset, history, historyIndex } = get();
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.parse(JSON.stringify(activePreset)));
-    
-    // Limit history to 50 steps
     if (newHistory.length > 50) newHistory.shift();
-    
-    set({
-      history: newHistory,
-      historyIndex: newHistory.length - 1
-    });
+    set({ history: newHistory, historyIndex: newHistory.length - 1 });
   }
 }));
