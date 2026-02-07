@@ -4,20 +4,21 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass Definitiva (1=ON, 65=OFF)
+// Mappatura Bypass Corretta in base ai test dell'utente
+// 1=ON, 65=OFF
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'eq': 4,
-  'modulation': 5,
-  'noise-gate': 6,
-  'delay': 7,
-  'reverb': 8,
-  'ir': 9
+  'noise-gate': 4,
+  'delay': 5,
+  'eq': 6,
+  'reverb': 7,
+  'ir': 8,
+  'modulation': 9
 };
 
-// Mappatura Parametri specifica per ogni blocco basata sulla tabella fornita
+// Mappatura Parametri specifica per ogni blocco fornita dall'utente
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],
@@ -32,15 +33,15 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
 
 const SELECT_BLOCK_CC = 78;
 const BLOCK_INDEX_MAP: Record<string, number> = {
-  'compressor': 0,
-  'efx': 1,
-  'amp': 2,
-  'eq': 3,
-  'modulation': 4,
-  'noise-gate': 5,
-  'delay': 6,
-  'reverb': 7,
-  'ir': 8
+  'noise-gate': 0,
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'ir': 4,
+  'eq': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8
 };
 
 const VAL_ON = 1;
@@ -140,7 +141,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
-          console.log('%c[MIDI] Connesso a NUX MG-30', 'color: #4CAF50; font-weight: bold');
         } else {
           set({ status: 'disconnected' });
         }
@@ -157,9 +157,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   handleIncomingMidi: (message) => {
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
-
-    // Log per debug (viola per messaggi in ingresso)
-    console.log(`%c[MIDI IN] Len:${data.length} | ${Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ')}`, 'color: #9C27B0');
 
     // Bypass sync da hardware
     if (data[0] === 0xB0) {
@@ -193,7 +190,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         }
       }
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] Nome Preset Trovato: ${foundName}`, 'color: #4CAF50; font-weight: bold; background: #E8F5E9; padding: 2px 5px; border-radius: 3px');
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -209,7 +205,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   sendProgramChange: (pc) => {
     const { output } = get();
     if (output) {
-      console.log(`%c[MIDI OUT] Program Change: ${pc}`, 'color: #2196F3');
       output.send([0xC0, pc]);
     }
   },
@@ -240,7 +235,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output, sendProgramChange } = get();
     if (!output) return;
     
-    console.log('%c[MG-30] Inizio Sincronizzazione Avanzata...', 'color: #FF9800; font-weight: bold');
     set({ isSyncing: true, syncProgress: 0 });
     
     for (let i = 1; i <= 56; i++) {
