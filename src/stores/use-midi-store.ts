@@ -4,10 +4,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-const NUX_HEADER = [0x00, 0x20, 0x6B];
-
-// Mappatura CC definitiva basata sui test dell'utente
-// Valori: ON = 1, OFF = 65
+// Mappatura Bypass definitiva (1=ON, 65=OFF)
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
@@ -20,7 +17,19 @@ const BYPASS_CC: Record<string, number> = {
   'ir': 9
 };
 
-// Mappatura per CC 78 (Selezione Blocco / Edit Mode)
+// Mappatura Parametri specifica per ogni blocco (Schermata 1 e 2)
+const BLOCK_PARAM_CCS: Record<string, number[]> = {
+  'compressor': [14, 15, 16, 17],
+  'efx': [18, 19, 20, 21, 22],
+  'amp': [24, 25, 26, 27, 28, 29, 30, 31],
+  'eq': [32, 33, 34, 35, 36, 37, 38, 39],
+  'noise-gate': [44, 45],
+  'modulation': [48, 49, 50, 51, 52],
+  'delay': [54, 55, 56, 57, 58, 59, 60, 61],
+  'reverb': [62, 63, 64, 65],
+  'ir': [66, 67, 68, 69]
+};
+
 const SELECT_BLOCK_CC = 78;
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'compressor': 0,
@@ -34,11 +43,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'ir': 8
 };
 
-// Manopole Parametri (Left to Right)
-const PARAM_KNOB_CCS = [14, 15, 16, 17];
-
 const VAL_ON = 1;
 const VAL_OFF = 65;
+const CC_VOLUME = 11;
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
   slot: i + 1,
@@ -48,7 +55,7 @@ const INITIAL_PRESETS: Preset[] = Array.from({ length: 56 }, (_, i) => ({
   favorite: false,
   rating: 0,
   lastModified: new Date(),
-  ampModel: 'NUX Modeling',
+  ampModel: 'NUX MG-30',
   effects: []
 }));
 
@@ -66,7 +73,7 @@ interface MidiStore {
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
   sendProgramChange: (pc: number) => void;
-  sendKnobParameter: (knobIndex: number, value: number) => void;
+  sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
   refreshDevices: () => void;
@@ -133,7 +140,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
-          console.log("%c[MIDI] Connesso a NUX MG-30", "color: #4CAF50; font-weight: bold;");
         } else {
           set({ status: 'disconnected' });
         }
@@ -200,10 +206,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
-  sendKnobParameter: (knobIndex, value) => {
-    if (knobIndex < 0 || knobIndex >= PARAM_KNOB_CCS.length) return;
-    const cc = PARAM_KNOB_CCS[knobIndex];
-    get().sendControlChange(cc, Math.round(value));
+  sendKnobParameter: (blockType, knobIndex, value) => {
+    const ccs = BLOCK_PARAM_CCS[blockType];
+    if (ccs && ccs[knobIndex] !== undefined) {
+      get().sendControlChange(ccs[knobIndex], Math.round(value));
+    }
   },
 
   toggleBlock: (blockType, enabled) => {
@@ -230,12 +237,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       sendProgramChange(i - 1);
-      
       await new Promise(r => setTimeout(r, 450));
-      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
-      await new Promise(r => setTimeout(r, 100));
-      output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x40, 0x00, 0xF7]);
-      await new Promise(r => setTimeout(r, 300)); 
     }
     
     set({ isSyncing: false, currentSyncSlot: null });

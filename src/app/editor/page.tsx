@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -23,8 +23,7 @@ export default function EditorPage() {
     updateParameter(selectedBlockId, param, value);
     
     if (status === 'connected') {
-      // Invia il valore tramite CC 14, 15, 16 o 17 in base alla posizione della manopola
-      sendKnobParameter(knobIndex, value);
+      sendKnobParameter(effectType, knobIndex, value);
     }
   };
 
@@ -57,7 +56,6 @@ export default function EditorPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        {/* Preset Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -88,14 +86,13 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Signal Chain Visualizer */}
         <Card className="border-border bg-background/50 overflow-hidden">
           <CardHeader className="py-3 border-b border-border bg-secondary/20">
              <div className="flex items-center justify-between">
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Click to select (Enter Settings) • Toggle power to bypass</span>
+                <span className="text-[10px] text-muted-foreground italic">Click to select (Edit Mode) • Toggle power to bypass</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -140,7 +137,6 @@ export default function EditorPage() {
           </CardContent>
         </Card>
 
-        {/* Editor Main Content */}
         <div className="grid grid-cols-1 gap-6">
           <Card className="border-primary/20 bg-primary/[0.02]">
             <CardHeader className="flex flex-row items-center justify-between border-b border-border/50">
@@ -161,31 +157,28 @@ export default function EditorPage() {
                     onCheckedChange={(v) => toggleEffect(selectedEffect!.id)} 
                    />
                 </div>
-                {selectedEffect?.type === 'amp' && <Badge className="bg-primary">{activePreset.ampModel}</Badge>}
               </div>
             </CardHeader>
             <CardContent className="p-10">
               {selectedEffect && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-y-12 gap-x-8 justify-items-center">
-                  {Object.entries(selectedEffect.parameters).map(([key, value], index) => (
-                    <RotaryKnob 
-                      key={key}
-                      label={key} 
-                      value={typeof value === 'number' ? value : 50} 
-                      onChange={(v) => handleParamChange(selectedEffect.type, key, v, index)} 
-                      size={72} 
-                      className={index < 4 ? "border-b-2 border-primary/20 pb-2" : ""}
-                    />
-                  ))}
-                  {Object.keys(selectedEffect.parameters).length === 0 && (
-                    <div className="col-span-full py-12 text-center text-muted-foreground italic">
-                      No parameters available for this block in the current version.
-                    </div>
-                  )}
+                <div className="space-y-12">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-12 gap-x-8 justify-items-center">
+                    {Object.entries(selectedEffect.parameters).map(([key, value], index) => (
+                      <RotaryKnob 
+                        key={key}
+                        label={key} 
+                        value={typeof value === 'number' ? value : 50} 
+                        onChange={(v) => handleParamChange(selectedEffect.type, key, v, index)} 
+                        size={72} 
+                        className={index < 4 ? "border-b-2 border-primary/20 pb-2" : ""}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
-              <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center">
-                I primi 4 parametri controllano le manopole fisiche (CC 14, 15, 16, 17)
+              <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center flex flex-col gap-1">
+                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera</span>
+                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()}</span>
               </div>
             </CardContent>
           </Card>

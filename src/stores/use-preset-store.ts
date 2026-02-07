@@ -14,12 +14,12 @@ const DEFAULT_PRESET: Preset = {
   effects: [
     { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
     { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
-    { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50, level: 50, bass: 50 } },
-    { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50 } },
-    { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80 } },
-    { id: 'eq', type: 'eq', enabled: true, parameters: { band1: 50, band2: 50, band3: 50, band4: 50 } },
-    { id: 'mod', type: 'modulation', enabled: false, parameters: { rate: 30, depth: 50, width: 50, regen: 20 } },
-    { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20, level: 50 } },
+    { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50, level: 50, bass: 50, extra: 0 } },
+    { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50, sag: 50, bias: 50 } },
+    { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80, distance: 0 } },
+    { id: 'eq', type: 'eq', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50 } },
+    { id: 'mod', type: 'modulation', enabled: false, parameters: { rate: 30, depth: 50, width: 50, regen: 20, mix: 50 } },
+    { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20, level: 50, tone: 50, mod: 50, rate: 50, width: 50 } },
     { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, tone: 50, mix: 15, level: 50 } }
   ]
 };
