@@ -8,12 +8,24 @@ const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'eq': 6,
-  'modulation': 9,
-  'noise-gate': 4,
-  'delay': 5,
-  'reverb': 7,
-  'ir': 8
+  'eq': 4,
+  'noise-gate': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8,
+  'ir': 9
+};
+
+const BYPASS_VALS: Record<string, { on: number; off: number }> = {
+  'compressor': { on: 1, off: 65 },
+  'efx': { on: 1, off: 65 },
+  'amp': { on: 13, off: 77 },
+  'eq': { on: 1, off: 65 },
+  'noise-gate': { on: 1, off: 65 },
+  'modulation': { on: 6, off: 70 },
+  'delay': { on: 7, off: 71 },
+  'reverb': { on: 1, off: 65 },
+  'ir': { on: 7, off: 71 }
 };
 
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
@@ -40,9 +52,6 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'delay': 7,
   'reverb': 8
 };
-
-const VAL_ON = 1;
-const VAL_OFF = 65;
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -166,8 +175,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       
       const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockType) {
-        const isEnabled = val === VAL_ON;
-        usePresetStore.getState().updateBlockStateLocally(blockType, isEnabled);
+        const vals = BYPASS_VALS[blockType];
+        if (vals) {
+          const isEnabled = val === vals.on;
+          usePresetStore.getState().updateBlockStateLocally(blockType, isEnabled);
+        }
       }
     }
 
@@ -218,8 +230,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType];
-    if (cc !== undefined) {
-      const val = enabled ? VAL_ON : VAL_OFF;
+    const vals = BYPASS_VALS[blockType];
+    if (cc !== undefined && vals) {
+      const val = enabled ? vals.on : vals.off;
       get().sendControlChange(cc, val);
     }
   },
