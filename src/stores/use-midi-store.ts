@@ -4,18 +4,20 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
+// Mappatura Bypass (CC 1-9) basata sui test dell'utente
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
   'eq': 4,
-  'noise-gate': 5,
+  'noise-gate': 5, // Assunto come 5 per esclusione
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
   'ir': 9
 };
 
+// Valori specifici di ON/OFF per ogni blocco
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'compressor': { on: 1, off: 65 },
   'efx': { on: 1, off: 65 },
@@ -28,6 +30,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
+// Mappatura manopole fisiche (14-69) come fornito dall'utente
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'compressor': [14, 15, 16, 17],
   'efx': [18, 19, 20, 21, 22],
@@ -54,9 +57,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
 };
 
 const formatSlotLabel = (slot: number) => {
-  const group = Math.floor((slot - 1) / 4) + 1;
-  const letter = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
-  return `${String(group).padStart(2, '0')}${letter}`;
+  const bank = Math.floor((slot - 1) / 4) + 1;
+  const sub = ['A', 'B', 'C', 'D'][(slot - 1) % 4];
+  return `${String(bank).padStart(2, '0')}${sub}`;
 };
 
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
