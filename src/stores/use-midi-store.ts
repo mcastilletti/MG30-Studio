@@ -7,7 +7,7 @@ import { Preset } from '@/types/preset';
 const NUX_HEADER = [0x00, 0x20, 0x6B];
 const DEVICE_ID = 0x01;
 
-// Mappatura Blocchi per SysEx (Basata sullo schema MG-30)
+// Mappatura Blocchi per SysEx
 const BLOCK_IDS = {
   'noise-gate': 0x01,
   'compressor': 0x02,
@@ -141,32 +141,33 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // LOG SEMPRE ATTIVO per vedere cosa arriva in HEX
+    // Log avanzato per debug
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-    console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
-
-    // Riconoscimento SysEx NUX (Header F0 00 20 6B)
-    if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x6B) {
-      // Estrazione stringhe ASCII (Nomi Preset)
-      let foundName = "";
-      let potential = "";
+    
+    // Se è un messaggio SysEx lungo, probabilmente contiene il nome
+    if (data[0] === 0xF0 && data.length > 10) {
+      console.log(`%c[MIDI DATA] Ricevuto pacchetto lungo (${data.length} bytes)`, "color: #9C27B0; font-weight: bold;");
       
-      // Scansioniamo il payload alla ricerca di caratteri stampabili
-      for (let i = 4; i < data.length; i++) {
+      let foundName = "";
+      let tempName = "";
+      
+      // Scansione alla ricerca di stringhe ASCII (almeno 4 caratteri stampabili consecutivi)
+      for (let i = 0; i < data.length; i++) {
         const byte = data[i];
         if (byte >= 32 && byte <= 126) {
-          potential += String.fromCharCode(byte);
+          tempName += String.fromCharCode(byte);
         } else {
-          if (potential.trim().length >= 3) {
-            foundName = potential.trim();
-            break;
+          if (tempName.trim().length >= 4) {
+            foundName = tempName.trim();
+            // Evitiamo nomi tecnici come "NUX" o header
+            if (foundName !== "NUX" && foundName.length > 2) break;
           }
-          potential = "";
+          tempName = "";
         }
       }
 
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] Rilevato nome preset: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #FF9800; font-weight: bold;");
+        console.log(`%c[MG-30] Nome estratto: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #FF9800; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -202,10 +203,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   syncPresets: async () => {
     const { output, sendProgramChange } = get();
-    if (!output) {
-       console.error("Output MIDI non disponibile per la sincronizzazione.");
-       return;
-    }
+    if (!output) return;
     
     set({ isSyncing: true, syncProgress: 0 });
     console.log("%c[MG-30] Inizio Sincronizzazione Totale...", "color: #2196F3; font-weight: bold;");
@@ -213,18 +211,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       
-      // 1. Cambiamo slot
+      // 1. Cambiamo slot (fondamentale: l'MG-30 spesso spara i dati al cambio PC)
       sendProgramChange(i - 1);
       
-      // 2. Attendiamo che l'MG-30 carichi la patch
-      await new Promise(r => setTimeout(r, 100));
+      // 2. Attendiamo il caricamento (tempo più lungo per stabilità)
+      await new Promise(r => setTimeout(r, 150));
       
-      // 3. Chiediamo i dettagli (che includono il nome)
-      // Comandi suggeriti dal foglio Excel per "Dump Request"
-      const dumpRequest = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7];
-      output.send(dumpRequest);
+      // 3. Proviamo diversi comandi di Dump Request se il precedente falliva
+      // Comando A: Get Current Preset (0x40 0x00)
+      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7]);
+      await new Promise(r => setTimeout(r, 50));
       
-      // 4. Pausa per evitare di saturare il buffer MIDI
+      // Comando B: Get Preset Name (0x00 0x01 - comune su alcune versioni)
+      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
+      
+      // 4. Pausa tra i preset
       await new Promise(r => setTimeout(r, 200)); 
     }
     
