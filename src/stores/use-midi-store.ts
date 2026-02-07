@@ -11,25 +11,25 @@ const BLOCK_IDS = {
   'compressor': 0x02,
   'efx': 0x03,
   'amp': 0x04,
-  'ir': 0x09, // ID stimato per IR
+  'ir': 0x09,
   'eq': 0x05,
   'modulation': 0x06,
   'delay': 0x07,
   'reverb': 0x08
 };
 
-// Mappatura CC basata sui log dell'utente
+// Mappatura CC corretta basata sui test dell'utente
 // Valori: ON = 1, OFF = 65
 const BYPASS_CC = {
   'compressor': 1,
   'efx': 2,
   'amp': 3,
   'noise-gate': 4,
-  'eq': 5,
-  'modulation': 6,
-  'delay': 7,
-  'reverb': 8,
-  'ir': 9 // CC aggiuntivo stimato
+  'eq': 5,          // Corretto: EQ ora è CC 5
+  'ir': 6,          // Corretto: IR ora è CC 6
+  'modulation': 7,
+  'delay': 8,
+  'reverb': 9
 };
 
 const VAL_ON = 1;
@@ -148,11 +148,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
     
-    // Scansione per nomi preset
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
-      
       for (let i = 0; i < data.length; i++) {
         const byte = data[i];
         if (byte >= 32 && byte <= 126) {
@@ -168,7 +166,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           tempName = "";
         }
       }
-
       if (foundName && currentSyncSlot !== null) {
         console.log(`%c[MG-30] NOME TROVATO: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #00E676; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
