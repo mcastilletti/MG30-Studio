@@ -123,6 +123,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
+          console.log("%c[MIDI] Connesso a NUX MG-30", "color: #4CAF50; font-weight: bold;");
         } else {
           set({ status: 'disconnected' });
         }
@@ -140,28 +141,32 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
+    // LOG SEMPRE ATTIVO per vedere cosa arriva in HEX
+    const hex = Array.from(data).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    console.log(`%c[MIDI IN] Len:${data.length} | ${hex}`, "color: #9C27B0; font-size: 10px;");
+
     // Riconoscimento SysEx NUX (Header F0 00 20 6B)
     if (data[0] === 0xF0 && data[1] === 0x00 && data[2] === 0x20 && data[3] === 0x6B) {
-      // Parser avanzato: Cerchiamo una stringa ASCII di almeno 3 caratteri nel payload
+      // Estrazione stringhe ASCII (Nomi Preset)
       let foundName = "";
-      for (let i = 4; i < data.length - 3; i++) {
-        let potential = "";
-        let j = i;
-        // Un nome preset NUX MG-30 è lungo tipicamente 16 caratteri
-        while (j < data.length && data[j] >= 32 && data[j] <= 126 && potential.length < 16) {
-          potential += String.fromCharCode(data[j]);
-          j++;
-        }
-        
-        const trimmed = potential.trim();
-        if (trimmed.length >= 3) {
-          foundName = trimmed;
-          break;
+      let potential = "";
+      
+      // Scansioniamo il payload alla ricerca di caratteri stampabili
+      for (let i = 4; i < data.length; i++) {
+        const byte = data[i];
+        if (byte >= 32 && byte <= 126) {
+          potential += String.fromCharCode(byte);
+        } else {
+          if (potential.trim().length >= 3) {
+            foundName = potential.trim();
+            break;
+          }
+          potential = "";
         }
       }
 
       if (foundName && currentSyncSlot !== null) {
-        console.log(`%c[MG-30] Slot ${currentSyncSlot}: Nome rilevato -> ${foundName}`, "color: #8E24AA; font-weight: bold;");
+        console.log(`%c[MG-30] Rilevato nome preset: "${foundName}" per lo slot ${currentSyncSlot}`, "color: #FF9800; font-weight: bold;");
         updatePresetName(currentSyncSlot, foundName);
       }
     }
@@ -174,14 +179,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   sendProgramChange: (pc) => {
     const { output } = get();
-    if (output) output.send([0xC0, pc]);
+    if (output) {
+      console.log(`[MIDI OUT] Program Change: ${pc}`);
+      output.send([0xC0, pc]);
+    }
   },
 
   sendParameter: (blockType, paramId, value) => {
     const { output } = get();
     if (!output) return;
     const blockId = BLOCK_IDS[blockType as keyof typeof BLOCK_IDS] || 0x01;
-    // Messaggio SysEx per cambio parametro singolo
     const msg = [0xF0, ...NUX_HEADER, DEVICE_ID, 0x01, blockId, paramId, value, 0xF7];
     output.send(msg);
   },
@@ -195,28 +202,34 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   syncPresets: async () => {
     const { output, sendProgramChange } = get();
-    if (!output) return;
+    if (!output) {
+       console.error("Output MIDI non disponibile per la sincronizzazione.");
+       return;
+    }
     
     set({ isSyncing: true, syncProgress: 0 });
+    console.log("%c[MG-30] Inizio Sincronizzazione Totale...", "color: #2196F3; font-weight: bold;");
     
-    // Iteriamo su tutti i 56 slot
     for (let i = 1; i <= 56; i++) {
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 56) * 100) });
       
-      // Metodo più affidabile per l'MG-30:
-      // 1. Cambiamo slot (Program Change)
+      // 1. Cambiamo slot
       sendProgramChange(i - 1);
       
-      // 2. Chiediamo il dump dell'edit buffer (che ora contiene il preset i)
-      // Comando: F0 00 20 6B 01 40 00 F7
+      // 2. Attendiamo che l'MG-30 carichi la patch
+      await new Promise(r => setTimeout(r, 100));
+      
+      // 3. Chiediamo i dettagli (che includono il nome)
+      // Comandi suggeriti dal foglio Excel per "Dump Request"
       const dumpRequest = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x40, 0x00, 0xF7];
       output.send(dumpRequest);
       
-      // Aspettiamo che l'hardware risponda ed elabori
-      await new Promise(r => setTimeout(r, 150)); 
+      // 4. Pausa per evitare di saturare il buffer MIDI
+      await new Promise(r => setTimeout(r, 200)); 
     }
     
     set({ isSyncing: false, currentSyncSlot: null });
+    console.log("%c[MG-30] Sincronizzazione completata.", "color: #4CAF50; font-weight: bold;");
   },
 
   updatePresetName: (slot, newName) => {

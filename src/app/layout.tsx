@@ -4,7 +4,6 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'MG30 Studio | NUX MG-30 Professional Editor',
   description: 'A professional web-based editor for the NUX MG-30 multi-effects pedal.',
-  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
