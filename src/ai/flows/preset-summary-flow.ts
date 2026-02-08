@@ -19,39 +19,29 @@ const PresetSummaryOutputSchema = z.object({
 export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
-export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
-  try {
-    return await presetSummaryFlow(input);
-  } catch (error) {
-    console.error("Genkit Flow Error:", error);
-    throw new Error('Impossibile generare il riassunto del preset');
-  }
-}
-
 const summaryPrompt = ai.definePrompt({
   name: 'presetSummaryPrompt',
   input: { schema: PresetSummaryInputSchema },
   output: { schema: PresetSummaryOutputSchema },
-  prompt: `Sei un esperto sound designer di chitarra. Analizza questo preset per il NUX MG-30 e descrivine il carattere sonoro.
+  system: "Sei un esperto critico di suoni di chitarra. Analizza i dati tecnici e fornisci un'opinione professionale in italiano.",
+  prompt: `Analizza questo preset NUX MG-30 e descrivine il carattere sonoro in modo accattivante.
   
 Preset Name: {{{preset.name}}}
 Amp Model: {{{preset.ampModel}}}
 
 Catena Effetti: 
-{{#if preset.effects.length}}
+{{#if preset.effects}}
 {{#each preset.effects}}
 - {{type}} ({{model}}): {{#if enabled}}Attivo{{else}}Bypass{{/if}}
 {{/each}}
-{{else}}
-Nessun effetto aggiuntivo configurato.
 {{/if}}
 
-Il tuo compito è fornire un'analisi professionale in italiano che includa:
-1. Il genere musicale ideale basato sull'amplificatore e la catena.
-2. Descrizione del tono (es. "crunchy e dinamico", "ambient etereo").
-3. Un consiglio pratico per l'uso.
+Fornisci:
+1. Genere ideale.
+2. Carattere del tono.
+3. Un consiglio pratico.
 
-Sii conciso, tecnico e accattivante.`,
+Sii breve e tecnico.`,
 });
 
 const presetSummaryFlow = ai.defineFlow(
@@ -61,10 +51,19 @@ const presetSummaryFlow = ai.defineFlow(
     outputSchema: PresetSummaryOutputSchema,
   },
   async (input) => {
-    const { output } = await summaryPrompt(input);
-    if (!output || !output.summary) {
-      throw new Error('Il modello non ha restituito un riassunto valido');
+    try {
+      const { output } = await summaryPrompt(input);
+      if (!output || !output.summary) {
+        throw new Error('Il modello non ha restituito un riassunto');
+      }
+      return output;
+    } catch (error) {
+      console.error("Summary Flow Error:", error);
+      throw new Error('Impossibile generare l\'analisi del preset');
     }
-    return output;
   }
 );
+
+export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
+  return presetSummaryFlow(input);
+}
