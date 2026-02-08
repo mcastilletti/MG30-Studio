@@ -22,7 +22,7 @@ export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
+      model: 'googleai/gemini-1.5-flash',
       system: "Sei un MIDI engineer esperto in reverse engineering di SysEx per il NUX MG-30.",
       prompt: `Analizza questi messaggi SysEx: ${input.sysexData}
       Azione eseguita: ${input.controlDescription}
