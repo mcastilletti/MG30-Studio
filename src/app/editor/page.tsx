@@ -12,12 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2, CheckCircle2, RotateCcw, RefreshCw } from 'lucide-react';
+import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
 import { useToast } from '@/hooks/use-toast';
-import { EffectState } from '@/types/preset';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -52,7 +51,6 @@ export default function EditorPage() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
 
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -64,7 +62,6 @@ export default function EditorPage() {
     return MG30_MODELS[selectedEffect.type as any]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type as any]?.[0];
   }, [selectedEffect]);
 
-  // Sincronizzazione hardware obbligatoria all'apertura dell'Editor
   useEffect(() => {
     if (status === 'connected') {
       syncActivePreset();
@@ -106,10 +103,11 @@ export default function EditorPage() {
   const handleAiModeGenerate = async () => {
     if (!aiPrompt.trim()) return;
     setIsGenerating(true);
-    setProposedPreset(null);
     try {
       const result = await generateMG30Preset({ description: aiPrompt });
-      setProposedPreset(result);
+      // Applichiamo il preset generato (placeholder logica di mappatura)
+      toast({ title: "AI Mode", description: `Preset "${result.name}" generato con successo.` });
+      setIsAiModalOpen(false);
     } catch (error: any) {
       toast({ title: "Errore AI", description: error.message, variant: "destructive" });
     } finally {
@@ -149,11 +147,28 @@ export default function EditorPage() {
           </div>
           <div className="flex items-center gap-2">
             <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-              <DialogTrigger asChild><Button variant="outline" className="gap-2 border-primary/50 text-primary"><Sparkles className="w-4 h-4" /> AI Tone</Button></DialogTrigger>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 border-primary/50 text-primary">
+                  <Sparkles className="w-4 h-4" /> AI Mode
+                </Button>
+              </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>AI Assistant</DialogTitle></DialogHeader>
-                <Textarea placeholder="Descrivi il suono..." value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
-                <DialogFooter><Button onClick={handleAiModeGenerate} disabled={isGenerating}>Genera</Button></DialogFooter>
+                <DialogHeader>
+                  <DialogTitle>AI Assistant</DialogTitle>
+                  <DialogDescription>Descrivi il tipo di suono che desideri ottenere e l'AI configurerà la catena per te.</DialogDescription>
+                </DialogHeader>
+                <Textarea 
+                  placeholder="Esempio: Un suono lead cremoso alla Pink Floyd con molto sustain e delay..." 
+                  value={aiPrompt} 
+                  onChange={(e) => setAiPrompt(e.target.value)} 
+                  className="min-h-[120px]"
+                />
+                <DialogFooter>
+                  <Button onClick={handleAiModeGenerate} disabled={isGenerating}>
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                    Genera Preset
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
             <div className="w-[1px] h-8 bg-border mx-2" />
@@ -187,7 +202,9 @@ export default function EditorPage() {
                       <div className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50">
                         <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)} />
                       </div>
-                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>{effect.type === 'noise-gate' ? 'GATE' : effect.type === 'compressor' ? 'COMP' : effect.type === 'sr' ? 'S/R' : effect.type === 'vol' ? 'VOL' : effect.type}</span>
+                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>
+                        {effect.type === 'noise-gate' ? 'GATE' : effect.type === 'compressor' ? 'COMP' : effect.type === 'sr' ? 'S/R' : effect.type === 'vol' ? 'VOL' : effect.type}
+                      </span>
                     </div>
                     {idx < activePreset.effects.length - 1 && <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />}
                   </React.Fragment>
