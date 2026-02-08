@@ -13,6 +13,7 @@ interface RotaryKnobProps {
   onChange: (value: number) => void;
   className?: string;
   size?: number;
+  color?: string; // Hex, HSL or CSS variable
 }
 
 export const RotaryKnob: React.FC<RotaryKnobProps> = ({
@@ -24,7 +25,8 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   unit = '',
   onChange,
   className,
-  size = 64
+  size = 64,
+  color = 'hsl(var(--primary))'
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef(0);
@@ -56,6 +58,14 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
   };
 
   const rotation = ((value - min) / (max - min)) * 270 - 135;
+  
+  // Calculate stroke dasharray for the active arc
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const arcPercentage = 270 / 360;
+  const totalArcLength = circumference * arcPercentage;
+  const activePercentage = (value - min) / (max - min);
+  const activeLength = totalArcLength * activePercentage;
 
   return (
     <div className={cn("flex flex-col items-center gap-1 knob-container", className)}>
@@ -66,25 +76,36 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
         onDoubleClick={() => onChange((max + min) / 2)}
         style={{ width: size, height: size }}
       >
-        <svg viewBox="0 0 100 100" className="w-full h-full transform transition-transform">
+        <svg viewBox="0 0 100 100" className="w-full h-full transform">
           {/* Background circle */}
           <circle cx="50" cy="50" r="45" fill="currentColor" className="text-secondary" />
           <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" className="text-border" />
           
-          {/* Active arc */}
+          {/* Passive arc path */}
           <path 
-            d={`M 25 80 A 40 40 0 1 1 75 80`}
+            d="M 25 80 A 40 40 0 1 1 75 80"
             fill="none"
             stroke="currentColor"
             strokeWidth="4"
-            className="text-muted/30"
+            className="text-muted/20"
             strokeLinecap="round"
+          />
+
+          {/* Active arc path */}
+          <path 
+            d="M 25 80 A 40 40 0 1 1 75 80"
+            fill="none"
+            stroke={color}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={`${activeLength} ${circumference}`}
+            className="transition-[stroke-dasharray] duration-75"
           />
 
           {/* Value pointer */}
           <g transform={`rotate(${rotation} 50 50)`}>
             <circle cx="50" cy="50" r="38" fill="currentColor" className="text-card" />
-            <rect x="47" y="15" width="6" height="15" rx="3" fill="currentColor" className="text-primary" />
+            <rect x="47" y="15" width="6" height="15" rx="3" fill={color} className="transition-all" />
           </g>
         </svg>
         
@@ -93,12 +114,15 @@ export const RotaryKnob: React.FC<RotaryKnobProps> = ({
           "absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity",
           isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}>
-           <span className="text-[10px] font-mono bg-background/80 px-1 rounded border border-border shadow-lg">
+           <span 
+             className="text-[10px] font-mono bg-background/90 px-1.5 py-0.5 rounded border shadow-lg"
+             style={{ borderColor: color }}
+           >
             {value.toFixed(step < 1 ? 1 : 0)}{unit}
           </span>
         </div>
       </div>
-      <span className="text-[11px] font-mono text-foreground mt-1 select-none">
+      <span className="text-[11px] font-mono mt-1 select-none font-bold" style={{ color: color }}>
         {value.toFixed(step < 1 ? 1 : 0)}
       </span>
     </div>

@@ -154,6 +154,7 @@ export default function EditorPage() {
   };
 
   const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
+  const currentBlockColor = selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'hsl(var(--primary))';
 
   return (
     <AppShell>
@@ -367,8 +368,8 @@ export default function EditorPage() {
                         unit={param.unit}
                         onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} 
                         size={72} 
+                        color={currentBlockColor}
                         className={index < 4 ? "pb-2" : ""}
-                        // Pass color to knob if needed (optional enhancement)
                       />
                     ))}
                   </div>
