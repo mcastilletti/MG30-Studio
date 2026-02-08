@@ -2,41 +2,48 @@
 
 /**
  * @fileOverview AI Agent per il riassunto dei preset NUX MG-30.
+ * Utilizza Genkit 1.x con gestione robusta delle Server Actions.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const PresetSummaryInputSchema = z.object({
-  preset: z.any(),
+  preset: z.any().describe('I dati completi del preset da analizzare'),
 });
 
 const PresetSummaryOutputSchema = z.object({
-  summary: z.string(),
+  summary: z.string().describe('Analisi breve del carattere sonoro'),
 });
 
 export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
-const summaryPrompt = ai.definePrompt({
-  name: 'presetSummaryPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: PresetSummaryInputSchema },
-  output: { schema: PresetSummaryOutputSchema },
-  system: "Sei un critico di suoni di chitarra. Analizza i dati tecnici e fornisci un'opinione breve in italiano.",
-  prompt: `Analizza questo preset NUX MG-30:
-  Nome: {{{preset.name}}}
-  Amp: {{{preset.ampModel}}}
-  Descrivi il carattere sonoro in 3 punti: Genere, Tono, Consiglio.`,
-});
-
+/**
+ * Genera un riassunto del preset basandosi sui modelli di Amp ed effetti.
+ */
 export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
   try {
-    const { output } = await summaryPrompt(input);
-    if (!output) throw new Error('Nessun output dall\'AI');
+    const response = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico.",
+      prompt: `Analizza questo preset:
+      Nome: ${input.preset.name}
+      Amplificatore: ${input.preset.ampModel}
+      Effetti attivi: ${input.preset.effects?.filter((e: any) => e.enabled).map((e: any) => e.type).join(', ') || 'Nessuno'}
+      
+      Fornisci una risposta breve e professionale in italiano.`,
+      output: { schema: PresetSummaryOutputSchema }
+    });
+
+    const output = response.output;
+    if (!output) {
+      throw new Error('L\'AI non ha prodotto un risultato valido.');
+    }
+
     return output;
-  } catch (error) {
-    console.error("Summary Flow Error:", error);
-    throw new Error('Impossibile generare l\'analisi');
+  } catch (error: any) {
+    console.error("Summary Flow Error Details:", error);
+    throw new Error(error.message || 'Errore durante la generazione dell\'analisi AI');
   }
 }

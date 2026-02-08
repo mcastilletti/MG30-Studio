@@ -2,9 +2,7 @@
 
 /**
  * @fileOverview AI Agent "Nux MG-30 preset"
- * 
- * Questo flow genera un preset completo per il NUX MG-30 basandosi su una descrizione del tono.
- * Include una gestione degli errori robusta per evitare Errori 500.
+ * Genera un preset completo partendo da una descrizione creativa.
  */
 
 import { ai } from '@/ai/genkit';
@@ -30,31 +28,30 @@ const MG30PresetOutputSchema = z.object({
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-const promptDefinition = ai.definePrompt({
-  name: 'mg30PresetPrompt',
-  model: 'googleai/gemini-1.5-flash',
-  input: { schema: MG30PresetInputSchema },
-  output: { schema: MG30PresetOutputSchema },
-  config: {
-    temperature: 0.7,
-  },
-  system: `Sei un esperto sound designer per il NUX MG-30. Genera un preset in formato JSON.
-  Usa solo questi blocchi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
-  Gli ID modelli devono essere minuscoli (es: jazzclean, plexi100w, tscream).
-  I parametri devono essere numeri 0-100.
-  Restituisci SEMPRE tutti i blocchi indicati, anche se disattivati.`,
-  prompt: `Crea un preset professionale per: "{{{description}}}"`,
-});
-
+/**
+ * Genera una configurazione completa per NUX MG-30.
+ */
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
   try {
-    const { output } = await promptDefinition(input);
+    const response = await ai.generate({
+      model: 'googleai/gemini-1.5-flash',
+      system: `Sei un sound designer per NUX MG-30. Genera un preset JSON valido.
+      Usa solo questi tipi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
+      Modelli suggeriti: tscream, plexi100w, deluxe-rvb, dly-analog.
+      Parametri: numeri 0-100.
+      Restituisci un oggetto con: name, ampModel, effects (array di oggetti con type, model, enabled, parameters).`,
+      prompt: `Crea un preset professionale basato su: "${input.description}"`,
+      output: { schema: MG30PresetOutputSchema }
+    });
+
+    const output = response.output;
     if (!output) {
-      throw new Error('L\'AI non ha restituito dati');
+      throw new Error('L\'AI non ha restituito una configurazione valida.');
     }
+
     return output;
   } catch (error: any) {
-    console.error("AI Generation Error:", error);
-    throw new Error(error.message || 'Errore durante la generazione del preset');
+    console.error("AI Generation Error Details:", error);
+    throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
 }
