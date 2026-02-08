@@ -1,10 +1,11 @@
+
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass CC e Valori fornita dall'utente
+// Mappatura Bypass CC e Valori
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -32,7 +33,6 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
 };
 
 // Mappatura per CC 78 (Selezione blocco su display pedaliera)
-// Allineata all'ultima indicazione dell'utente: NG = 5, IR = 9
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -90,6 +90,7 @@ interface MidiStore {
   syncProgress: number;
   lastError: string | null;
   currentSyncSlot: number | null;
+  hasSyncedOnce: boolean;
   
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
@@ -99,7 +100,8 @@ interface MidiStore {
   selectBlock: (blockType: string) => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   refreshDevices: () => void;
-  syncPresets: () => Promise<void>;
+  syncPresets: (force?: boolean) => Promise<void>;
+  syncActivePreset: () => void;
   updatePresetName: (slot: number, newName: string) => void;
   handleIncomingMidi: (message: MIDIMessageEvent) => void;
 }
@@ -114,6 +116,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   syncProgress: 0,
   lastError: null,
   currentSyncSlot: null,
+  hasSyncedOnce: false,
 
   initialize: async () => {
     if (typeof window === 'undefined' || !navigator.requestMIDIAccess) {
@@ -162,6 +165,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
+          
+          // Al caricamento, chiediamo lo stato attivo
+          get().syncActivePreset();
         } else {
           set({ status: 'disconnected' });
         }
@@ -178,8 +184,18 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   handleIncomingMidi: (message) => {
     const data = message.data;
     
+    // Program Change Detection (Sincronizza slot se cambiato fisicamente)
+    if ((data[0] & 0xF0) === 0xC0) {
+      const pc = data[1];
+      const slot = pc + 1;
+      const currentPreset = get().devicePresets.find(p => p.slot === slot);
+      if (currentPreset) {
+        usePresetStore.getState().setActivePreset(currentPreset);
+      }
+    }
+
     // Gestione CC (Control Change)
-    if (data[0] === 0xB0) {
+    if ((data[0] & 0xF0) === 0xB0) {
       const cc = data[1];
       const val = data[2];
       
@@ -206,18 +222,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           }
         }
       }
-
-      // Pedale Wah posizione specifica (CC 79)
-      if (cc === 79) {
-        const wahEffect = usePresetStore.getState().activePreset.effects.find(e => e.type === 'wah');
-        if (wahEffect) {
-          usePresetStore.getState().updateParameter(wahEffect.id, 'position', val);
-        }
-      }
     }
 
-    // SysEx name capture during sync
-    if (data.length > 10) {
+    // SysEx Capture (Nome e Parametri)
+    if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
+      // Cattura Nome Preset
       let foundName = "";
       let tempName = "";
       for (let i = 0; i < data.length; i++) {
@@ -225,9 +234,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         if (byte >= 32 && byte <= 126) {
           tempName += String.fromCharCode(byte);
         } else {
-          if (tempName.trim().length >= 4) {
+          if (tempName.trim().length >= 3) {
             const candidate = tempName.trim();
-            if (!["NUX", "MG-30", "VER", "HDR", "EDIT"].includes(candidate.toUpperCase())) {
+            if (!["NUX", "MG-30", "VER", "HDR", "EDIT", "PRESET"].includes(candidate.toUpperCase())) {
               foundName = candidate;
               break; 
             }
@@ -235,11 +244,30 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           tempName = "";
         }
       }
+
       const { currentSyncSlot, updatePresetName } = get();
       if (foundName && currentSyncSlot !== null) {
         updatePresetName(currentSyncSlot, foundName);
+        
+        // Se è lo slot attivo, aggiorna anche il preset in uso nell'editor
+        const activeSlot = usePresetStore.getState().activePreset.slot;
+        if (currentSyncSlot === activeSlot) {
+          usePresetStore.getState().setActivePreset({
+            ...usePresetStore.getState().activePreset,
+            name: foundName
+          });
+        }
       }
     }
+  },
+
+  syncActivePreset: () => {
+    const { output } = get();
+    if (!output) return;
+    
+    // Richiedi dati del preset corrente (SysEx standard MG-30 per dump buffer)
+    output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
+    output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
   },
 
   sendControlChange: (cc, value) => {
@@ -298,9 +326,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     });
   },
 
-  syncPresets: async () => {
-    const { output, sendProgramChange } = get();
-    if (!output) return;
+  syncPresets: async (force = false) => {
+    const { output, sendProgramChange, hasSyncedOnce } = get();
+    if (!output || (hasSyncedOnce && !force)) return;
     
     set({ isSyncing: true, syncProgress: 0 });
     
@@ -308,13 +336,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
+      // Richiesta nomi
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       
       await new Promise(r => setTimeout(r, 450));
     }
     
-    set({ isSyncing: false, currentSyncSlot: null });
+    set({ isSyncing: false, currentSyncSlot: null, hasSyncedOnce: true });
   },
 
   updatePresetName: (slot, newName) => {
