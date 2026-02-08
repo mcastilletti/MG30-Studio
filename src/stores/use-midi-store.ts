@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
+import { MG30_MODELS } from '@/lib/mg30-data';
 
 // Mappatura Bypass basata sui log MIDI dell'utente e documentazione MG-30
-// La sequenza segue l'ordine fisico dei blocchi
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -19,9 +19,9 @@ const BYPASS_CC: Record<string, number> = {
   's-r': 10
 };
 
-// Valori specifici di ON/OFF (standard NUX: valore e valore + 64)
+// Valori specifici di ON/OFF (standard NUX: valore < 64 = ON)
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
-  'wah': { on: 1, off: 65 },
+  'wah': { on: 1, off: 68 },
   'compressor': { on: 1, off: 65 },
   'efx': { on: 2, off: 66 },
   'amp': { on: 13, off: 77 },
@@ -34,8 +34,9 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   's-r': { on: 10, off: 74 }
 };
 
-// Mappatura manopole fisiche
+// Mappatura manopole fisiche (Hardware -> Software)
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
+  'wah': [79], // CC 79 = Wah Position
   'compressor': [13, 14, 15, 90],
   'efx': [17, 18, 19, 20, 21],
   'amp': [22, 23, 24, 25, 26, 27, 28, 29],
@@ -44,8 +45,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'modulation': [46, 47, 48, 49, 50, 51],
   'delay': [52, 53, 54, 55, 56, 57, 58, 59],
   'reverb': [60, 61, 62, 63],
-  'ir': [64, 65, 66, 67, 68, 69],
-  'wah': [79] // CC 79 per la posizione Wah (Position)
+  'ir': [64, 65, 66, 67, 68, 69]
 };
 
 const SELECT_BLOCK_CC = 73;
@@ -184,13 +184,30 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const cc = data[1];
       const val = data[2];
       
-      const blockType = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
-      if (blockType) {
-        const vals = BYPASS_VALS[blockType];
+      // 1. Gestione Bypass (On/Off)
+      const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
+      if (blockTypeForBypass) {
+        const vals = BYPASS_VALS[blockTypeForBypass];
         if (vals) {
-          // Se il valore è vicino a quello di ON (es. 1-63) lo consideriamo attivo
           const isEnabled = val < 64;
-          usePresetStore.getState().updateBlockStateLocally(blockType, isEnabled);
+          usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
+        }
+      }
+
+      // 2. Gestione Parametri Real-time (Position Wah, Gain Amp, ecc.)
+      for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
+        const knobIndex = ccs.indexOf(cc);
+        if (knobIndex !== -1) {
+          const presetState = usePresetStore.getState().activePreset;
+          const effect = presetState.effects.find(e => e.type === type);
+          if (effect) {
+             const modelData = MG30_MODELS[effect.type as any]?.find(m => m.id === effect.model);
+             const paramDef = modelData?.parameters[knobIndex];
+             if (paramDef) {
+               // Aggiorna il valore nel componente UI (senza salvare in history per non saturarla)
+               usePresetStore.getState().updateParameter(effect.id, paramDef.id, val);
+             }
+          }
         }
       }
     }
