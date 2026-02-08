@@ -40,7 +40,7 @@ export default function EditorPage() {
     updateParameter(selectedBlockId, paramId, value);
     
     if (status === 'connected') {
-      sendKnobParameter(effectType, index, value);
+      sendKnobParameter(selectedBlockId, index, value);
     }
   };
 
@@ -55,7 +55,6 @@ export default function EditorPage() {
   const handleSelectBlock = (effectId: string, type: string) => {
     setSelectedBlockId(effectId);
     if (status === 'connected') {
-      // CC 78 for direct hardware selection
       selectBlock(type);
     }
   };
@@ -116,7 +115,7 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Click: Edit UI & Hardware (CC 78) • Double Click: Sync</span>
+                <span className="text-[10px] text-muted-foreground italic">Click: Select UI • Double Click: Edit Hardware (CC 78)</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -174,7 +173,9 @@ export default function EditorPage() {
                     {selectedEffect?.type.replace('-', ' ')}
                     <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model.toUpperCase()}</Badge>
                   </CardTitle>
-                  <CardTitle className="text-xs text-muted-foreground font-normal">Model: {currentModelData?.name}</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground font-normal">
+                    Model: <span className="text-foreground font-semibold">{currentModelData?.fullName}</span>
+                  </CardTitle>
                 </div>
               </div>
               
@@ -235,9 +236,9 @@ export default function EditorPage() {
                   <Sparkles className="w-3 h-3 text-primary" />
                   <span className="font-bold">Hardware Real-Time Link</span>
                 </div>
-                <span>Le manopole della prima riga (evidenziate) corrispondono ai controlli fisici hardware</span>
+                <span>Le manopole evidenziate corrispondono ai controlli fisici hardware</span>
                 <span className="font-mono text-primary/70">
-                  {selectedEffect?.type.toUpperCase()} • CC Mapping: {currentModelData?.parameters.slice(0, 4).map(p => p.name).join(', ')}
+                  {selectedEffect?.type.toUpperCase()} • MIDI Mapping Attivo
                 </span>
               </div>
             </CardContent>
