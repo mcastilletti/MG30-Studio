@@ -1,53 +1,103 @@
 'use server';
 
 /**
- * @fileOverview AI Agent "NUX MG-30 Preset Generator"
- * Genera una configurazione completa di preset utilizzando Gemini 2.0 Flash Lite.
+ * @fileOverview AI Mode Flow per NUX MG-30.
+ * Converte istruzioni testuali in parametri tecnici per la pedaliera.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const EffectSchema = z.object({
-  type: z.string().describe('Tipo di effetto (es. wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb, eq, vol, sr)'),
-  model: z.string().describe('ID del modello specifico'),
-  enabled: z.boolean().describe('Stato attivo/disattivo'),
-  parameters: z.record(z.any()).describe('Mappa parametri-valore (0-100)')
+/* =========================
+   SCHEMI PARAMETRI
+========================= */
+
+const NoiseGateParams = z.object({
+  threshold: z.number().min(0).max(100),
+  decay: z.number().min(0).max(100),
 });
 
-const MG30PresetInputSchema = z.object({
-  description: z.string().describe('Descrizione del suono desiderato'),
+const TScreamParams = z.object({
+  drive: z.number().min(0).max(100),
+  tone: z.number().min(0).max(100),
+  level: z.number().min(0).max(100),
 });
+
+const DigitalDelayParams = z.object({
+  level: z.number().min(0).max(100),
+  feedback: z.number().min(0).max(100),
+  time: z.number().min(0).max(100),
+});
+
+const HallReverbParams = z.object({
+  decay: z.number().min(0).max(100),
+  predelay: z.number().min(0).max(100),
+  liveliness: z.number().min(0).max(100),
+  level: z.number().min(0).max(100),
+});
+
+/* =========================
+   SCHEMA OUTPUT
+========================= */
+
+const EffectSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('noise-gate'),
+    model: z.literal('gate'),
+    enabled: z.boolean(),
+    parameters: NoiseGateParams,
+  }),
+  z.object({
+    type: z.literal('efx'),
+    model: z.enum(['tscream', 'distone', 'morningdrv', 'bluesdrv']),
+    enabled: z.boolean(),
+    parameters: TScreamParams,
+  }),
+  z.object({
+    type: z.literal('delay'),
+    model: z.literal('dly-digital'),
+    enabled: z.boolean(),
+    parameters: DigitalDelayParams,
+  }),
+  z.object({
+    type: z.literal('reverb'),
+    model: z.literal('hall'),
+    enabled: z.boolean(),
+    parameters: HallReverbParams,
+  }),
+]);
 
 const MG30PresetOutputSchema = z.object({
-  name: z.string().describe('Nome creativo per il preset'),
-  explanation: z.string().describe('Breve spiegazione delle scelte effettuate'),
-  effects: z.array(EffectSchema).describe('Lista dei blocchi della catena del segnale')
+  name: z.string().describe('Un nome creativo per il preset basato sulle impostazioni'),
+  explanation: z.string().describe('Breve riassunto dei parametri estratti dal testo'),
+  ampModel: z.enum(['plexi100w', 'jcm800', 'dualrect', 'ac30', 'jazzclean']).describe('Il modello di amplificatore più adatto'),
+  effects: z.array(EffectSchema),
 });
 
-export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-const generatePresetPrompt = ai.definePrompt({
-  name: 'generatePresetPrompt',
-  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
-  input: { schema: MG30PresetInputSchema },
-  output: { schema: MG30PresetOutputSchema },
-  system: `Sei un sound designer esperto per la pedaliera NUX MG-30.
-Il tuo compito è configurare la catena del segnale in base alla descrizione dell'utente.
+/* =========================
+   PROMPT & FLOW
+========================= */
 
-REGOLE TECNICHE:
-- I tipi di effetto validi sono: wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb, eq, vol, sr.
-- Per 'amp' usa modelli come: plexi100w, brit800, jazzclean, deluxervb, dualrect, slo100.
-- Per 'efx' usa modelli come: tscream, distone, bluesdrv, morningdrv, eatdist.
-- Per 'ir' usa sempre un modello compatibile (es. ir-1960 per plexi, ir-dr112 per deluxe).
-- I parametri devono essere numerici tra 0 e 100.
-- Mantieni una catena logica: Gate all'inizio, Amp/IR al centro, Delay/Reverb alla fine.`,
-  prompt: `Genera un preset ottimizzato per: "{{description}}"`,
+const mg30PresetPrompt = ai.definePrompt({
+  name: 'mg30PresetPrompt',
+  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
+  input: { schema: z.object({ instructions: z.string() }) },
+  output: { schema: MG30PresetOutputSchema },
+  system: `Sei un assistente tecnico esperto per NUX MG-30. 
+Il tuo compito è ESTRARRE i valori dei parametri dal testo fornito dall'utente.
+REGOLE:
+1. Se l'utente specifica un valore (es. "Gain a 40"), impostalo esattamente.
+2. Se l'utente specifica un modello (es. "Usa il JCM800"), seleziona l'ampModel corrispondente.
+3. Mappa i blocchi efx, delay, reverb e noise-gate se menzionati.
+4. Per i parametri non menzionati, usa valori di default bilanciati.
+5. L'output deve essere SOLO il JSON strutturato.`,
+  prompt: `Istruzioni utente: "{{instructions}}"`,
 });
 
-export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  const { output } = await generatePresetPrompt(input);
-  if (!output) throw new Error('Impossibile generare la configurazione del preset.');
+export async function generateMG30Preset(input: { description: string }): Promise<MG30PresetOutput> {
+  const { output } = await mg30PresetPrompt({ instructions: input.description });
+  if (!output) throw new Error('Impossibile interpretare le istruzioni del preset.');
   return output;
 }

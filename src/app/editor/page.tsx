@@ -149,7 +149,7 @@ export default function EditorPage() {
       });
     }
 
-    toast({ title: "AI Mode Applicato", description: `Preset "${proposedPreset.name}" caricato con successo.` });
+    toast({ title: "AI Mode Applicato", description: `Parametri estratti e applicati con successo.` });
     setProposedPreset(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
@@ -196,12 +196,12 @@ export default function EditorPage() {
                 {!proposedPreset ? (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Assistant</DialogTitle>
-                      <DialogDescription>Descrivi il tipo di suono che desideri ottenere e l'AI configurerà la catena per te.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Parameter Extractor</DialogTitle>
+                      <DialogDescription>Incolla le istruzioni testuali dei parametri (es. "Metti Gain a 70 e Bassi a 30") e l'AI le mapperà sulla pedaliera.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <Textarea 
-                        placeholder="Esempio: Un suono lead cremoso alla Pink Floyd con molto sustain e delay..." 
+                        placeholder="Esempio: Imposta il JCM800 con Gain 60, Master 50. Aggiungi un Tube Screamer con Drive 30. Metti un Hall Reverb con Decay 40..." 
                         value={aiPrompt} 
                         onChange={(e) => setAiPrompt(e.target.value)} 
                         className="min-h-[120px] bg-secondary/20"
@@ -210,24 +210,29 @@ export default function EditorPage() {
                     <DialogFooter>
                       <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        Genera Configurazione
+                        Analizza Istruzioni
                       </Button>
                     </DialogFooter>
                   </>
                 ) : (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Proposta AI: {proposedPreset.name}</DialogTitle>
-                      <DialogDescription>L'AI ha elaborato questa configurazione. Puoi approvarla per applicare i parametri al preset attuale.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Parametri Rilevati: {proposedPreset.name}</DialogTitle>
+                      <DialogDescription>L'AI ha interpretato le tue indicazioni. Controlla il riassunto prima di applicare.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs leading-relaxed italic">
                         "{proposedPreset.explanation}"
                       </div>
                       <div className="space-y-2">
-                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Cambiamenti proposti</h4>
+                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Mappatura Blocchi</h4>
                          <div className="grid grid-cols-2 gap-2">
-                           {proposedPreset.effects.filter(e => e.enabled).map(e => (
+                           <div className="flex items-center gap-2 p-2 rounded border bg-card/50 text-[10px]">
+                             <div className="w-2 h-2 rounded-full bg-red-500" />
+                             <span className="font-bold uppercase">AMP:</span>
+                             <span className="truncate opacity-70">{proposedPreset.ampModel}</span>
+                           </div>
+                           {proposedPreset.effects.map(e => (
                              <div key={e.type} className="flex items-center gap-2 p-2 rounded border bg-card/50 text-[10px]">
                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `hsl(${getBlockColorVar(e.type)})` }} />
                                <span className="font-bold uppercase">{e.type}:</span>
@@ -239,7 +244,7 @@ export default function EditorPage() {
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
                       <Button variant="ghost" onClick={() => setProposedPreset(null)} className="gap-2"><XCircle className="w-4 h-4" /> Scarta</Button>
-                      <Button onClick={applyProposedPreset} className="gap-2 bg-green-600 hover:bg-green-700 text-white flex-1"><Save className="w-4 h-4" /> Approva e Salva</Button>
+                      <Button onClick={applyProposedPreset} className="gap-2 bg-green-600 hover:bg-green-700 text-white flex-1"><Save className="w-4 h-4" /> Applica Settaggi</Button>
                     </DialogFooter>
                   </>
                 )}
