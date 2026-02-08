@@ -1,8 +1,10 @@
+
 'use server';
 
 /**
  * @fileOverview AI Agent "Nux MG-30 preset"
  * Genera un preset completo partendo da una descrizione creativa.
+ * Utilizza il modello stabile gemini-1.5-flash tramite endpoint v1.
  */
 
 import { ai } from '@/ai/genkit';
@@ -60,7 +62,6 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
     return output;
   } catch (error: any) {
     console.error("AI Generation Error:", error);
-    // Restituiamo il messaggio di errore originale per debug nel client
     throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
 }
