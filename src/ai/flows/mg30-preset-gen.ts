@@ -2,145 +2,57 @@
 
 /**
  * @fileOverview AI Agent "NUX MG-30 Preset Generator"
- * Genera una configurazione completa di preset per chitarra.
+ * Genera una configurazione completa di preset per chitarra utilizzando Genkit 1.x.
  */
 
-import { z } from 'zod';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+
+const EffectSchema = z.object({
+  type: z.string().describe('Tipo di effetto (es. wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb)'),
+  model: z.string().describe('ID del modello specifico'),
+  enabled: z.boolean().describe('Stato attivo/disattivo'),
+  parameters: z.record(z.any()).describe('Mappa parametri-valore (0-100)')
+});
 
 const MG30PresetInputSchema = z.object({
   description: z.string().describe('Descrizione del suono desiderato'),
 });
 
-const EffectSchema = z.object({
-  type: z.string(),
-  model: z.string(),
-  enabled: z.boolean(),
-  parameters: z.record(z.any())
-});
-
 const MG30PresetOutputSchema = z.object({
-  name: z.string(),
-  ampModel: z.string(),
-  effects: z.array(EffectSchema)
+  name: z.string().describe('Nome creativo per il preset'),
+  explanation: z.string().describe('Breve spiegazione delle scelte effettuate'),
+  effects: z.array(EffectSchema).describe('Lista dei blocchi della catena del segnale')
 });
 
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
+const generatePresetPrompt = ai.definePrompt({
+  name: 'generatePresetPrompt',
+  model: 'googleai/gemini-1.5-flash',
+  input: { schema: MG30PresetInputSchema },
+  output: { schema: MG30PresetOutputSchema },
+  system: `Sei un sound designer esperto per la pedaliera NUX MG-30.
+Il tuo compito è configurare la catena del segnale in base alla descrizione dell'utente.
+
+REGOLE TECNICHE:
+- I tipi di effetto validi sono: wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb, eq, vol, sr.
+- Per 'amp' usa modelli come: plexi100w, brit800, jazzclean, deluxervb, dualrect, slo100.
+- Per 'efx' usa modelli come: tscream, distone, bluesdrv, morningdrv, eatdist.
+- Per 'ir' usa sempre un modello compatibile (es. ir-1960 per plexi, ir-dr112 per deluxe).
+- I parametri devono essere numerici tra 0 e 100.
+- Mantieni una catena logica: Gate all'inizio, Amp/IR al centro, Delay/Reverb alla fine.`,
+  prompt: `Genera un preset ottimizzato per: "{{description}}"`,
+});
+
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('GOOGLE_GENAI_API_KEY non configurata');
-  }
-
   try {
-    console.log('🎸 Generazione preset:', input.description);
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Sei un sound designer esperto per pedaliera NUX MG-30.
-
-DESCRIZIONE SUONO: "${input.description}"
-
-Genera un preset JSON con questa ESATTA struttura:
-
-{
-  "name": "Nome preset",
-  "ampModel": "plexi100w",
-  "effects": [
-    {
-      "type": "noise-gate",
-      "model": "gate",
-      "enabled": true,
-      "parameters": {"threshold": 30, "decay": 50}
-    },
-    {
-      "type": "overdrive",
-      "model": "tscream",
-      "enabled": true,
-      "parameters": {"drive": 60, "tone": 55, "level": 70}
-    },
-    {
-      "type": "delay",
-      "model": "digital",
-      "enabled": true,
-      "parameters": {"time": 400, "feedback": 30, "mix": 25}
-    },
-    {
-      "type": "reverb",
-      "model": "hall",
-      "enabled": true,
-      "parameters": {"decay": 40, "mix": 20}
-    }
-  ]
-}
-
-REGOLE:
-- Parametri sempre tra 0-100
-- Modelli disponibili amp: clean, plexi100w, jcm800, dual-rect, ac30
-- Effetti: gate, compressor, tscream, chorus, phaser, delay, reverb
-- Usa 3-5 effetti max
-- Rispondi SOLO con JSON valido, nessun testo aggiuntivo`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 800,
-            topP: 0.95,
-            topK: 40
-          }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Errore API Gemini:', errorText);
-      throw new Error(`API Error ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
-    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!textResponse) {
-      throw new Error('Nessuna risposta da Gemini');
-    }
-
-    console.log('📝 Risposta raw:', textResponse);
-
-    // Pulisci la risposta da markdown
-    let jsonText = textResponse.trim();
-    jsonText = jsonText.replace(/```json\n?/g, '');
-    jsonText = jsonText.replace(/```\n?/g, '');
-    jsonText = jsonText.trim();
-
-    // Parsing JSON
-    let preset: MG30PresetOutput;
-    try {
-      preset = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error('❌ Errore parsing JSON:', jsonText);
-      throw new Error('Risposta AI non valida. Riprova.');
-    }
-
-    // Validazione con Zod
-    const validated = MG30PresetOutputSchema.parse(preset);
-    
-    console.log('✅ Preset generato:', validated.name);
-    return validated;
-    
+    const { output } = await generatePresetPrompt(input);
+    if (!output) throw new Error('L\'AI non ha restituito una configurazione valida.');
+    return output;
   } catch (error: any) {
-    console.error('❌ Errore generazione preset:', {
-      message: error.message,
-      stack: error.stack
-    });
+    console.error("AI Generation Error:", error);
     throw new Error(error.message || 'Errore durante la generazione del preset');
   }
 }
