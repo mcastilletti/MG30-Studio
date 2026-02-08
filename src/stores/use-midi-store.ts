@@ -32,22 +32,23 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
 };
 
 // Mappatura per CC 78 (Selezione blocco su display pedaliera)
+// Allineata: se 5 apriva IR, allora IR = 5 e Noise Gate = 9
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
   'efx': 2,
   'amp': 3,
   'eq': 4,
-  'noise-gate': 5,
+  'ir': 5,
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9
+  'noise-gate': 9
 };
 
 // CC per i parametri dei blocchi (Knobs)
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
-  'wah': [79], // CC 79 = Wah Position
+  'wah': [79],
   'compressor': [13, 14, 15, 90],
   'efx': [17, 18, 19, 20, 21],
   'amp': [22, 23, 24, 25, 26, 27, 28, 29],
@@ -176,23 +177,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   handleIncomingMidi: (message) => {
     const data = message.data;
-    const { currentSyncSlot, updatePresetName } = get();
-
+    
     // Gestione CC (Control Change)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
       
-      // Gestione Bypass (Riconoscimento stato da hardware)
+      // Bypass detection
       const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockTypeForBypass) {
         const vals = BYPASS_VALS[blockTypeForBypass];
-        // Se riceviamo il valore ON specifico o un valore < 64 (standard MIDI)
-        const isEnabled = val === vals.on || val < 64;
+        const isEnabled = val === vals.on;
         usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // Gestione Parametri Real-time (Manopole fisiche)
+      // Knob value detection (Real-time sync pedalboard -> editor)
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
@@ -209,7 +208,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // Gestione nomi preset via SysEx (durante sync)
+    // SysEx name capture during sync
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -228,6 +227,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           tempName = "";
         }
       }
+      const { currentSyncSlot, updatePresetName } = get();
       if (foundName && currentSyncSlot !== null) {
         updatePresetName(currentSyncSlot, foundName);
       }
@@ -267,7 +267,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
-      // Invia CC 78 con l'indice del blocco per cambiare display sulla pedaliera
       get().sendControlChange(SELECT_BLOCK_CC, index);
     }
   },
@@ -301,7 +300,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
-      // Comandi SysEx per richiedere i dettagli del preset
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       
