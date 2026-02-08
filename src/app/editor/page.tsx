@@ -25,6 +25,21 @@ const formatSlotLabel = (slot: number) => {
   return `${String(group).padStart(2, '0')}${letter}`;
 };
 
+const getBlockColorVar = (type: string) => {
+  switch(type) {
+    case 'noise-gate': return 'var(--block-gate)';
+    case 'compressor': return 'var(--block-cmp)';
+    case 'efx': return 'var(--block-efx)';
+    case 'amp': return 'var(--block-amp)';
+    case 'ir': return 'var(--block-ir)';
+    case 'eq': return 'var(--block-eq)';
+    case 'modulation': return 'var(--block-mod)';
+    case 'delay': return 'var(--block-dly)';
+    case 'reverb': return 'var(--block-rvb)';
+    default: return 'var(--primary)';
+  }
+};
+
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
   const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
@@ -92,7 +107,6 @@ export default function EditorPage() {
     try {
       const result = await generateMG30Preset({ prompt: aiPrompt });
       
-      // Mappiamo i tipi AI agli ID esistenti nel preset store
       const typeToId: Record<string, string> = {
         'noise-gate': 'ng',
         'compressor': 'cmp',
@@ -127,12 +141,6 @@ export default function EditorPage() {
         title: "AI Mode: Preset Aggiornato",
         description: `Il suono "${result.name}" è stato applicato allo slot attuale.`,
       });
-      
-      // Sync hardware (opzionale: potremmo voler syncare tutti i parametri)
-      if (status === 'connected') {
-        // In un'app reale qui cicleremmo per mandare i nuovi parametri via MIDI
-        toast({ description: "Ricorda di salvare per rendere definitive le modifiche sull'hardware." });
-      }
 
     } catch (error) {
       toast({
@@ -230,58 +238,82 @@ export default function EditorPage() {
           </CardHeader>
           <CardContent className="py-8">
             <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
-              {activePreset.effects.map((effect, idx) => (
-                <React.Fragment key={effect.id}>
-                  <div 
-                    onClick={() => handleSelectBlock(effect.id, effect.type)}
-                    onDoubleClick={() => handleHardwareSync(effect.type)}
-                    className={cn(
-                      "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
-                      effect.enabled 
-                        ? (selectedBlockId === effect.id ? 'border-primary bg-primary/20 shadow-[0_0_15px_rgba(103,58,183,0.3)]' : 'border-primary/40 bg-primary/5')
-                        : 'border-border bg-secondary/20 opacity-60',
-                      selectedBlockId === effect.id && !effect.enabled && 'border-accent bg-accent/10'
-                    )}
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded flex items-center justify-center mb-1 transition-colors",
-                      effect.enabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
-                      selectedBlockId === effect.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    )}>
-                      <Power 
-                        className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform" 
-                        onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
-                      />
-                    </div>
-                    <span className="text-[9px] font-bold uppercase tracking-tighter text-center h-4 line-clamp-1">
-                      {effect.type.replace('-', ' ')}
-                    </span>
-                    {selectedBlockId === effect.id && (
-                      <div className="absolute -top-2 -right-2 bg-accent text-accent-foreground p-1 rounded-full shadow-lg">
-                        <Settings2 className="w-3 h-3" />
+              {activePreset.effects.map((effect, idx) => {
+                const blockColor = getBlockColorVar(effect.type);
+                const isSelected = selectedBlockId === effect.id;
+                return (
+                  <React.Fragment key={effect.id}>
+                    <div 
+                      onClick={() => handleSelectBlock(effect.id, effect.type)}
+                      onDoubleClick={() => handleHardwareSync(effect.type)}
+                      className={cn(
+                        "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
+                        effect.enabled 
+                          ? (isSelected ? 'bg-primary/10' : 'bg-transparent border-border/40')
+                          : 'border-border bg-secondary/20 opacity-40'
+                      )}
+                      style={{ 
+                        borderColor: isSelected ? `hsl(${blockColor})` : effect.enabled ? `hsla(${blockColor}, 0.3)` : 'inherit',
+                        boxShadow: isSelected && effect.enabled ? `0 0 15px hsla(${blockColor}, 0.2)` : 'none'
+                      }}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded flex items-center justify-center mb-1 transition-colors",
+                        effect.enabled ? '' : 'bg-muted text-muted-foreground',
+                        isSelected && "ring-2 ring-offset-2 ring-offset-background"
+                      )}
+                      style={{ 
+                        backgroundColor: effect.enabled ? `hsl(${blockColor})` : 'inherit',
+                        color: effect.enabled ? '#fff' : 'inherit',
+                        ringColor: `hsl(${blockColor})`
+                      } as any}
+                      >
+                        <Power 
+                          className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform" 
+                          onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+                        />
                       </div>
+                      <span className="text-[9px] font-bold uppercase tracking-tighter text-center h-4 line-clamp-1"
+                        style={{ color: effect.enabled ? `hsl(${blockColor})` : 'inherit' }}
+                      >
+                        {effect.type.replace('-', ' ')}
+                      </span>
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 p-1 rounded-full shadow-lg"
+                          style={{ backgroundColor: `hsl(${blockColor})`, color: '#fff' }}
+                        >
+                          <Settings2 className="w-3 h-3" />
+                        </div>
+                      )}
+                    </div>
+                    {idx < activePreset.effects.length - 1 && (
+                      <div className="flex-1 min-w-[20px] h-[2px] bg-gradient-to-r from-border via-border to-border" />
                     )}
-                  </div>
-                  {idx < activePreset.effects.length - 1 && (
-                    <div className="flex-1 min-w-[20px] h-[2px] bg-gradient-to-r from-border via-primary/30 to-border" />
-                  )}
-                </React.Fragment>
-              ))}
+                  </React.Fragment>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 gap-6">
-          <Card className="border-primary/20 bg-primary/[0.02] shadow-xl">
+          <Card className="shadow-xl" 
+            style={{ 
+              borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : 'inherit',
+              backgroundColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.02)` : 'inherit'
+            }}
+          >
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <div className="p-2 rounded-lg" style={{ backgroundColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.1)` : 'inherit', color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'inherit' }}>
                   <Settings2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg uppercase flex items-center gap-2">
+                  <CardTitle className="text-lg uppercase flex items-center gap-2" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'inherit' }}>
                     {selectedEffect?.type.replace('-', ' ')}
-                    <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model.toUpperCase()}</Badge>
+                    <Badge variant="outline" className="text-[10px] ml-2" style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.5)` : 'inherit' }}>
+                      {selectedEffect?.model.toUpperCase()}
+                    </Badge>
                   </CardTitle>
                   <CardTitle className="text-xs text-muted-foreground font-normal">
                     Model: <span className="text-foreground font-semibold">{currentModelData?.fullName}</span>
@@ -295,8 +327,8 @@ export default function EditorPage() {
                     value={selectedEffect?.model} 
                     onValueChange={(val) => updateModel(selectedEffect!.id, val)}
                   >
-                    <SelectTrigger className="w-full bg-background/50 border-primary/30">
-                      <Sparkles className="w-3 h-3 mr-2 text-primary" />
+                    <SelectTrigger className="w-full bg-background/50" style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : 'inherit' }}>
+                      <Sparkles className="w-3 h-3 mr-2" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'inherit' }} />
                       <SelectValue placeholder="Select Model" />
                     </SelectTrigger>
                     <SelectContent>
@@ -335,7 +367,8 @@ export default function EditorPage() {
                         unit={param.unit}
                         onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} 
                         size={72} 
-                        className={index < 4 ? "border-b-2 border-primary/20 pb-2" : ""}
+                        className={index < 4 ? "pb-2" : ""}
+                        // Pass color to knob if needed (optional enhancement)
                       />
                     ))}
                   </div>
@@ -343,10 +376,10 @@ export default function EditorPage() {
               )}
               <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center flex flex-col gap-1">
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <Sparkles className="w-3 h-3 text-primary" />
+                  <Sparkles className="w-3 h-3" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'inherit' }} />
                   <span className="font-bold">Hardware Real-Time Link</span>
                 </div>
-                <span>Le manopole corrispondono ai controlli hardware (CC {activePreset.slot})</span>
+                <span>Le manopole corrispondono ai controlli hardware per {selectedEffect?.type}</span>
               </div>
             </CardContent>
           </Card>

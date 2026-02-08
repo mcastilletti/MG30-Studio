@@ -33,6 +33,19 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 260 10% 15%;
     --sidebar-ring: 261 43% 48%;
+
+    /* MG-30 Block Colors from Image */
+    --block-wah: 300 100% 75%;
+    --block-amp: 0 100% 50%;
+    --block-gate: 70 100% 50%;
+    --block-ir: 192 100% 50%;
+    --block-cmp: 60 100% 50%;
+    --block-eq: 0 0% 100%;
+    --block-efx: 32 100% 50%;
+    --block-sr: 120 100% 50%;
+    --block-mod: 220 100% 50%;
+    --block-dly: 180 100% 50%;
+    --block-rvb: 288 100% 50%;
   }
 }
 
