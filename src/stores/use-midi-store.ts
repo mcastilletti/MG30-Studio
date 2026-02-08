@@ -32,18 +32,18 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
 };
 
 // Mappatura per CC 78 (Selezione blocco su display pedaliera)
-// Allineata: se 5 apriva IR, allora IR = 5 e Noise Gate = 9
+// Allineata all'ultima indicazione dell'utente: NG = 5, IR = 9
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
   'efx': 2,
   'amp': 3,
   'eq': 4,
-  'ir': 5,
+  'noise-gate': 5,
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'noise-gate': 9
+  'ir': 9
 };
 
 // CC per i parametri dei blocchi (Knobs)
@@ -204,6 +204,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
                usePresetStore.getState().updateParameter(effect.id, paramDef.id, val);
              }
           }
+        }
+      }
+
+      // Pedale Wah posizione specifica (CC 79)
+      if (cc === 79) {
+        const wahEffect = usePresetStore.getState().activePreset.effects.find(e => e.type === 'wah');
+        if (wahEffect) {
+          usePresetStore.getState().updateParameter(wahEffect.id, 'position', val);
         }
       }
     }
