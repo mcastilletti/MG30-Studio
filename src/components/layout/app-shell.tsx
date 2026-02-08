@@ -11,19 +11,19 @@ import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { status, initialize, availableDevices, syncPresets, hasSyncedOnce, isSyncing } = useMidiStore();
+  const { status, initialize, syncActivePreset } = useMidiStore();
   const pathname = usePathname();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  // Se siamo connessi e non abbiamo mai sincronizzato i nomi, fallo in background
+  // All'apertura, se connesso, sincronizza solo lo slot attivo
   useEffect(() => {
-    if (status === 'connected' && !hasSyncedOnce && !isSyncing) {
-      syncPresets();
+    if (status === 'connected') {
+      syncActivePreset();
     }
-  }, [status, hasSyncedOnce, isSyncing, syncPresets]);
+  }, [status, syncActivePreset]);
 
   const navItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -76,13 +76,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                     </div>
                     {status === 'connected' ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
                   </div>
-                  {isSyncing && (
-                    <div className="flex items-center gap-2 px-1 mt-1">
-                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                      <span className="text-[9px] text-muted-foreground uppercase font-bold">Syncing Library...</span>
-                    </div>
-                  )}
-                  {status === 'connected' && !isSyncing && (
+                  {status === 'connected' && (
                     <p className="text-[10px] text-muted-foreground px-1">
                       NUX MG-30 ready for communication.
                     </p>

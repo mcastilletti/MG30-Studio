@@ -5,7 +5,7 @@ import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass CC e Valori
+// Mappatura Bypass CC e Valori (Tabella utente)
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -32,7 +32,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
-// Mappatura per CC 78 (Selezione blocco su display pedaliera)
+// Mappatura per CC 78 (Selezione blocco su display pedaliera - Tabella utente)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -166,7 +166,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
           
-          // Al caricamento, chiediamo lo stato attivo
+          // Al caricamento, sincronizza lo slot attivo
           get().syncActivePreset();
         } else {
           set({ status: 'disconnected' });
@@ -188,10 +188,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if ((data[0] & 0xF0) === 0xC0) {
       const pc = data[1];
       const slot = pc + 1;
-      const currentPreset = get().devicePresets.find(p => p.slot === slot);
-      if (currentPreset) {
-        usePresetStore.getState().setActivePreset(currentPreset);
-      }
+      
+      // Aggiorna lo slot nell'editor
+      const activePreset = usePresetStore.getState().activePreset;
+      usePresetStore.getState().setActivePreset({
+        ...activePreset,
+        slot: slot
+      });
+
+      // Richiedi i dati completi per il nuovo slot
+      setTimeout(() => get().syncActivePreset(), 50);
     }
 
     // Gestione CC (Control Change)
@@ -245,18 +251,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         }
       }
 
-      const { currentSyncSlot, updatePresetName } = get();
-      if (foundName && currentSyncSlot !== null) {
-        updatePresetName(currentSyncSlot, foundName);
-        
-        // Se è lo slot attivo, aggiorna anche il preset in uso nell'editor
-        const activeSlot = usePresetStore.getState().activePreset.slot;
-        if (currentSyncSlot === activeSlot) {
-          usePresetStore.getState().setActivePreset({
-            ...usePresetStore.getState().activePreset,
-            name: foundName
-          });
-        }
+      if (foundName) {
+        const activePreset = usePresetStore.getState().activePreset;
+        get().updatePresetName(activePreset.slot, foundName);
+        usePresetStore.getState().setActivePreset({
+          ...activePreset,
+          name: foundName
+        });
       }
     }
   },
@@ -266,6 +267,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (!output) return;
     
     // Richiedi dati del preset corrente (SysEx standard MG-30 per dump buffer)
+    // Invio sequenza di handshake per forzare il dump del nome e dei parametri attivi
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
   },
@@ -281,6 +283,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (output) {
       output.send([0xC0, pc]);
+      // Dopo il cambio programma, attendi un istante e chiedi i dati del nuovo slot
+      setTimeout(() => get().syncActivePreset(), 100);
     }
   },
 
