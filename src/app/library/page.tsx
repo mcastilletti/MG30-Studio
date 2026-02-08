@@ -5,18 +5,15 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Filter, LayoutGrid, List, MoreVertical, RefreshCw, Loader2, Edit2, Check, Sparkles, Wand2 } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useToast } from '@/hooks/use-toast';
 import { Preset } from '@/types/preset';
-import { generateMG30Preset } from '@/ai/flows/mg30-preset-gen';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -30,11 +27,6 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('');
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
-  
-  // AI States
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   
   const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
   const { setActivePreset } = usePresetStore();
@@ -51,44 +43,6 @@ export default function LibraryPage() {
     }
     setActivePreset(preset);
     router.push('/editor');
-  };
-
-  const handleGenerateAiPreset = async () => {
-    if (!aiPrompt.trim()) return;
-    
-    setIsGenerating(true);
-    try {
-      const result = await generateMG30Preset({ prompt: aiPrompt });
-      
-      const newPreset: Preset = {
-        name: result.name,
-        slot: 1, // Default to first for preview
-        category: 'AI Generated',
-        tags: ['AI'],
-        favorite: false,
-        rating: 5,
-        lastModified: new Date(),
-        ampModel: result.ampModel,
-        effects: result.effects as any
-      };
-
-      setActivePreset(newPreset);
-      setIsAiModalOpen(false);
-      setAiPrompt('');
-      toast({
-        title: "Preset Generato!",
-        description: `L'AI "Nux MG-30 preset" ha creato: ${result.name}`,
-      });
-      router.push('/editor');
-    } catch (error) {
-      toast({
-        title: "Errore generazione",
-        description: "Non è stato possibile generare il preset. Riprova.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGenerating(false);
-    }
   };
 
   const startEditingName = (e: React.MouseEvent, preset: Preset) => {
@@ -115,47 +69,6 @@ export default function LibraryPage() {
             <p className="text-muted-foreground">Sincronizza e gestisci i 128 slot (01A-32D) della tua pedaliera MG-30.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
-                  <Sparkles className="w-4 h-4" /> AI Magic Gen
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Wand2 className="w-5 h-5 text-primary" /> 
-                    Nux MG-30 Preset Generator
-                  </DialogTitle>
-                  <DialogDescription>
-                    Descrivi il suono che desideri e l'agente AI configurerà per te amplificatori ed effetti.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-4">
-                  <Textarea 
-                    placeholder="Esempio: Un tono lead Marshall anni '70 con molto sustain e un riverbero a molla..." 
-                    className="h-32 bg-secondary/20"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                  />
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-widest bg-secondary/30 p-2 rounded border border-border">
-                    <span className="font-bold text-primary">Suggerimento:</span> Prova a citare generi musicali, chitarristi famosi o canzoni specifiche.
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="ghost" onClick={() => setIsAiModalOpen(false)}>Annulla</Button>
-                  <Button 
-                    className="gap-2 bg-primary" 
-                    onClick={handleGenerateAiPreset}
-                    disabled={isGenerating || !aiPrompt.trim()}
-                  >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {isGenerating ? 'Generazione...' : 'Crea Preset'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
             <Button 
               onClick={() => syncPresets()} 
               variant={isSyncing ? "secondary" : "outline"} 

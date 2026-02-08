@@ -10,9 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MG30_MODELS, MG30Model } from '@/lib/mg30-data';
+import { MG30_MODELS } from '@/lib/mg30-data';
+import { generateMG30Preset } from '@/ai/flows/mg30-preset-gen';
+import { useToast } from '@/hooks/use-toast';
+import { EffectState } from '@/types/preset';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -23,8 +28,14 @@ const formatSlotLabel = (slot: number) => {
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
   const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
+  const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
+  
+  // AI Mode States
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -74,6 +85,66 @@ export default function EditorPage() {
     setActivePreset({ ...activePreset, slot: nextSlot });
   };
 
+  const handleAiModeApply = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsGenerating(true);
+    try {
+      const result = await generateMG30Preset({ prompt: aiPrompt });
+      
+      // Mappiamo i tipi AI agli ID esistenti nel preset store
+      const typeToId: Record<string, string> = {
+        'noise-gate': 'ng',
+        'compressor': 'cmp',
+        'efx': 'efx',
+        'amp': 'amp',
+        'ir': 'ir',
+        'eq': 'eq',
+        'modulation': 'mod',
+        'delay': 'delay',
+        'reverb': 'reverb'
+      };
+
+      const newEffects: EffectState[] = result.effects.map((eff) => ({
+        id: typeToId[eff.type] || eff.type,
+        type: eff.type as any,
+        model: eff.model,
+        enabled: eff.enabled,
+        parameters: eff.parameters
+      }));
+
+      setActivePreset({
+        ...activePreset,
+        name: result.name,
+        ampModel: result.ampModel,
+        effects: newEffects,
+        lastModified: new Date()
+      });
+
+      setIsAiModalOpen(false);
+      setAiPrompt('');
+      toast({
+        title: "AI Mode: Preset Aggiornato",
+        description: `Il suono "${result.name}" è stato applicato allo slot attuale.`,
+      });
+      
+      // Sync hardware (opzionale: potremmo voler syncare tutti i parametri)
+      if (status === 'connected') {
+        // In un'app reale qui cicleremmo per mandare i nuovi parametri via MIDI
+        toast({ description: "Ricorda di salvare per rendere definitive le modifiche sull'hardware." });
+      }
+
+    } catch (error) {
+      toast({
+        title: "Errore AI Mode",
+        description: "Non è stato possibile generare il suono. Riprova.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
 
   return (
@@ -101,6 +172,45 @@ export default function EditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
+                  <Sparkles className="w-4 h-4" /> AI Mode
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Wand2 className="w-5 h-5 text-primary" /> 
+                    AI Tone Assistant
+                  </DialogTitle>
+                  <DialogDescription>
+                    Descrivi il suono che desideri. L'AI modificherà i parametri dello slot <strong>{formatSlotLabel(activePreset.slot)}</strong> per te.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <Textarea 
+                    placeholder="Esempio: Un lead distorto molto compresso con delay stereo per assoli epici..." 
+                    className="h-32 bg-secondary/20"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setIsAiModalOpen(false)}>Annulla</Button>
+                  <Button 
+                    className="gap-2 bg-primary" 
+                    onClick={handleAiModeApply}
+                    disabled={isGenerating || !aiPrompt.trim()}
+                  >
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {isGenerating ? 'Elaborazione...' : 'Applica al Preset'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <div className="w-[1px] h-8 bg-border mx-2" />
             <Button variant="outline" size="icon" onClick={undo}><Undo2 className="w-4 h-4" /></Button>
             <Button variant="outline" size="icon" onClick={redo}><Redo2 className="w-4 h-4" /></Button>
             <div className="w-[1px] h-8 bg-border mx-2" />
@@ -115,7 +225,7 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Click: Select UI • Double Click: Edit Hardware (CC 78)</span>
+                <span className="text-[10px] text-muted-foreground italic">Click: Select UI • Double Click: Edit Hardware</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -236,10 +346,7 @@ export default function EditorPage() {
                   <Sparkles className="w-3 h-3 text-primary" />
                   <span className="font-bold">Hardware Real-Time Link</span>
                 </div>
-                <span>Le manopole evidenziate corrispondono ai controlli fisici hardware</span>
-                <span className="font-mono text-primary/70">
-                  {selectedEffect?.type.toUpperCase()} • MIDI Mapping Attivo
-                </span>
+                <span>Le manopole corrispondono ai controlli hardware (CC {activePreset.slot})</span>
               </div>
             </CardContent>
           </Card>
