@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Info, Sparkles } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Info, Sparkles, Settings2 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -44,7 +44,21 @@ export default function LibraryPage() {
     formatSlotLabel(p.slot).toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSelectAndEdit = (preset: Preset) => {
+  // Solo selezione e invio MIDI (rimane nella pagina)
+  const handleSelectPreset = (preset: Preset) => {
+    if (status === 'connected') {
+      sendProgramChange(preset.slot - 1);
+    }
+    setActivePreset(preset);
+    toast({
+      title: "Preset Attivato",
+      description: `Slot ${formatSlotLabel(preset.slot)}: ${preset.name} selezionato sull'hardware.`,
+    });
+  };
+
+  // Selezione, invio MIDI e navigazione all'editor
+  const handleConfigurePreset = (e: React.MouseEvent, preset: Preset) => {
+    e.stopPropagation();
     if (status === 'connected') {
       sendProgramChange(preset.slot - 1);
     }
@@ -52,30 +66,31 @@ export default function LibraryPage() {
     router.push('/editor');
   };
 
-  const handleShowInfo = async (e: React.MouseEvent, preset: Preset) => {
+  const handleShowInfo = (e: React.MouseEvent, preset: Preset) => {
     e.stopPropagation();
     
-    // Serializzazione pulita per evitare problemi con oggetti Date o simili
     const cleanPreset = JSON.parse(JSON.stringify(preset));
     
     setSummaryPreset(preset);
     setIsSummarizing(true);
     setSummaryText(null);
     
-    try {
-      const result = await summarizePreset({ preset: cleanPreset });
-      setSummaryText(result.summary);
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Errore AI",
-        description: "Impossibile generare il riassunto. Verifica la connessione o riprova.",
-        variant: "destructive"
+    summarizePreset({ preset: cleanPreset })
+      .then((result) => {
+        setSummaryText(result.summary);
+      })
+      .catch((err) => {
+        console.error(err);
+        toast({
+          title: "Errore AI",
+          description: "Impossibile generare il riassunto. Verifica la connessione o riprova.",
+          variant: "destructive"
+        });
+        setSummaryPreset(null);
+      })
+      .finally(() => {
+        setIsSummarizing(false);
       });
-      setSummaryPreset(null);
-    } finally {
-      setIsSummarizing(false);
-    }
   };
 
   const startEditingName = (e: React.MouseEvent, preset: Preset) => {
@@ -168,7 +183,7 @@ export default function LibraryPage() {
                 <Card 
                   key={preset.slot} 
                   className="group relative overflow-hidden hover:border-primary/50 transition-all cursor-pointer bg-card/40 border-border"
-                  onClick={() => handleSelectAndEdit(preset)}
+                  onClick={() => handleSelectPreset(preset)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -189,7 +204,7 @@ export default function LibraryPage() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSelectAndEdit(preset); }}>Modifica</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => handleConfigurePreset(e as any, preset)}>Modifica</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => startEditingName(e as any, preset)}>Rinomina</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -224,9 +239,10 @@ export default function LibraryPage() {
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      className="h-7 text-[10px] font-bold uppercase tracking-widest hover:text-primary"
+                      className="h-7 text-[10px] font-bold uppercase tracking-widest hover:text-primary gap-1"
+                      onClick={(e) => handleConfigurePreset(e, preset)}
                     >
-                      Configura
+                      <Settings2 className="w-3 h-3" /> Configura
                     </Button>
                   </CardFooter>
                 </Card>
@@ -249,7 +265,7 @@ export default function LibraryPage() {
                       <tr 
                         key={preset.slot} 
                         className="hover:bg-primary/5 transition-colors group cursor-pointer" 
-                        onClick={() => handleSelectAndEdit(preset)}
+                        onClick={() => handleSelectPreset(preset)}
                       >
                         <td className="p-4 font-mono font-bold text-primary text-center">
                           {formatSlotLabel(preset.slot)}
@@ -270,7 +286,14 @@ export default function LibraryPage() {
                             >
                               <Info className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase">Modifica</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-xs font-bold uppercase gap-1"
+                              onClick={(e) => handleConfigurePreset(e, preset)}
+                            >
+                              <Settings2 className="w-3 h-3" /> Modifica
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -310,7 +333,7 @@ export default function LibraryPage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSummaryPreset(null)}>Chiudi</Button>
-              <Button onClick={() => summaryPreset && handleSelectAndEdit(summaryPreset)}>
+              <Button onClick={(e) => summaryPreset && handleConfigurePreset(e as any, summaryPreset)}>
                 Apri Editor
               </Button>
             </div>
