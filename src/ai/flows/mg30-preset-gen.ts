@@ -10,19 +10,19 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const MG30PresetInputSchema = z.object({
-  prompt: z.string().describe('Descrizione del suono desiderato (es. "Heavy Metal anni 80", "Blues caldo alla SRV")'),
+  description: z.string().describe('Descrizione del suono desiderato (es. "Heavy Metal anni 80", "Blues caldo alla SRV")'),
 });
 
 const EffectSchema = z.object({
-  type: z.enum(['noise-gate', 'compressor', 'efx', 'amp', 'ir', 'eq', 'modulation', 'delay', 'reverb']),
-  model: z.string().describe('ID del modello (es. "tscream", "brit800", "jazzclean")'),
+  type: z.string().describe('ID del blocco (noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb)'),
+  model: z.string().describe('ID del modello hardware'),
   enabled: z.boolean(),
   parameters: z.record(z.any()).describe('Mappa dei parametri e valori (0-100)')
 });
 
 const MG30PresetOutputSchema = z.object({
   name: z.string().describe('Nome creativo del preset'),
-  ampModel: z.string().describe('Nome breve dell\'amplificatore (es. "BRIT 800")'),
+  ampModel: z.string().describe('Nome dell\'amplificatore'),
   effects: z.array(EffectSchema).describe('Catena completa degli effetti')
 });
 
@@ -33,19 +33,17 @@ const promptDefinition = ai.definePrompt({
   name: 'mg30PresetPrompt',
   input: { schema: MG30PresetInputSchema },
   output: { schema: MG30PresetOutputSchema },
-  system: `Sei un esperto sound designer di chitarra specializzato nel NUX MG-30.
-  Devi rispondere SEMPRE con un oggetto JSON valido che rispetti lo schema richiesto.
-  Usa solo questi ID per i tipi di effetto: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.`,
-  prompt: `Crea un preset perfetto per questa richiesta: "{{{prompt}}}"
+  system: `Sei un esperto sound designer di chitarra per il NUX MG-30.
+  Devi generare un oggetto JSON che rappresenti una patch valida.
+  Usa SOLO questi ID blocco: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
+  I parametri devono essere numeri tra 0 e 100.
+  Assicurati di includere tutti i blocchi nella catena.`,
+  prompt: `Crea un preset professionale per: "{{{description}}}"
 
-REGOLE TECNICHE:
-1. Usa solo ID modello validi (es. tscream, brit800, jazzclean, room, dly-analog).
-2. I parametri devono essere numerici tra 0 e 100.
-3. La catena DEVE includere: NG -> COMP -> EFX -> AMP -> IR -> EQ -> MOD -> DLY -> RVB.
-
-Esempio Amp: jazzclean, deluxervb, bassmate, plexi100w, brit800, slo100, dualrect.
-Esempio EFX: tscream, distone, bluesdrv, morningdrv, eatdist, reddirt.
-Esempio IR: ir-jz120, ir-1960, ir-gb412.`,
+Esempi di modelli validi:
+- AMP: jazzclean, deluxervb, plexi100w, brit800, slo100, dualrect.
+- EFX: tscream, distone, bluesdrv, reddirt.
+- REVERB: room, hall, plate, shimmer.`,
 });
 
 const mg30PresetGenFlow = ai.defineFlow(
@@ -55,14 +53,11 @@ const mg30PresetGenFlow = ai.defineFlow(
     outputSchema: MG30PresetOutputSchema,
   },
   async (input) => {
-    try {
-      const { output } = await promptDefinition(input);
-      if (!output) throw new Error('Il modello non ha restituito output');
-      return output;
-    } catch (error) {
-      console.error("AI Generation Error:", error);
-      throw new Error('Errore durante la generazione del suono con AI');
+    const { output } = await promptDefinition(input);
+    if (!output) {
+      throw new Error('Errore: l\'AI non ha generato una configurazione valida.');
     }
+    return output;
   }
 );
 

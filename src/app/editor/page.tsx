@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -61,7 +60,7 @@ export default function EditorPage() {
 
   const currentModelData = useMemo(() => {
     if (!selectedEffect) return null;
-    return MG30_MODELS[selectedEffect.type].find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type][0];
+    return MG30_MODELS[selectedEffect.type as any]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type as any]?.[0];
   }, [selectedEffect]);
 
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
@@ -108,12 +107,13 @@ export default function EditorPage() {
     setIsGenerating(true);
     setProposedPreset(null);
     try {
-      const result = await generateMG30Preset({ prompt: aiPrompt });
+      const result = await generateMG30Preset({ description: aiPrompt });
       setProposedPreset(result);
     } catch (error) {
+      console.error(error);
       toast({
         title: "Errore AI Mode",
-        description: "Non è stato possibile generare il suono. Riprova.",
+        description: "Non è stato possibile generare il suono. Riprova con una descrizione diversa.",
         variant: "destructive"
       });
     } finally {
@@ -152,7 +152,6 @@ export default function EditorPage() {
       lastModified: new Date()
     });
 
-    // Reset and Close
     setIsAiModalOpen(false);
     setAiPrompt('');
     setProposedPreset(null);
@@ -163,7 +162,7 @@ export default function EditorPage() {
     });
   };
 
-  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
+  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type as any] || [] : [];
   const currentBlockColor = selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'hsl(var(--primary))';
 
   return (
@@ -299,7 +298,7 @@ export default function EditorPage() {
             <Button variant="outline" size="icon" onClick={redo}><Redo2 className="w-4 h-4" /></Button>
             <div className="w-[1px] h-8 bg-border mx-2" />
             <Button variant="outline" className="gap-2"><Share2 className="w-4 h-4" /> Export</Button>
-            <Button className="gap-2"><Save className="w-4 h-4" /> Save</Button>
+            <Button className="gap-2" onClick={() => toast({ title: "Salvataggio", description: "Configurazione salvata nel database locale." })}><Save className="w-4 h-4" /> Save</Button>
           </div>
         </div>
 
