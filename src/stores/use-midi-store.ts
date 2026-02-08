@@ -48,7 +48,8 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'ir': [64, 65, 66, 67, 68, 69]
 };
 
-const SELECT_BLOCK_CC = 73;
+// CC 78 viene usato per spostare il focus dello schermo dell'MG-30
+const SELECT_BLOCK_CC = 78;
 
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'noise-gate': 0,
@@ -192,7 +193,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // 2. Gestione Parametri Real-time
+      // 2. Gestione Parametri Real-time (incluso Wah Position CC 79)
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
@@ -264,9 +265,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   selectBlock: (blockType) => {
-    const value = BLOCK_INDEX_MAP[blockType];
-    if (value !== undefined) {
-      get().sendControlChange(SELECT_BLOCK_CC, value);
+    const index = BLOCK_INDEX_MAP[blockType];
+    if (index !== undefined) {
+      get().sendControlChange(SELECT_BLOCK_CC, index);
     }
   },
 
@@ -274,7 +275,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const ccs = BLOCK_PARAM_CCS[blockType];
     if (!ccs) return;
 
-    // Troviamo il modello attivo per mappare l'ordine dei parametri
     const presetState = usePresetStore.getState().activePreset;
     const effect = presetState.effects.find(e => e.type === blockType);
     if (!effect) return;
