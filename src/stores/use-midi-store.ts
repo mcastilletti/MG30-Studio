@@ -3,7 +3,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass basata sulla colonna NEW MIDI CC della tabella utente
+// Mappatura Bypass basata sulla documentazione MIDI dell'MG-30
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
@@ -14,10 +14,11 @@ const BYPASS_CC: Record<string, number> = {
   'delay': 7,
   'reverb': 8,
   'ir': 9,
-  'wah': 10 // Aggiunto Wah
+  's-r': 10, // S/R è sul CC 10 come segnalato
+  'wah': 43  // Wah Bypass è sul CC 43
 };
 
-// Valori specifici di ON/OFF catturati precedentemente dall'utente per la stabilità del segnale
+// Valori specifici di ON/OFF per la stabilità del segnale
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'compressor': { on: 1, off: 65 },
   'efx': { on: 1, off: 65 },
@@ -28,24 +29,24 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'delay': { on: 7, off: 71 },
   'reverb': { on: 1, off: 65 },
   'ir': { on: 7, off: 71 },
+  's-r': { on: 1, off: 65 },
   'wah': { on: 1, off: 65 }
 };
 
-// Mappatura manopole fisiche basata sulla colonna NEW MIDI CC
+// Mappatura manopole fisiche
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
-  'compressor': [13, 14, 15, 90], // Knob 1-4 (ID 14-17)
-  'efx': [17, 18, 19, 20, 21],    // Knob 1-5 (ID 18-22)
-  'amp': [22, 23, 24, 25, 26, 27, 28, 29], // Knob 1-8 (ID 23-30)
-  'eq': [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41], // Knob 1-12 (ID 31-42)
-  'noise-gate': [42, 43, 44, 45], // Knob 1-4 (ID 43-46)
-  'modulation': [46, 47, 48, 49, 50, 51], // Knob 1-6 (ID 47-52)
-  'delay': [52, 53, 54, 55, 56, 57, 58, 59], // Knob 1-8 (ID 53-60)
-  'reverb': [60, 61, 62, 63], // Knob 1-4 (ID 61-64)
-  'ir': [64, 65, 66, 67, 68, 69], // Knob 1-6 (ID 65-70)
-  'wah': [79] // CC 79 catturato dal log dell'utente per la posizione Wah
+  'compressor': [13, 14, 15, 90],
+  'efx': [17, 18, 19, 20, 21],
+  'amp': [22, 23, 24, 25, 26, 27, 28, 29],
+  'eq': [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41],
+  'noise-gate': [42, 43, 44, 45],
+  'modulation': [46, 47, 48, 49, 50, 51],
+  'delay': [52, 53, 54, 55, 56, 57, 58, 59],
+  'reverb': [60, 61, 62, 63],
+  'ir': [64, 65, 66, 67, 68, 69],
+  'wah': [79] // CC 79 per la posizione Wah (Position)
 };
 
-// ID 74: CURRENT BLOCK -> New CC 73
 const SELECT_BLOCK_CC = 73;
 
 const BLOCK_INDEX_MAP: Record<string, number> = {
@@ -58,7 +59,8 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'wah': 9
+  'wah': 9,
+  's-r': 10
 };
 
 const formatSlotLabel = (slot: number) => {
