@@ -1,9 +1,7 @@
-
 'use server';
 
 /**
- * @fileOverview AI Agent per il riassunto dei preset NUX MG-30.
- * Utilizza il modello stabile gemini-1.5-flash via endpoint v1.
+ * @fileOverview AI Agent per il riassunto sonoro dei preset NUX MG-30.
  */
 
 import { ai } from '@/ai/genkit';
@@ -20,9 +18,6 @@ const PresetSummaryOutputSchema = z.object({
 export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
-/**
- * Genera un riassunto del preset basandosi sui modelli di Amp ed effetti.
- */
 export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
   try {
     const response = await ai.generate({
@@ -44,8 +39,6 @@ export async function summarizePreset(input: PresetSummaryInput): Promise<Preset
 
     return output;
   } catch (error: any) {
-    console.error("Summary Flow Error Details:", error);
-    // Rilancia l'errore senza console.log ridondanti per evitare loop di errore infiniti
     throw new Error(error.message || 'Errore durante la generazione dell\'analisi AI');
   }
 }

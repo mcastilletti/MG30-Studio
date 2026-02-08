@@ -1,13 +1,11 @@
-
 'use server';
 
 /**
- * @fileOverview A SysEx analysis AI agent.
- * Utilizza il modello stabile gemini-1.5-flash via endpoint v1.
+ * @fileOverview SysEx analysis AI agent per NUX MG-30.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const AnalyzeSysExInputSchema = z.object({
   sysexData: z.string().describe('Sequence of SysEx messages.'),
@@ -36,7 +34,6 @@ export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSys
     if (!output) throw new Error('Analisi AI fallita');
     return output;
   } catch (error: any) {
-    console.error("SysEx Analysis Error Details:", error);
     throw new Error(error.message || 'Errore durante l\'analisi SysEx');
   }
 }

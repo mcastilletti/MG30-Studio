@@ -1,10 +1,8 @@
-
 'use server';
 
 /**
- * @fileOverview AI Agent "Nux MG-30 preset"
- * Genera un preset completo partendo da una descrizione creativa.
- * Utilizza l'endpoint stabile v1 tramite identificativo modello aggiornato.
+ * @fileOverview AI Agent "NUX MG-30 Preset Generator"
+ * Genera una configurazione completa partendo da una descrizione creativa.
  */
 
 import { ai } from '@/ai/genkit';
@@ -30,9 +28,6 @@ const MG30PresetOutputSchema = z.object({
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-/**
- * Genera una configurazione completa per NUX MG-30.
- */
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
   try {
     const response = await ai.generate({
@@ -61,7 +56,6 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
 
     return output;
   } catch (error: any) {
-    console.error("AI Generation Error:", error);
     throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
 }
