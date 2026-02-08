@@ -3,16 +3,11 @@
 /**
  * @fileOverview AI Mode Flow per NUX MG-30.
  * Converte istruzioni testuali in parametri tecnici per la pedaliera.
- * Ottimizzato per Gemini 1.5 Flash (stabile).
+ * Utilizza Gemini 2.0 Flash Lite per un'estrazione precisa.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-/* =========================
-   SCHEMA OUTPUT OTTIMIZZATO
-   (Usiamo array di oggetti invece di record per compatibilità totale)
-========================= */
 
 const ParameterOutputSchema = z.object({
   name: z.string().describe('Nome del parametro (es. gain, tone, level)'),
@@ -44,13 +39,9 @@ const MG30PresetOutputSchema = z.object({
 
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-/* =========================
-   PROMPT & FLOW
-========================= */
-
 const mg30PresetPrompt = ai.definePrompt({
   name: 'mg30PresetPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
   input: { schema: z.object({ instructions: z.string() }) },
   output: { schema: MG30PresetOutputSchema },
   system: `Sei un assistente tecnico esperto per NUX MG-30. 

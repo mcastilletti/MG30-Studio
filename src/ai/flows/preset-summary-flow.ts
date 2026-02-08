@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Analisi sonora AI per preset MG-30.
- * Utilizza Gemini 1.5 Flash per un'analisi affidabile e stabile.
+ * Utilizza Gemini 2.0 Flash Lite per un'analisi dettagliata.
  */
 
 import { ai } from '@/ai/genkit';
@@ -21,7 +21,7 @@ export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
 const presetSummaryPrompt = ai.definePrompt({
   name: 'presetSummaryPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
   input: { schema: PresetSummaryInputSchema },
   output: { schema: PresetSummaryOutputSchema },
   system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico. Rispondi in modo conciso.",
