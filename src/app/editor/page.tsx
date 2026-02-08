@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react';
@@ -249,33 +250,30 @@ export default function EditorPage() {
                       onDoubleClick={() => handleHardwareSync(effect.type)}
                       className={cn(
                         "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
-                        effect.enabled 
-                          ? (isSelected ? 'bg-primary/10' : 'bg-transparent border-border/40')
-                          : 'border-border bg-secondary/20 opacity-40'
+                        "bg-secondary/40",
+                        isSelected ? "border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.1)]" : "border-border/40",
+                        !effect.enabled && "opacity-60"
                       )}
                       style={{ 
-                        borderColor: isSelected ? `hsl(${blockColor})` : effect.enabled ? `hsla(${blockColor}, 0.3)` : 'inherit',
-                        boxShadow: isSelected && effect.enabled ? `0 0 15px hsla(${blockColor}, 0.2)` : 'none'
+                        borderColor: isSelected ? `hsl(${blockColor})` : 'inherit',
                       }}
                     >
                       <div className={cn(
-                        "w-10 h-10 rounded flex items-center justify-center mb-1 transition-colors",
-                        effect.enabled ? '' : 'bg-muted text-muted-foreground',
-                        isSelected && "ring-2 ring-offset-2 ring-offset-background"
+                        "w-10 h-10 rounded-md flex items-center justify-center mb-1 transition-all bg-background/60 border border-border/50",
+                        isSelected && "ring-1 ring-offset-1 ring-offset-background"
                       )}
                       style={{ 
-                        backgroundColor: effect.enabled ? `hsl(${blockColor})` : 'inherit',
-                        color: effect.enabled ? '#fff' : 'inherit',
                         ringColor: `hsl(${blockColor})`
                       } as any}
                       >
                         <Power 
                           className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform" 
+                          style={{ color: effect.enabled ? `hsl(${blockColor})` : 'var(--muted-foreground)' }}
                           onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
                         />
                       </div>
-                      <span className="text-[9px] font-bold uppercase tracking-tighter text-center h-4 line-clamp-1"
-                        style={{ color: effect.enabled ? `hsl(${blockColor})` : 'inherit' }}
+                      <span className="text-[9px] font-bold uppercase tracking-tighter text-center h-4 line-clamp-1 transition-colors"
+                        style={{ color: effect.enabled ? `hsl(${blockColor})` : 'var(--muted-foreground)' }}
                       >
                         {effect.type.replace('-', ' ')}
                       </span>
@@ -288,7 +286,7 @@ export default function EditorPage() {
                       )}
                     </div>
                     {idx < activePreset.effects.length - 1 && (
-                      <div className="flex-1 min-w-[20px] h-[2px] bg-gradient-to-r from-border via-border to-border" />
+                      <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />
                     )}
                   </React.Fragment>
                 );
