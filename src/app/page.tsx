@@ -5,8 +5,9 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, Database, RotateCw, Usb } from 'lucide-react';
+import { Sliders, Library, Zap, Download, Database, RotateCw, Usb, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const { status, refreshDevices, availableDevices } = useMidiStore();
@@ -14,9 +15,14 @@ export default function HomePage() {
   return (
     <AppShell>
       <div className="max-w-6xl mx-auto space-y-8">
-        <header>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">Manage your NUX MG-30 device and local preset library.</p>
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">Gestisci il tuo NUX MG-30 e la tua libreria di preset.</p>
+          </div>
+          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 gap-1 py-1 px-3">
+            <Sparkles className="w-3 h-3" /> AI Features Always Online
+          </Badge>
         </header>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -26,13 +32,13 @@ export default function HomePage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Usb className="w-5 h-5 text-primary" />
-                    Connection Status
+                    Stato Connessione
                   </CardTitle>
-                  <CardDescription>Hardware connectivity overview</CardDescription>
+                  <CardDescription>Panoramica connettività hardware</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={refreshDevices}>
                   <RotateCw className="w-4 h-4 mr-2" />
-                  Refresh
+                  Aggiorna
                 </Button>
               </div>
             </CardHeader>
@@ -45,24 +51,24 @@ export default function HomePage() {
                   <div className="text-xl font-bold uppercase tracking-wider">{status}</div>
                   <p className="text-sm text-muted-foreground">
                     {status === 'connected' 
-                      ? "Device detected: NUX MG-30 ready for editing."
-                      : "No device detected. Please connect your MG-30 via USB."}
+                      ? "Dispositivo rilevato: NUX MG-30 pronto per l'editing."
+                      : "Nessun dispositivo rilevato. Collega l'MG-30 via USB per il controllo real-time."}
                   </p>
                 </div>
               </div>
 
               {availableDevices.inputs.length > 0 && (
                 <div className="mt-6 space-y-4">
-                  <h4 className="text-sm font-semibold">Available MIDI Ports</h4>
+                  <h4 className="text-sm font-semibold">Porte MIDI Disponibili</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 rounded-md bg-secondary/30 border border-border">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Inputs</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Input</p>
                       {availableDevices.inputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>
                       ))}
                     </div>
                     <div className="p-3 rounded-md bg-secondary/30 border border-border">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Outputs</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Output</p>
                       {availableDevices.outputs.map(d => (
                         <div key={d.id} className="text-xs truncate">{d.name}</div>
                       ))}
@@ -73,28 +79,28 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-accent/20 bg-accent/5">
             <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-              <CardDescription>Library and presets</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-accent" />
+                AI Smart Studio
+              </CardTitle>
+              <CardDescription>Sempre disponibile, anche offline</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-primary" />
-                  <span className="text-sm">Total Presets</span>
-                </div>
-                <span className="font-mono font-bold">128</span>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Puoi usare l'**AI Mode** e l'**Analisi Preset** anche senza pedaliera. Progetta i tuoi suoni ovunque e sincronizzali quando torni in studio.
+              </p>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-accent/10">
+                <span className="text-xs">AI Mode</span>
+                <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-500 bg-green-500/5">ONLINE</Badge>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
-                <div className="flex items-center gap-2">
-                  <Library className="w-4 h-4 text-accent" />
-                  <span className="text-sm">Banks (Groups)</span>
-                </div>
-                <span className="font-mono font-bold">32</span>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-accent/10">
+                <span className="text-xs">Preset Analysis</span>
+                <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-500 bg-green-500/5">ONLINE</Badge>
               </div>
-              <Button asChild className="w-full mt-2" variant="secondary">
-                <Link href="/library">Manage Library</Link>
+              <Button asChild className="w-full mt-2 bg-accent hover:bg-accent/90">
+                <Link href="/editor">Apri Editor AI</Link>
               </Button>
             </CardContent>
           </Card>
@@ -109,7 +115,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-center">
                   <h4 className="font-bold">Visual Editor</h4>
-                  <p className="text-xs text-muted-foreground">Adjust pedal parameters</p>
+                  <p className="text-xs text-muted-foreground">Regola i parametri dei pedali</p>
                 </div>
               </CardContent>
             </Card>
@@ -122,8 +128,8 @@ export default function HomePage() {
                   <Library className="w-6 h-6 text-accent" />
                 </div>
                 <div className="text-center">
-                  <h4 className="font-bold">Preset Library</h4>
-                  <p className="text-xs text-muted-foreground">Browse your collection</p>
+                  <h4 className="font-bold">Libreria Preset</h4>
+                  <p className="text-xs text-muted-foreground">Sfoglia la tua collezione</p>
                 </div>
               </CardContent>
             </Card>
@@ -137,7 +143,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-center">
                   <h4 className="font-bold">AI Analyzer</h4>
-                  <p className="text-xs text-muted-foreground">Reverse engineer SysEx</p>
+                  <p className="text-xs text-muted-foreground">Reverse engineering SysEx</p>
                 </div>
               </CardContent>
             </Card>
@@ -150,7 +156,7 @@ export default function HomePage() {
               </div>
               <div className="text-center">
                 <h4 className="font-bold">Bulk Backup</h4>
-                <p className="text-xs text-muted-foreground">Backup all 128 slots</p>
+                <p className="text-xs text-muted-foreground">Salva tutti i 128 slot</p>
               </div>
             </CardContent>
           </Card>
