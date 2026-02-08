@@ -38,6 +38,7 @@ export async function summarizePreset(input: PresetSummaryInput): Promise<Preset
     }
 
     return output;
+    
   } catch (error: any) {
     throw new Error(error.message || 'Errore durante la generazione dell\'analisi AI');
   }

@@ -36,7 +36,7 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
       Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
       
       REGOLE RIGIDE:
-      1. Usa SOLO questi tipi di blocchi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
+      1. Usa SOLO questi tipi di blocchi: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol, eq.
       2. Per ogni blocco, scegli un modello verosimile (es. 'tscream' per overdrive, 'plexi100w' per amp).
       3. I parametri devono essere valori numerici tra 0 e 100.
       4. Restituisci SEMPRE tutti i blocchi della catena, abilitando solo quelli necessari per il suono richiesto.
