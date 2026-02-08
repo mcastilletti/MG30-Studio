@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview AI Agent "NUX MG-30 Preset Generator"
- * Genera una configurazione completa partendo da una descrizione creativa.
+ * Genera una configurazione completa utilizzando definePrompt di Genkit 1.x.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,6 +28,22 @@ const MG30PresetOutputSchema = z.object({
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
+const generatePresetPrompt = ai.definePrompt({
+  name: 'generatePresetPrompt',
+  model: 'googleai/gemini-1.5-flash',
+  input: { schema: MG30PresetInputSchema },
+  output: { schema: MG30PresetOutputSchema },
+  system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
+  Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
+  
+  REGOLE RIGIDE:
+  1. Usa QUESTI blocchi in questo ordine: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol.
+  2. Scegli modelli verosimili (es. 'tscream' per overdrive, 'plexi100w' per amp).
+  3. I parametri devono essere tra 0 e 100.
+  4. Restituisci SEMPRE tutti i blocchi della catena.`,
+  prompt: `Crea un preset professionale basato su questa descrizione: "{{description}}"`,
+});
+
 const mg30PresetFlow = ai.defineFlow(
   {
     name: 'mg30PresetFlow',
@@ -35,30 +51,16 @@ const mg30PresetFlow = ai.defineFlow(
     outputSchema: MG30PresetOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
-      system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
-      Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
-      
-      REGOLE RIGIDE:
-      1. Usa SOLO questi tipi di blocchi in questo esatto ordine: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol.
-      2. Per ogni blocco, scegli un modello verosimile (es. 'tscream' per overdrive, 'plexi100w' per amp).
-      3. I parametri devono essere valori numerici tra 0 e 100.
-      4. Restituisci SEMPRE tutti i blocchi della catena, abilitando solo quelli necessari per il suono richiesto.
-      
-      STRUTTURA OUTPUT:
-      - name: Nome creativo del preset.
-      - ampModel: Nome del modello di amplificatore.
-      - effects: Array di oggetti con { type, model, enabled, parameters }.`,
-      prompt: `Crea un preset professionale basato su questa descrizione: "${input.description}"`,
-      output: { schema: MG30PresetOutputSchema }
-    });
-
-    if (!output) {
-      throw new Error('Il modello AI non ha restituito una configurazione valida.');
+    try {
+      const { output } = await generatePresetPrompt(input);
+      if (!output) {
+        throw new Error('Il modello AI non ha restituito una configurazione valida.');
+      }
+      return output;
+    } catch (error: any) {
+      console.error("Preset Gen Flow Error:", error);
+      throw new Error(error.message || 'Errore generazione preset');
     }
-
-    return output;
   }
 );
 
