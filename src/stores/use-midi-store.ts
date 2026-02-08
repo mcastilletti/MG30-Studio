@@ -3,8 +3,10 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass basata sulla documentazione MIDI dell'MG-30
+// Mappatura Bypass basata sui log MIDI dell'utente e documentazione MG-30
+// La sequenza segue l'ordine fisico dei blocchi
 const BYPASS_CC: Record<string, number> = {
+  'wah': 0,
   'compressor': 1,
   'efx': 2,
   'amp': 3,
@@ -14,23 +16,22 @@ const BYPASS_CC: Record<string, number> = {
   'delay': 7,
   'reverb': 8,
   'ir': 9,
-  's-r': 10, // S/R è sul CC 10 come segnalato
-  'wah': 43  // Wah Bypass è sul CC 43
+  's-r': 10
 };
 
-// Valori specifici di ON/OFF per la stabilità del segnale
+// Valori specifici di ON/OFF (standard NUX: valore e valore + 64)
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
+  'wah': { on: 1, off: 65 },
   'compressor': { on: 1, off: 65 },
-  'efx': { on: 1, off: 65 },
+  'efx': { on: 2, off: 66 },
   'amp': { on: 13, off: 77 },
-  'eq': { on: 1, off: 65 },
-  'noise-gate': { on: 1, off: 65 },
+  'eq': { on: 4, off: 68 },
+  'noise-gate': { on: 5, off: 69 },
   'modulation': { on: 6, off: 70 },
   'delay': { on: 7, off: 71 },
-  'reverb': { on: 1, off: 65 },
-  'ir': { on: 7, off: 71 },
-  's-r': { on: 1, off: 65 },
-  'wah': { on: 1, off: 65 }
+  'reverb': { on: 8, off: 72 },
+  'ir': { on: 9, off: 73 },
+  's-r': { on: 10, off: 74 }
 };
 
 // Mappatura manopole fisiche
@@ -187,7 +188,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       if (blockType) {
         const vals = BYPASS_VALS[blockType];
         if (vals) {
-          const isEnabled = val === vals.on;
+          // Se il valore è vicino a quello di ON (es. 1-63) lo consideriamo attivo
+          const isEnabled = val < 64;
           usePresetStore.getState().updateBlockStateLocally(blockType, isEnabled);
         }
       }
