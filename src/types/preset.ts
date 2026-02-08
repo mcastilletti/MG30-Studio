@@ -1,4 +1,4 @@
-export type EffectType = 'wah' | 'noise-gate' | 'compressor' | 'efx' | 'amp' | 'ir' | 'eq' | 'modulation' | 'delay' | 'reverb';
+export type EffectType = 'wah' | 'noise-gate' | 'compressor' | 'efx' | 'amp' | 'ir' | 'sr' | 'modulation' | 'delay' | 'reverb' | 'vol' | 'eq';
 
 export interface EffectState {
   id: string;

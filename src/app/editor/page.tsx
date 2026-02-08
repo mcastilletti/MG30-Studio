@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -34,10 +33,12 @@ const getBlockColorVar = (type: string) => {
     case 'efx': return 'var(--block-efx)';
     case 'amp': return 'var(--block-amp)';
     case 'ir': return 'var(--block-ir)';
-    case 'eq': return 'var(--block-eq)';
+    case 'sr': return 'var(--block-sr)';
     case 'modulation': return 'var(--block-mod)';
     case 'delay': return 'var(--block-dly)';
     case 'reverb': return 'var(--block-rvb)';
+    case 'vol': return 'var(--block-vol)';
+    case 'eq': return 'var(--block-eq)';
     default: return 'var(--primary)';
   }
 };
@@ -116,12 +117,6 @@ export default function EditorPage() {
     }
   };
 
-  const handleAiModeConfirm = () => {
-    if (!proposedPreset) return;
-    // ... Logica di applicazione preset proposta ...
-    setIsAiModalOpen(false);
-  };
-
   const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type as any] || [] : [];
   const currentBlockColor = selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : 'hsl(var(--primary))';
 
@@ -192,7 +187,7 @@ export default function EditorPage() {
                       <div className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50">
                         <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)} />
                       </div>
-                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>{effect.type}</span>
+                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>{effect.type === 'noise-gate' ? 'GATE' : effect.type === 'compressor' ? 'COMP' : effect.type === 'sr' ? 'S/R' : effect.type === 'vol' ? 'VOL' : effect.type}</span>
                     </div>
                     {idx < activePreset.effects.length - 1 && <div className="flex-1 min-w-[20px] h-[2px] bg-border/40" />}
                   </React.Fragment>

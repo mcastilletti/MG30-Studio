@@ -132,11 +132,16 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'ir-gj15', name: 'G-J15', fullName: 'GIBSON J-15 (ACOUSTIC)', parameters: IR_BASS_PARAMS },
     { id: 'ir-user', name: 'USER IR CAB', fullName: 'USER IR CAB', parameters: IR_BASS_PARAMS }
   ],
-  'eq': [
-    { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },
-    { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0 }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
-    { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [{ id: 'vol', name: 'VOL', min: -10, max: 10, step: 1, default: 0 }, P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), { id: 'gain', name: 'GAIN', min: -10, max: 10, step: 1, default: 0 }] },
-    { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'), P1('b2freq', 'Band2 Freq'), P1('b2gain', 'Band2 Gain'), P1('b2q', 'Band2 Q'), P1('b3freq', 'Band3 Freq'), P1('b3gain', 'Band3 Gain'), P1('b3q', 'Band3 Q')] }
+  'sr': [
+    { 
+      id: 'send-return', 
+      name: 'S/R', 
+      fullName: 'SEND / RETURN', 
+      parameters: [
+        { id: 'send', name: 'Send', min: 0, max: 127, step: 1, default: 100 },
+        { id: 'return', name: 'Return', min: 0, max: 127, step: 1, default: 100 }
+      ] 
+    }
   ],
   'modulation': [
     { id: 'mod-ce1', name: 'CE-1', fullName: 'ROLAND CE-1 CHORUS', parameters: [P1('intensity', 'Intensity'), P1('depth', 'Depth'), P1('rate', 'Rate'), SUBDIV] },
@@ -168,5 +173,14 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'plate', name: 'PLATE', fullName: 'EMT 140 Plate Reverb', parameters: [P1('decay', 'DECAY'), P1('level', 'LEVEL')] },
     { id: 'spring', name: 'SPRING', fullName: 'Vintage Spring Reverb', parameters: [P1('decay', 'DECAY'), P1('level', 'LEVEL')] },
     { id: 'shimmer', name: 'SHIMMER', fullName: 'SHIMMER REVERB', parameters: [P1('mix', 'MIX'), P1('decay', 'DECAY'), P1('shim', 'SHIM')] }
+  ],
+  'vol': [
+    { id: 'patch-vol', name: 'VOL', fullName: 'PATCH VOLUME', parameters: [P1('level', 'Level', 100)] }
+  ],
+  'eq': [
+    { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },
+    { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0 }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
+    { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [{ id: 'vol', name: 'VOL', min: -10, max: 10, step: 1, default: 0 }, P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), { id: 'gain', name: 'GAIN', min: -10, max: 10, step: 1, default: 0 }] },
+    { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'), P1('b2freq', 'Band2 Freq'), P1('b2gain', 'Band2 Gain'), P1('b2q', 'Band2 Q'), P1('b3freq', 'Band3 Freq'), P1('b3gain', 'Band3 Gain'), P1('b3q', 'Band3 Q')] }
   ]
 };
