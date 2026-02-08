@@ -15,24 +15,21 @@ const BYPASS_CC: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9,
-  's-r': 10
+  'ir': 9
 };
 
-// Valori ON/OFF (NUX standard: 1-63 = ON, 64-127 = OFF)
-// Usiamo valori medi per sicurezza
+// Valori ON/OFF specificati dall'utente
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
-  'wah': { on: 1, off: 68 },
-  'compressor': { on: 1, off: 65 },
-  'efx': { on: 2, off: 66 },
-  'amp': { on: 3, off: 67 },
-  'eq': { on: 4, off: 68 },
+  'wah': { on: 1, off: 65 },
+  'compressor': { on: 2, off: 66 },
+  'efx': { on: 5, off: 69 },
+  'amp': { on: 13, off: 77 },
+  'eq': { on: 1, off: 65 },
   'noise-gate': { on: 5, off: 69 },
   'modulation': { on: 6, off: 70 },
   'delay': { on: 7, off: 71 },
-  'reverb': { on: 8, off: 72 },
-  'ir': { on: 9, off: 73 },
-  's-r': { on: 10, off: 74 }
+  'reverb': { on: 1, off: 65 },
+  'ir': { on: 7, off: 71 }
 };
 
 // Mappatura manopole fisiche e pedale d'espressione
@@ -62,8 +59,7 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'wah': 9,
-  's-r': 10
+  'wah': 9
 };
 
 const formatSlotLabel = (slot: number) => {
@@ -187,14 +183,15 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const cc = data[1];
       const val = data[2];
       
-      // 1. Gestione Bypass (On/Off) basata su CC Mapping
+      // Gestione Bypass
       const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockTypeForBypass) {
+        // Usiamo la logica standard: < 64 = ON, >= 64 = OFF
         const isEnabled = val < 64;
         usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // 2. Gestione Parametri Real-time (incluso CC 79 Wah Position)
+      // Gestione Parametri Real-time
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
@@ -211,6 +208,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
+    // Gestione nomi preset via SysEx (durante sync)
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -301,6 +299,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
+      // Comandi SysEx per richiedere i dettagli del preset
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       
