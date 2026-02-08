@@ -4,26 +4,27 @@
  * @fileOverview AI Agent "Nux MG-30 preset"
  * 
  * Questo flow genera un preset completo per il NUX MG-30 basandosi su una descrizione del tono.
+ * Include una gestione degli errori robusta per evitare Errori 500.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const MG30PresetInputSchema = z.object({
-  description: z.string().describe('Descrizione del suono desiderato (es. "Heavy Metal anni 80", "Blues caldo alla SRV")'),
+  description: z.string().describe('Descrizione del suono desiderato'),
 });
 
 const EffectSchema = z.object({
-  type: z.string().describe('ID del blocco (noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb)'),
-  model: z.string().describe('ID del modello hardware'),
+  type: z.string(),
+  model: z.string(),
   enabled: z.boolean(),
-  parameters: z.record(z.any()).describe('Mappa dei parametri e valori (0-100)')
+  parameters: z.record(z.any())
 });
 
 const MG30PresetOutputSchema = z.object({
-  name: z.string().describe('Nome creativo del preset'),
-  ampModel: z.string().describe('Nome dell\'amplificatore'),
-  effects: z.array(EffectSchema).describe('Catena completa degli effetti')
+  name: z.string(),
+  ampModel: z.string(),
+  effects: z.array(EffectSchema)
 });
 
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
@@ -33,34 +34,27 @@ const promptDefinition = ai.definePrompt({
   name: 'mg30PresetPrompt',
   input: { schema: MG30PresetInputSchema },
   output: { schema: MG30PresetOutputSchema },
-  system: `Sei un esperto sound designer di chitarra per il NUX MG-30.
-  Devi generare un oggetto JSON che rappresenti una patch valida.
-  Usa SOLO questi ID blocco: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
-  I parametri devono essere numeri tra 0 e 100.
-  Assicurati di includere tutti i blocchi nella catena.`,
-  prompt: `Crea un preset professionale per: "{{{description}}}"
-
-Esempi di modelli validi:
-- AMP: jazzclean, deluxervb, plexi100w, brit800, slo100, dualrect.
-- EFX: tscream, distone, bluesdrv, reddirt.
-- REVERB: room, hall, plate, shimmer.`,
+  config: {
+    temperature: 0.7,
+  },
+  system: `Sei un esperto sound designer per il NUX MG-30. Genera un preset in formato JSON.
+  Usa solo questi blocchi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
+  Gli ID modelli devono essere minuscoli (es: jazzclean, plexi100w, tscream).
+  I parametri devono essere numeri 0-100.
+  Restituisci SEMPRE tutti i blocchi indicati, anche se disattivati.`,
+  prompt: `Crea un preset professionale per: "{{{description}}}"`,
 });
 
-const mg30PresetGenFlow = ai.defineFlow(
-  {
-    name: 'mg30PresetGenFlow',
-    inputSchema: MG30PresetInputSchema,
-    outputSchema: MG30PresetOutputSchema,
-  },
-  async (input) => {
+export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
+  try {
     const { output } = await promptDefinition(input);
     if (!output) {
-      throw new Error('Errore: l\'AI non ha generato una configurazione valida.');
+      throw new Error('L\'AI non ha restituito dati');
     }
     return output;
+  } catch (error: any) {
+    console.error("AI Generation Error:", error);
+    // Lanciamo un errore che possa essere catturato dal client con un messaggio pulito
+    throw new Error(error.message || 'Errore durante la generazione del preset');
   }
-);
-
-export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  return mg30PresetGenFlow(input);
 }
