@@ -2,6 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const formatSlotLabel = (slot: number) => {
 };
 
 export default function LibraryPage() {
+  const router = useRouter();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [search, setSearch] = useState('');
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
@@ -48,25 +50,34 @@ export default function LibraryPage() {
 
     sendProgramChange(preset.slot - 1);
     
-    setActivePreset({
+    // Assicuriamoci che il preset caricato nello store abbia gli effetti mappati se vuoto
+    const presetToLoad = {
       ...preset,
       effects: preset.effects.length > 0 ? preset.effects : [
-        { id: 'ng', type: 'noise-gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-        { id: 'cmp', type: 'compressor', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
-        { id: 'efx', type: 'efx', enabled: true, parameters: { gain: 30, tone: 50, level: 50, bass: 50, extra: 0 } },
-        { id: 'amp', type: 'amp', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50, sag: 50, bias: 50 } },
-        { id: 'ir', type: 'ir', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80, distance: 0 } },
-        { id: 'eq', type: 'eq', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50 } },
-        { id: 'mod', type: 'modulation', enabled: false, parameters: { rate: 30, depth: 50, width: 50, regen: 20, mix: 50 } },
-        { id: 'delay', type: 'delay', enabled: false, parameters: { time: 400, feedback: 30, mix: 20, level: 50, tone: 50, mod: 50, rate: 50, width: 50 } },
-        { id: 'reverb', type: 'reverb', enabled: true, parameters: { decay: 2.5, tone: 50, mix: 15, level: 50 } }
+        { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
+        { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
+        { id: 'efx', type: 'efx', model: 'tscream', enabled: true, parameters: { drive: 30, tone: 50, level: 50 } },
+        { id: 'amp', type: 'amp', model: 'jazzclean', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, level: 50 } },
+        { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 50, lowcut: 20, highcut: 20000, mic: 1, axis: 0 } },
+        { id: 'eq', type: 'eq', model: 'eq-ge6', enabled: true, parameters: { '100hz': 50, '220hz': 50, '500hz': 50, '1.2khz': 50, '2.6khz': 50, '6.4khz': 50, level: 50 } },
+        { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 30, depth: 50, rate: 50, subdiv: 2 } },
+        { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 40, echo: 30, intensity: 20, subdiv: 2 } },
+        { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 2.5, tone: 50, level: 50 } }
       ]
-    });
+    };
+
+    setActivePreset(presetToLoad);
 
     toast({
       title: "Preset caricato",
       description: `Caricato ${preset.name} nello slot ${formatSlotLabel(preset.slot)}`
     });
+  };
+
+  const handleEditPreset = (e: React.MouseEvent, preset: Preset) => {
+    e.stopPropagation(); // Evitiamo il doppio trigger dal clic della card
+    handleLoadPreset(preset);
+    router.push('/editor');
   };
 
   const startEditing = (e: React.MouseEvent, preset: Preset) => {
@@ -202,7 +213,8 @@ export default function LibraryPage() {
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleLoadPreset(preset)}>Carica su MG-30</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleLoadPreset(preset); }}>Carica su MG-30</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditPreset(e as any, preset); }}>Modifica Parametri</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => startEditing(e as any, preset)}>Rinomina</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -234,7 +246,14 @@ export default function LibraryPage() {
                   </CardContent>
                   <CardFooter className="pt-2 border-t border-border/30 bg-secondary/5 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground font-mono">MIDI PC: {preset.slot - 1}</span>
-                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-primary-foreground">Modifica</Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={(e) => handleEditPreset(e, preset)}
+                      className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-primary-foreground"
+                    >
+                      Modifica
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -281,7 +300,8 @@ export default function LibraryPage() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => startEditing(e as any, preset)}>Edit</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => startEditing(e as any, preset)}>Edit Name</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => handleEditPreset(e as any, preset)}>Modifica</Button>
                              <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={() => handleLoadPreset(preset)}>Load</Button>
                           </div>
                         </td>
