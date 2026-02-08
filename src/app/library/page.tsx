@@ -54,17 +54,22 @@ export default function LibraryPage() {
 
   const handleShowInfo = async (e: React.MouseEvent, preset: Preset) => {
     e.stopPropagation();
+    
+    // Serializzazione pulita per evitare problemi con oggetti Date o simili
+    const cleanPreset = JSON.parse(JSON.stringify(preset));
+    
     setSummaryPreset(preset);
     setIsSummarizing(true);
     setSummaryText(null);
     
     try {
-      const result = await summarizePreset({ preset });
+      const result = await summarizePreset({ preset: cleanPreset });
       setSummaryText(result.summary);
     } catch (err) {
+      console.error(err);
       toast({
         title: "Errore AI",
-        description: "Impossibile generare il riassunto.",
+        description: "Impossibile generare il riassunto. Verifica la connessione o riprova.",
         variant: "destructive"
       });
       setSummaryPreset(null);
@@ -298,7 +303,7 @@ export default function LibraryPage() {
               ) : (
                 <div className="w-full space-y-4">
                   <div className="p-4 rounded-lg bg-secondary/20 border border-border text-sm leading-relaxed whitespace-pre-wrap">
-                    {summaryText}
+                    {summaryText || "Nessuna analisi disponibile."}
                   </div>
                 </div>
               )}

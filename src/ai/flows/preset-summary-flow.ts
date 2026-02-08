@@ -20,7 +20,12 @@ export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
 export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
-  return presetSummaryFlow(input);
+  try {
+    return await presetSummaryFlow(input);
+  } catch (error) {
+    console.error("Genkit Flow Error:", error);
+    throw new Error('Impossibile generare il riassunto del preset');
+  }
 }
 
 const summaryPrompt = ai.definePrompt({
@@ -29,18 +34,24 @@ const summaryPrompt = ai.definePrompt({
   output: { schema: PresetSummaryOutputSchema },
   prompt: `Sei un esperto sound designer di chitarra. Analizza questo preset per il NUX MG-30 e descrivine il carattere sonoro.
   
-Preset: {{{preset.name}}}
-Amp: {{{preset.ampModel}}}
-Catena: 
+Preset Name: {{{preset.name}}}
+Amp Model: {{{preset.ampModel}}}
+
+Catena Effetti: 
+{{#if preset.effects.length}}
 {{#each preset.effects}}
 - {{type}} ({{model}}): {{#if enabled}}Attivo{{else}}Bypass{{/if}}
 {{/each}}
+{{else}}
+Nessun effetto aggiuntivo configurato.
+{{/if}}
 
-Descrivi in modo professionale e accattivante:
-1. Il genere musicale ideale.
-2. Come suona (es. "caldo e dinamico", "aggressivo e tagliente").
-3. Un consiglio su come usarlo (es. "ottimo per assoli", "perfetto con il pick-up al manico").
-Sii conciso ma tecnico. Usa l'italiano.`,
+Il tuo compito è fornire un'analisi professionale in italiano che includa:
+1. Il genere musicale ideale basato sull'amplificatore e la catena.
+2. Descrizione del tono (es. "crunchy e dinamico", "ambient etereo").
+3. Un consiglio pratico per l'uso.
+
+Sii conciso, tecnico e accattivante.`,
 });
 
 const presetSummaryFlow = ai.defineFlow(
@@ -51,7 +62,9 @@ const presetSummaryFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await summaryPrompt(input);
-    if (!output) throw new Error('Errore nella generazione del riassunto');
+    if (!output || !output.summary) {
+      throw new Error('Il modello non ha restituito un riassunto valido');
+    }
     return output;
   }
 );
