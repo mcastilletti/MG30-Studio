@@ -4,7 +4,7 @@ import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass basata sui log MIDI dell'utente e documentazione MG-30
+// Mappatura Bypass CC fornita dall'utente
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -19,12 +19,13 @@ const BYPASS_CC: Record<string, number> = {
   's-r': 10
 };
 
-// Valori specifici di ON/OFF (standard NUX: valore < 64 = ON)
+// Valori ON/OFF (NUX standard: 1-63 = ON, 64-127 = OFF)
+// Usiamo valori medi per sicurezza
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'wah': { on: 1, off: 68 },
   'compressor': { on: 1, off: 65 },
   'efx': { on: 2, off: 66 },
-  'amp': { on: 13, off: 77 },
+  'amp': { on: 3, off: 67 },
   'eq': { on: 4, off: 68 },
   'noise-gate': { on: 5, off: 69 },
   'modulation': { on: 6, off: 70 },
@@ -34,7 +35,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   's-r': { on: 10, off: 74 }
 };
 
-// Mappatura manopole fisiche (Hardware -> Software)
+// Mappatura manopole fisiche e pedale d'espressione
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [79], // CC 79 = Wah Position
   'compressor': [13, 14, 15, 90],
@@ -48,7 +49,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'ir': [64, 65, 66, 67, 68, 69]
 };
 
-// CC 78 viene usato per spostare il focus dello schermo dell'MG-30
+// CC 78 per spostare il focus dello schermo dell'MG-30
 const SELECT_BLOCK_CC = 78;
 
 const BLOCK_INDEX_MAP: Record<string, number> = {
@@ -186,14 +187,14 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const cc = data[1];
       const val = data[2];
       
-      // 1. Gestione Bypass (On/Off)
+      // 1. Gestione Bypass (On/Off) basata su CC Mapping
       const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockTypeForBypass) {
         const isEnabled = val < 64;
         usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // 2. Gestione Parametri Real-time (incluso Wah Position CC 79)
+      // 2. Gestione Parametri Real-time (incluso CC 79 Wah Position)
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
