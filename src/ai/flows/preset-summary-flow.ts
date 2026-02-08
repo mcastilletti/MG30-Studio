@@ -2,7 +2,6 @@
 
 /**
  * @fileOverview AI Agent per il riassunto dei preset NUX MG-30.
- * Utilizza Genkit 1.x con gestione robusta delle Server Actions.
  */
 
 import { ai } from '@/ai/genkit';

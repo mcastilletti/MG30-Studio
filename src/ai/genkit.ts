@@ -1,11 +1,9 @@
-
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Inizializzazione globale di Genkit.
- * Il plugin googleAI cercherà automaticamente GOOGLE_GENAI_API_KEY 
- * o GEMINI_API_KEY nel file .env.
+ * Utilizziamo googleAI che cercherà automaticamente le variabili d'ambiente.
  */
 export const ai = genkit({
   plugins: [

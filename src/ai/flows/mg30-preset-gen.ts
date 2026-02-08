@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -61,10 +60,7 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
     return output;
   } catch (error: any) {
     console.error("AI Generation Error:", error);
-    // Propaghiamo l'errore specifico per aiutare il debugging nel client
-    if (error.message?.includes('API key')) {
-      throw new Error('Configurazione AI incompleta: Manca la chiave API nel file .env');
-    }
+    // Restituiamo il messaggio di errore originale per debug nel client
     throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
 }
