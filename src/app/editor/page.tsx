@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MG30_MODELS } from '@/lib/mg30-data';
+import { MG30_MODELS, MG30Model } from '@/lib/mg30-data';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -26,11 +26,21 @@ export default function EditorPage() {
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
 
-  const handleParamChange = (effectType: string, param: string, value: number, knobIndex: number) => {
-    updateParameter(selectedBlockId, param, value);
+  const selectedEffect = useMemo(() => 
+    activePreset.effects.find(e => e.id === selectedBlockId),
+    [activePreset.effects, selectedBlockId]
+  );
+
+  const currentModelData = useMemo(() => {
+    if (!selectedEffect) return null;
+    return MG30_MODELS[selectedEffect.type].find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type][0];
+  }, [selectedEffect]);
+
+  const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
+    updateParameter(selectedBlockId, paramId, value);
     
     if (status === 'connected') {
-      sendKnobParameter(effectType, knobIndex, value);
+      sendKnobParameter(effectType, index, value);
     }
   };
 
@@ -42,8 +52,12 @@ export default function EditorPage() {
     }
   };
 
-  const handleSelectBlock = (effectId: string) => {
+  const handleSelectBlock = (effectId: string, type: string) => {
     setSelectedBlockId(effectId);
+    if (status === 'connected') {
+      // CC 78 for direct hardware selection
+      selectBlock(type);
+    }
   };
 
   const handleHardwareSync = (type: string) => {
@@ -61,7 +75,6 @@ export default function EditorPage() {
     setActivePreset({ ...activePreset, slot: nextSlot });
   };
 
-  const selectedEffect = activePreset.effects.find(e => e.id === selectedBlockId);
   const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
 
   return (
@@ -103,7 +116,7 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Single click to Edit UI • Double click for Hardware Edit (CC 78)</span>
+                <span className="text-[10px] text-muted-foreground italic">Click: Edit UI & Hardware (CC 78) • Double Click: Sync</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -111,7 +124,7 @@ export default function EditorPage() {
               {activePreset.effects.map((effect, idx) => (
                 <React.Fragment key={effect.id}>
                   <div 
-                    onClick={() => handleSelectBlock(effect.id)}
+                    onClick={() => handleSelectBlock(effect.id, effect.type)}
                     onDoubleClick={() => handleHardwareSync(effect.type)}
                     className={cn(
                       "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
@@ -161,12 +174,12 @@ export default function EditorPage() {
                     {selectedEffect?.type.replace('-', ' ')}
                     <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model.toUpperCase()}</Badge>
                   </CardTitle>
-                  <CardTitle className="text-xs text-muted-foreground font-normal">Section Model Selection & Parameters</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground font-normal">Model: {currentModelData?.name}</CardTitle>
                 </div>
               </div>
               
               <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-                <div className="flex-1 sm:flex-none min-w-[180px]">
+                <div className="flex-1 sm:flex-none min-w-[200px]">
                   <Select 
                     value={selectedEffect?.model} 
                     onValueChange={(val) => updateModel(selectedEffect!.id, val)}
@@ -197,15 +210,19 @@ export default function EditorPage() {
               </div>
             </CardHeader>
             <CardContent className="p-10">
-              {selectedEffect && (
+              {selectedEffect && currentModelData && (
                 <div className="space-y-12">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-12 gap-x-8 justify-items-center">
-                    {Object.entries(selectedEffect.parameters).map(([key, value], index) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
+                    {currentModelData.parameters.map((param, index) => (
                       <RotaryKnob 
-                        key={key}
-                        label={key} 
-                        value={typeof value === 'number' ? value : 50} 
-                        onChange={(v) => handleParamChange(selectedEffect.type, key, v, index)} 
+                        key={param.id}
+                        label={param.name} 
+                        value={Number(selectedEffect.parameters[param.id] ?? param.default)} 
+                        min={param.min}
+                        max={param.max}
+                        step={param.step}
+                        unit={param.unit}
+                        onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} 
                         size={72} 
                         className={index < 4 ? "border-b-2 border-primary/20 pb-2" : ""}
                       />
@@ -216,10 +233,12 @@ export default function EditorPage() {
               <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center flex flex-col gap-1">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Sparkles className="w-3 h-3 text-primary" />
-                  <span className="font-bold">Hardware Link Active</span>
+                  <span className="font-bold">Hardware Real-Time Link</span>
                 </div>
-                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera per la sezione {selectedEffect?.type.toUpperCase()}</span>
-                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()} • Doppio click per Hardware Edit (CC 78)</span>
+                <span>Le manopole della prima riga (evidenziate) corrispondono ai controlli fisici hardware</span>
+                <span className="font-mono text-primary/70">
+                  {selectedEffect?.type.toUpperCase()} • CC Mapping: {currentModelData?.parameters.slice(0, 4).map(p => p.name).join(', ')}
+                </span>
               </div>
             </CardContent>
           </Card>
