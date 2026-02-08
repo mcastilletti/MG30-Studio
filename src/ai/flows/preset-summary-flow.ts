@@ -1,0 +1,57 @@
+'use server';
+
+/**
+ * @fileOverview AI Agent per il riassunto dei preset NUX MG-30.
+ * Genera una descrizione testuale del tono basata sulla catena degli effetti.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+
+const PresetSummaryInputSchema = z.object({
+  preset: z.any().describe('L\'oggetto preset completo da analizzare'),
+});
+
+const PresetSummaryOutputSchema = z.object({
+  summary: z.string().describe('Un riassunto creativo e tecnico del preset'),
+});
+
+export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
+export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
+
+export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
+  return presetSummaryFlow(input);
+}
+
+const summaryPrompt = ai.definePrompt({
+  name: 'presetSummaryPrompt',
+  input: { schema: PresetSummaryInputSchema },
+  output: { schema: PresetSummaryOutputSchema },
+  prompt: `Sei un esperto sound designer di chitarra. Analizza questo preset per il NUX MG-30 e descrivine il carattere sonoro.
+  
+Preset: {{{preset.name}}}
+Amp: {{{preset.ampModel}}}
+Catena: 
+{{#each preset.effects}}
+- {{type}} ({{model}}): {{#if enabled}}Attivo{{else}}Bypass{{/if}}
+{{/each}}
+
+Descrivi in modo professionale e accattivante:
+1. Il genere musicale ideale.
+2. Come suona (es. "caldo e dinamico", "aggressivo e tagliente").
+3. Un consiglio su come usarlo (es. "ottimo per assoli", "perfetto con il pick-up al manico").
+Sii conciso ma tecnico. Usa l'italiano.`,
+});
+
+const presetSummaryFlow = ai.defineFlow(
+  {
+    name: 'presetSummaryFlow',
+    inputSchema: PresetSummaryInputSchema,
+    outputSchema: PresetSummaryOutputSchema,
+  },
+  async (input) => {
+    const { output } = await summaryPrompt(input);
+    if (!output) throw new Error('Errore nella generazione del riassunto');
+    return output;
+  }
+);
