@@ -122,11 +122,17 @@ export default function EditorPage() {
     const updatedEffects = activePreset.effects.map(effect => {
       const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
       if (propEffect) {
+        // Convertiamo l'array di parametri in un record per lo store
+        const paramRecord: Record<string, number> = {};
+        propEffect.parameters.forEach(p => {
+          paramRecord[p.name] = p.value;
+        });
+
         return {
           ...effect,
           model: propEffect.model,
           enabled: propEffect.enabled,
-          parameters: { ...effect.parameters, ...propEffect.parameters }
+          parameters: { ...effect.parameters, ...paramRecord }
         };
       }
       return effect;

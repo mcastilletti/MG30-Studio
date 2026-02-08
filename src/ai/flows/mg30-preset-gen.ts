@@ -11,8 +11,13 @@ import { z } from 'genkit';
 
 /* =========================
    SCHEMA OUTPUT OTTIMIZZATO
-   (Evitiamo unions e literals per compatibilità API Gemini)
+   (Evitiamo z.record per compatibilità con response_schema di Gemini)
 ========================= */
+
+const ParameterOutputSchema = z.object({
+  name: z.string().describe('Nome del parametro (es. gain, tone, level)'),
+  value: z.number().describe('Valore del parametro (0-100)'),
+});
 
 const EffectOutputSchema = z.object({
   type: z.enum([
@@ -21,7 +26,7 @@ const EffectOutputSchema = z.object({
   ]).describe('Il tipo di blocco catena'),
   model: z.string().describe('Il nome tecnico del modello (es. gate, tscream, plexi100w, hall)'),
   enabled: z.boolean().describe('Stato di attivazione del blocco'),
-  parameters: z.record(z.number()).describe('Mappa dei parametri (es. { "gain": 50, "tone": 30 }) con valori 0-100'),
+  parameters: z.array(ParameterOutputSchema).describe('Lista dei parametri configurati per questo effetto'),
 });
 
 const MG30PresetOutputSchema = z.object({
