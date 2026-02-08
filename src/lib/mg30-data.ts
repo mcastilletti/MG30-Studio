@@ -18,23 +18,26 @@ export interface MG30Model {
 }
 
 const P1 = (id: string, name: string, def = 50) => ({ id, name, min: 0, max: 100, step: 1, default: def });
-const SUBDIV = { id: 'subdiv', name: 'Sub Div', min: 0, max: 6, step: 1, default: 2 }; 
-
-const AMP_STD_PARAMS = [
-  P1('gain', 'Gain', 40), P1('master', 'Master', 50), P1('bass', 'Bass', 50), P1('mid', 'Middle', 50),
-  P1('treble', 'Treble', 50), P1('presence', 'Presence', 50), P1('bias', 'Bias', 50), P1('level', 'Level', 50)
-];
+const SUBDIV = { 
+  id: 'subdiv', 
+  name: 'Sub Div', 
+  min: 0, 
+  max: 6, 
+  step: 1, 
+  default: 2,
+  description: '1/4, 1/8D, 1/8, 1/4T, 1/16, 1/8T, 1/32'
+}; 
 
 const IR_GUITAR_PARAMS = [
   { id: 'mic', name: 'Mic', min: 0, max: 7, step: 1, default: 1 }, 
   { id: 'axis', name: 'Axis', min: 0, max: 2, step: 1, default: 0 },
-  { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50, unit: 'dB' },
+  { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB' },
   { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz' },
   { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
 ];
 
 const IR_BASS_PARAMS = [
-  { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50, unit: 'dB' },
+  { id: 'level', name: 'Level', min: -12, max: 12, step: 1, default: 0, unit: 'dB' },
   { id: 'lowcut', name: 'Lo Cut', min: 20, max: 1000, step: 1, default: 20, unit: 'Hz' },
   { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
 ];
@@ -72,7 +75,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'amp': [
     { id: 'jazzclean', name: 'JAZZ CLEAN', fullName: 'Roland JC-120', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('brightsw', 'Bright SW', 0), P1('level', 'Level')] },
-    { id: 'deluxervb', name: 'DELUXE RVB', fullName: '64 Fender Deluxe Reverb', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('bias', 'Bias', 50), P1('level', 'Level')] },
+    { id: 'deluxervb', name: 'DELUXE RVB', fullName: '64 Fender Deluxe Reverb', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'bassmate', name: 'BASS MATE', fullName: '59 Fender Bassman', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'tweedy', name: 'TWEEDY', fullName: '57 Fender Tweed Deluxe', parameters: [P1('gain', 'Gain'), P1('tone', 'Tone'), P1('master', 'Master'), P1('level', 'Level')] },
     { id: 'twinrvb', name: 'TWIN RVB', fullName: '65 Fender Twin Reverb', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('brightsw', 'Bright SW', 0), P1('bias', 'Bias'), P1('level', 'Level')] },
@@ -80,22 +83,22 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'calicrunch', name: 'CALI CRUNCH', fullName: '1978 Mesa Boogie MK1', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'classa15', name: 'CLASS A 15', fullName: 'VOX AC15', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('treble', 'Treble'), P1('level', 'Level')] },
     { id: 'classa30', name: 'CLASS A 30', fullName: 'VOX AC30', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('treble', 'Treble'), P1('level', 'Level')] },
-    { id: 'plexi100w', name: 'PLEXI 100W', fullName: '68 Marshall Plexi 100W', parameters: AMP_STD_PARAMS },
-    { id: 'plexi45', name: 'PLEXI 45', fullName: '67 Marshall Plexi 45W', parameters: AMP_STD_PARAMS },
-    { id: 'brit800', name: 'BRIT 800', fullName: '1977 Marshall JCM800', parameters: AMP_STD_PARAMS },
-    { id: '1987x50w', name: '1987 X 50W', fullName: '1989 Marshall 1987 X 50W', parameters: AMP_STD_PARAMS },
-    { id: 'slo100', name: 'SLO 100', fullName: '1980 Soldano SLO 100', parameters: AMP_STD_PARAMS },
-    { id: 'firemanhbe', name: 'FIREMAN HBE', fullName: '2005 Friedman HBE', parameters: AMP_STD_PARAMS },
-    { id: 'dualrect', name: 'DUAL RECT', fullName: '1985 Mesa Dual Rectifier', parameters: AMP_STD_PARAMS },
-    { id: 'dievh4', name: 'DIE VH4', fullName: '1999 DEIZEL VH4', parameters: AMP_STD_PARAMS },
-    { id: 'vibroking', name: 'VIBRO KING', fullName: '1990 Fender Vibro King', parameters: AMP_STD_PARAMS },
-    { id: 'budda', name: 'BUDDA', fullName: 'BUDDA', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('level', 'Level')] },
-    { id: 'mrz38', name: 'MR Z 38', fullName: '2001 DR Z MAZ 38', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('level', 'Level')] },
+    { id: 'plexi100w', name: 'PLEXI 100W', fullName: '68 Marshall Plexi 100W', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'plexi45', name: 'PLEXI 45', fullName: '67 Marshall Plexi 45W', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'brit800', name: 'BRIT 800', fullName: '1977 Marshall JCM800', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: '1987x50w', name: '1987 X 50W', fullName: '1989 Marshall 1987 X 50W', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'slo100', name: 'SLO 100', fullName: '1980 Soldano SLO 100', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'firemanhbe', name: 'FIREMAN HBE', fullName: '2005 Friedman HBE', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'dualrect', name: 'DUAL RECT', fullName: '1985 Mesa Dual Rectifier', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'dievh4', name: 'DIE VH4', fullName: '1999 DEIZEL VH4', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'vibroking', name: 'VIBRO KING', fullName: '1990 Fender Vibro King', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'budda', name: 'BUDDA', fullName: 'BUDDA', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('middle', 'Middle'), P1('treble', 'Treble'), P1('level', 'Level')] },
+    { id: 'mrz38', name: 'MR Z 38', fullName: '2001 DR Z MAZ 38', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('middle', 'Middle'), P1('treble', 'Treble'), P1('level', 'Level')] },
     { id: 'superrvb', name: 'SUPER RVB', fullName: '2008 Fender Supersonic', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('brightsw', 'Bright SW', 0), P1('bias', 'Bias'), P1('level', 'Level')] },
-    { id: 'britblues', name: 'BRIT BLUES', fullName: '1967 Marshall JTM45', parameters: AMP_STD_PARAMS },
+    { id: 'britblues', name: 'BRIT BLUES', fullName: '1967 Marshall JTM45', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'match', name: 'MATCH', fullName: '1986 Matchless DC30', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('cut', 'Cut'), P1('bass', 'Bass'), P1('treble', 'Treble'), P1('level', 'Level')] },
-    { id: 'brit2000', name: 'BRIT 2000', fullName: 'Marshall JTM2000', parameters: AMP_STD_PARAMS },
-    { id: 'uber', name: 'UBER', fullName: 'Bognar Uberschall', parameters: AMP_STD_PARAMS },
+    { id: 'brit2000', name: 'BRIT 2000', fullName: 'Marshall JTM2000', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
+    { id: 'uber', name: 'UBER', fullName: 'Bognar Uberschall', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('bias', 'Bias'), P1('level', 'Level')] },
     { id: 'agl', name: 'AGL', fullName: 'Aguilar Tone Hammer AMP', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), { id: 'mfreq', name: 'M FREQ', min: 0, max: 100, step: 1, default: 50 }, P1('treble', 'Treble'), P1('level', 'Level')] },
     { id: 'bassguy', name: 'BASSGUY', fullName: 'BASSMAN 100', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), P1('treble', 'Treble'), P1('presence', 'Presence'), P1('level', 'Level')] },
     { id: 'mld', name: 'MLD', fullName: 'NUX Melvin Lee Davis AMP', parameters: [P1('gain', 'Gain'), P1('master', 'Master'), P1('bass', 'Bass'), P1('mid', 'Middle'), { id: 'mfreq', name: 'M FREQ', min: 0, max: 100, step: 1, default: 50 }, P1('treble', 'Treble'), P1('level', 'Level')] },
@@ -127,7 +130,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   'eq': [
     { id: 'eq-ge6', name: '6-BAND EQ', fullName: 'BOSS GE-6', parameters: [P1('100hz', '100Hz'), P1('220hz', '220Hz'), P1('500hz', '500Hz'), P1('1.2khz', '1.2kHz'), P1('2.6khz', '2.6kHz'), P1('6.4khz', '6.4kHz'), P1('level', 'Level')] },
     { id: 'eq-align', name: 'ALIGN EQ', fullName: 'ALIGN EQ', parameters: [{ id: 'hpf', name: 'HPF', min: 0, max: 2, step: 1, default: 0 }, P1('110hz', '110Hz'), P1('340hz', '340Hz'), P1('660hz', '660Hz'), P1('1300hz', '1300Hz'), P1('2600hz', '2600Hz'), P1('5000hz', '5000Hz'), P1('volume', 'Volume')] },
-    { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [P1('vol', 'VOL'), P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), P1('gain', 'GAIN')] },
+    { id: 'eq-10band', name: '10-BAND EQ', fullName: 'MXR 10 BAND', parameters: [{ id: 'vol', name: 'VOL', min: -10, max: 10, step: 1, default: 0 }, P1('31.25hz', '31.25Hz'), P1('62.5hz', '62.5Hz'), P1('125hz', '125Hz'), P1('250hz', '250Hz'), P1('500hz', '500Hz'), P1('1khz', '1KHz'), P1('2khz', '2KHz'), P1('4khz', '4KHz'), P1('8khz', '8KHz'), P1('16khz', '16KHz'), { id: 'gain', name: 'GAIN', min: -10, max: 10, step: 1, default: 0 }] },
     { id: 'eq-para', name: 'PARA EQ', fullName: 'ALIGN EQ', parameters: [P1('b1freq', 'Band1 Freq'), P1('b1gain', 'Band1 Gain'), P1('b1q', 'Band1 Q'), P1('b2freq', 'Band2 Freq'), P1('b2gain', 'Band2 Gain'), P1('b2q', 'Band2 Q'), P1('b3freq', 'Band3 Freq'), P1('b3gain', 'Band3 Gain'), P1('b3q', 'Band3 Q')] }
   ],
   'modulation': [
