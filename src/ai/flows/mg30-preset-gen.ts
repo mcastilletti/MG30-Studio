@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -35,23 +36,35 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
   try {
     const response = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
-      system: `Sei un sound designer per NUX MG-30. Genera un preset JSON valido.
-      Usa solo questi tipi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
-      Modelli suggeriti: tscream, plexi100w, deluxe-rvb, dly-analog.
-      Parametri: numeri 0-100.
-      Restituisci un oggetto con: name, ampModel, effects (array di oggetti con type, model, enabled, parameters).`,
-      prompt: `Crea un preset professionale basato su: "${input.description}"`,
+      system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
+      Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
+      
+      REGOLE RIGIDE:
+      1. Usa SOLO questi tipi di blocchi: noise-gate, compressor, efx, amp, ir, eq, modulation, delay, reverb.
+      2. Per ogni blocco, scegli un modello verosimile (es. 'tscream' per overdrive, 'plexi100w' per amp).
+      3. I parametri devono essere valori numerici tra 0 e 100.
+      4. Restituisci SEMPRE tutti i blocchi della catena, abilitando solo quelli necessari per il suono richiesto.
+      
+      STRUTTURA OUTPUT:
+      - name: Nome creativo del preset.
+      - ampModel: Nome del modello di amplificatore.
+      - effects: Array di oggetti con { type, model, enabled, parameters }.`,
+      prompt: `Crea un preset professionale basato su questa descrizione: "${input.description}"`,
       output: { schema: MG30PresetOutputSchema }
     });
 
     const output = response.output;
     if (!output) {
-      throw new Error('L\'AI non ha restituito una configurazione valida.');
+      throw new Error('Il modello AI non ha restituito una configurazione valida.');
     }
 
     return output;
   } catch (error: any) {
-    console.error("AI Generation Error Details:", error);
+    console.error("AI Generation Error:", error);
+    // Propaghiamo l'errore specifico per aiutare il debugging nel client
+    if (error.message?.includes('API key')) {
+      throw new Error('Configurazione AI incompleta: Manca la chiave API nel file .env');
+    }
     throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
 }
