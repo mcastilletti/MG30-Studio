@@ -13,10 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2 } from 'lucide-react';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
-import { generateMG30Preset } from '@/ai/flows/mg30-preset-gen';
+import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
 import { useToast } from '@/hooks/use-toast';
 import { EffectState } from '@/types/preset';
 
@@ -52,6 +52,7 @@ export default function EditorPage() {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
 
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -101,48 +102,14 @@ export default function EditorPage() {
     setActivePreset({ ...activePreset, slot: nextSlot });
   };
 
-  const handleAiModeApply = async () => {
+  const handleAiModeGenerate = async () => {
     if (!aiPrompt.trim()) return;
     
     setIsGenerating(true);
+    setProposedPreset(null);
     try {
       const result = await generateMG30Preset({ prompt: aiPrompt });
-      
-      const typeToId: Record<string, string> = {
-        'noise-gate': 'ng',
-        'compressor': 'cmp',
-        'efx': 'efx',
-        'amp': 'amp',
-        'ir': 'ir',
-        'eq': 'eq',
-        'modulation': 'mod',
-        'delay': 'delay',
-        'reverb': 'reverb'
-      };
-
-      const newEffects: EffectState[] = result.effects.map((eff) => ({
-        id: typeToId[eff.type] || eff.type,
-        type: eff.type as any,
-        model: eff.model,
-        enabled: eff.enabled,
-        parameters: eff.parameters
-      }));
-
-      setActivePreset({
-        ...activePreset,
-        name: result.name,
-        ampModel: result.ampModel,
-        effects: newEffects,
-        lastModified: new Date()
-      });
-
-      setIsAiModalOpen(false);
-      setAiPrompt('');
-      toast({
-        title: "AI Mode: Preset Aggiornato",
-        description: `Il suono "${result.name}" è stato applicato allo slot attuale.`,
-      });
-
+      setProposedPreset(result);
     } catch (error) {
       toast({
         title: "Errore AI Mode",
@@ -152,6 +119,48 @@ export default function EditorPage() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleAiModeConfirm = () => {
+    if (!proposedPreset) return;
+
+    const typeToId: Record<string, string> = {
+      'noise-gate': 'ng',
+      'compressor': 'cmp',
+      'efx': 'efx',
+      'amp': 'amp',
+      'ir': 'ir',
+      'eq': 'eq',
+      'modulation': 'mod',
+      'delay': 'delay',
+      'reverb': 'reverb'
+    };
+
+    const newEffects: EffectState[] = proposedPreset.effects.map((eff) => ({
+      id: typeToId[eff.type] || eff.type,
+      type: eff.type as any,
+      model: eff.model,
+      enabled: eff.enabled,
+      parameters: eff.parameters
+    }));
+
+    setActivePreset({
+      ...activePreset,
+      name: proposedPreset.name,
+      ampModel: proposedPreset.ampModel,
+      effects: newEffects,
+      lastModified: new Date()
+    });
+
+    // Reset and Close
+    setIsAiModalOpen(false);
+    setAiPrompt('');
+    setProposedPreset(null);
+
+    toast({
+      title: "Preset Applicato",
+      description: `Il suono "${proposedPreset.name}" è ora attivo nello slot ${formatSlotLabel(activePreset.slot)}.`,
+    });
   };
 
   const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
@@ -182,7 +191,13 @@ export default function EditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+            <Dialog open={isAiModalOpen} onOpenChange={(open) => {
+              setIsAiModalOpen(open);
+              if (!open) {
+                setProposedPreset(null);
+                setAiPrompt('');
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10">
                   <Sparkles className="w-4 h-4" /> AI Mode
@@ -195,27 +210,86 @@ export default function EditorPage() {
                     AI Tone Assistant
                   </DialogTitle>
                   <DialogDescription>
-                    Descrivi il suono che desideri. L'AI modificherà i parametri dello slot <strong>{formatSlotLabel(activePreset.slot)}</strong> per te.
+                    Descrivi il suono che desideri. L'AI proporrà una configurazione per lo slot <strong>{formatSlotLabel(activePreset.slot)}</strong>.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4 space-y-4">
-                  <Textarea 
-                    placeholder="Esempio: Un lead distorto molto compresso con delay stereo per assoli epici..." 
-                    className="h-32 bg-secondary/20"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button variant="ghost" onClick={() => setIsAiModalOpen(false)}>Annulla</Button>
-                  <Button 
-                    className="gap-2 bg-primary" 
-                    onClick={handleAiModeApply}
-                    disabled={isGenerating || !aiPrompt.trim()}
-                  >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {isGenerating ? 'Elaborazione...' : 'Applica al Preset'}
-                  </Button>
+
+                {!proposedPreset ? (
+                  <div className="py-4 space-y-4">
+                    <Textarea 
+                      placeholder="Esempio: Un lead distorto molto compresso con delay stereo per assoli epici..." 
+                      className="h-32 bg-secondary/20"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      disabled={isGenerating}
+                    />
+                  </div>
+                ) : (
+                  <div className="py-4 space-y-4">
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground">Proposta AI</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground">Nome Suggerito</p>
+                          <p className="font-bold text-lg">{proposedPreset.name}</p>
+                        </div>
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase text-muted-foreground">Modello AMP</p>
+                            <p className="font-medium">{proposedPreset.ampModel}</p>
+                          </div>
+                          <Badge variant="outline" className="bg-background">
+                            {proposedPreset.effects.filter(e => e.enabled).length} Moduli Attivi
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {proposedPreset.effects.map(eff => (
+                            <Badge 
+                              key={eff.type} 
+                              variant={eff.enabled ? "default" : "outline"}
+                              className={cn("text-[8px] h-4", !eff.enabled && "opacity-40")}
+                              style={eff.enabled ? { backgroundColor: `hsl(${getBlockColorVar(eff.type)})` } : {}}
+                            >
+                              {eff.type.split('-').map(w => w[0]).join('').toUpperCase()}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <p className="text-[11px] text-muted-foreground italic text-center">
+                      Puoi applicare questa configurazione o generare un'altra versione.
+                    </p>
+                  </div>
+                )}
+
+                <DialogFooter className="gap-2 sm:gap-0">
+                  {!proposedPreset ? (
+                    <>
+                      <Button variant="ghost" onClick={() => setIsAiModalOpen(false)}>Annulla</Button>
+                      <Button 
+                        className="gap-2 bg-primary" 
+                        onClick={handleAiModeGenerate}
+                        disabled={isGenerating || !aiPrompt.trim()}
+                      >
+                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        {isGenerating ? 'Elaborazione...' : 'Genera Proposta'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" className="gap-2" onClick={() => setProposedPreset(null)}>
+                        <RotateCcw className="w-4 h-4" /> Riprova
+                      </Button>
+                      <Button 
+                        className="gap-2 bg-primary" 
+                        onClick={handleAiModeConfirm}
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> Applica al Preset
+                      </Button>
+                    </>
+                  )}
                 </DialogFooter>
               </DialogContent>
             </Dialog>
