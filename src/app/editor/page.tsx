@@ -1,6 +1,7 @@
+
 "use client"
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Wand2, Loader2, CheckCircle2, RotateCcw, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -43,7 +44,7 @@ const getBlockColorVar = (type: string) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, syncBlockParameters } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, syncBlockParameters, isEditorSyncing, syncActivePreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -63,6 +64,13 @@ export default function EditorPage() {
     if (!selectedEffect) return null;
     return MG30_MODELS[selectedEffect.type as any]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type as any]?.[0];
   }, [selectedEffect]);
+
+  // Al montaggio, se siamo connessi, forziamo la lettura dei parametri dall'hardware
+  useEffect(() => {
+    if (status === 'connected') {
+      syncActivePreset();
+    }
+  }, [status, syncActivePreset]);
 
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
@@ -109,7 +117,7 @@ export default function EditorPage() {
     setIsGenerating(true);
     setProposedPreset(null);
     try {
-      const result = await generateMG30Preset({ prompt: aiPrompt });
+      const result = await generateMG30Preset({ description: aiPrompt });
       setProposedPreset(result);
     } catch (error: any) {
       console.error(error);
@@ -170,7 +178,20 @@ export default function EditorPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
+        {/* Overlay di sincronizzazione Hardware */}
+        {isEditorSyncing && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl border border-primary/20">
+            <Card className="p-8 flex flex-col items-center gap-4 shadow-2xl border-primary/40 bg-card">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <div className="text-center">
+                <h3 className="text-lg font-bold">Lettura Hardware in corso...</h3>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Sincronizzazione Chain dello Slot {formatSlotLabel(activePreset.slot)}</p>
+              </div>
+            </Card>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -297,6 +318,7 @@ export default function EditorPage() {
             </Dialog>
 
             <div className="w-[1px] h-8 bg-border mx-2" />
+            <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Refresh from Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
             <Button variant="outline" size="icon" onClick={undo}><Undo2 className="w-4 h-4" /></Button>
             <Button variant="outline" size="icon" onClick={redo}><Redo2 className="w-4 h-4" /></Button>
             <div className="w-[1px] h-8 bg-border mx-2" />

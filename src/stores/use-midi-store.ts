@@ -34,21 +34,6 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// Mappatura per CC 75 (Selezione blocco su display pedaliera)
-const BLOCK_INDEX_MAP: Record<string, number> = {
-  'wah': 0,
-  'compressor': 1,
-  'efx': 2,
-  'amp': 3,
-  'eq': 4,
-  'noise-gate': 5,
-  'modulation': 6,
-  'delay': 7,
-  'reverb': 8,
-  'ir': 9,
-  'sr': 10
-};
-
 // CC per i parametri dei blocchi (Knobs) basati su tabella utente
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12, 13],
@@ -61,6 +46,21 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'delay': [54, 55, 56, 57, 58, 59, 60, 61],
   'reverb': [62, 63, 64, 65],
   'ir': [66, 67, 68, 69, 70]
+};
+
+// Mappatura indici CC 75 (Current Block) basata su feedback utente
+const BLOCK_INDEX_MAP: Record<string, number> = {
+  'wah': 0,
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'eq': 4,
+  'noise-gate': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8,
+  'ir': 9,
+  'sr': 10
 };
 
 const SELECT_BLOCK_CC = 75; // CURRENT BLOCK
@@ -92,6 +92,7 @@ interface MidiStore {
   availableDevices: { inputs: MidiDevice[], outputs: MidiDevice[] };
   devicePresets: Preset[];
   isSyncing: boolean;
+  isEditorSyncing: boolean;
   syncProgress: number;
   lastError: string | null;
   currentSyncSlot: number | null;
@@ -109,6 +110,7 @@ interface MidiStore {
   syncActivePreset: () => void;
   updatePresetName: (slot: number, newName: string) => void;
   handleIncomingMidi: (message: MIDIMessageEvent) => void;
+  setEditorSyncing: (syncing: boolean) => void;
 }
 
 export const useMidiStore = create<MidiStore>((set, get) => ({
@@ -118,6 +120,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   availableDevices: { inputs: [], outputs: [] },
   devicePresets: INITIAL_PRESETS,
   isSyncing: false,
+  isEditorSyncing: false,
   syncProgress: 0,
   lastError: null,
   currentSyncSlot: null,
@@ -236,7 +239,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // SysEx Capture (Nome Preset)
+    // SysEx Capture (Nome Preset e Parametri se inviati come dump)
     if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
       let tempName = "";
       for (let i = 0; i < data.length; i++) {
@@ -258,11 +261,20 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
+  setEditorSyncing: (syncing) => set({ isEditorSyncing: syncing }),
+
   syncActivePreset: () => {
     const { output } = get();
     if (!output) return;
+    set({ isEditorSyncing: true });
+    // Richiesta stato attuale all'hardware (SysEx dump request)
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
+    
+    // Simula fine sincronizzazione dopo 1 secondo se non arrivano conferme SysEx specifiche
+    setTimeout(() => {
+      set({ isEditorSyncing: false });
+    }, 1200);
   },
 
   sendControlChange: (cc, value) => {
@@ -296,7 +308,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
-      get().sendControlChange(SELECT_BLOCK_CC, index);
+      get().sendControlChange(75, index); // CC 75 per la selezione blocco su display hardware
     }
   },
 
