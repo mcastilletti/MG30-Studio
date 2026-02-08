@@ -4,7 +4,7 @@ import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass CC fornita dall'utente
+// Mappatura Bypass CC e Valori fornita dall'utente
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -18,7 +18,6 @@ const BYPASS_CC: Record<string, number> = {
   'ir': 9
 };
 
-// Valori ON/OFF specificati dall'utente
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'wah': { on: 1, off: 65 },
   'compressor': { on: 2, off: 66 },
@@ -32,7 +31,21 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
-// Mappatura manopole fisiche e pedale d'espressione
+// Mappatura per CC 78 (Selezione blocco su display pedaliera)
+const BLOCK_INDEX_MAP: Record<string, number> = {
+  'wah': 0,
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'eq': 4,
+  'noise-gate': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8,
+  'ir': 9
+};
+
+// CC per i parametri dei blocchi (Knobs)
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [79], // CC 79 = Wah Position
   'compressor': [13, 14, 15, 90],
@@ -46,21 +59,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'ir': [64, 65, 66, 67, 68, 69]
 };
 
-// CC 78 per spostare il focus dello schermo dell'MG-30
 const SELECT_BLOCK_CC = 78;
-
-const BLOCK_INDEX_MAP: Record<string, number> = {
-  'noise-gate': 0,
-  'compressor': 1,
-  'efx': 2,
-  'amp': 3,
-  'ir': 4,
-  'eq': 5,
-  'modulation': 6,
-  'delay': 7,
-  'reverb': 8,
-  'wah': 9
-};
 
 const formatSlotLabel = (slot: number) => {
   const bank = Math.floor((slot - 1) / 4) + 1;
@@ -179,19 +178,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
+    // Gestione CC (Control Change)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
       
-      // Gestione Bypass
+      // Gestione Bypass (Riconoscimento stato da hardware)
       const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockTypeForBypass) {
-        // Usiamo la logica standard: < 64 = ON, >= 64 = OFF
-        const isEnabled = val < 64;
+        const vals = BYPASS_VALS[blockTypeForBypass];
+        // Se riceviamo il valore ON specifico o un valore < 64 (standard MIDI)
+        const isEnabled = val === vals.on || val < 64;
         usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // Gestione Parametri Real-time
+      // Gestione Parametri Real-time (Manopole fisiche)
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
@@ -266,6 +267,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
+      // Invia CC 78 con l'indice del blocco per cambiare display sulla pedaliera
       get().sendControlChange(SELECT_BLOCK_CC, index);
     }
   },
