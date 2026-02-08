@@ -4,7 +4,7 @@ import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 
-// Mappatura Bypass definitiva basata sui test dell'utente
+// Mappatura Bypass basata sulla colonna NEW MIDI CC della tabella utente
 const BYPASS_CC: Record<string, number> = {
   'compressor': 1,
   'efx': 2,
@@ -17,7 +17,7 @@ const BYPASS_CC: Record<string, number> = {
   'ir': 9
 };
 
-// Valori specifici di ON/OFF catturati dall'utente
+// Valori specifici di ON/OFF catturati precedentemente dall'utente per la stabilità del segnale
 const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'compressor': { on: 1, off: 65 },
   'efx': { on: 1, off: 65 },
@@ -30,20 +30,22 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'ir': { on: 7, off: 71 }
 };
 
-// Mappatura manopole fisiche multi-schermata per sezione
+// Mappatura manopole fisiche basata sulla colonna NEW MIDI CC
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
-  'compressor': [14, 15, 16, 17],
-  'efx': [18, 19, 20, 21, 22],
-  'amp': [24, 25, 26, 27, 28, 29, 30, 31],
-  'eq': [32, 33, 34, 35, 36, 37, 38, 39],
-  'noise-gate': [44, 45],
-  'modulation': [48, 49, 50, 51, 52],
-  'delay': [54, 55, 56, 57, 58, 59, 60, 61],
-  'reverb': [62, 63, 64, 65],
-  'ir': [66, 67, 68, 69]
+  'compressor': [13, 14, 15, 90], // Knob 1-4 (ID 14-17)
+  'efx': [17, 18, 19, 20, 21],    // Knob 1-5 (ID 18-22)
+  'amp': [22, 23, 24, 25, 26, 27, 28, 29], // Knob 1-8 (ID 23-30)
+  'eq': [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41], // Knob 1-12 (ID 31-42)
+  'noise-gate': [42, 43, 44, 45], // Knob 1-4 (ID 43-46)
+  'modulation': [46, 47, 48, 49, 50, 51], // Knob 1-6 (ID 47-52)
+  'delay': [52, 53, 54, 55, 56, 57, 58, 59], // Knob 1-8 (ID 53-60)
+  'reverb': [60, 61, 62, 63], // Knob 1-4 (ID 61-64)
+  'ir': [64, 65, 66, 67, 68, 69] // Knob 1-6 (ID 65-70)
 };
 
-const SELECT_BLOCK_CC = 78;
+// ID 74: CURRENT BLOCK -> New CC 73
+const SELECT_BLOCK_CC = 73;
+
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'noise-gate': 0,
   'compressor': 1,
@@ -172,7 +174,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const data = message.data;
     const { currentSyncSlot, updatePresetName } = get();
 
-    // Gestione messaggi CC in entrata (Bypass status sync)
     if (data[0] === 0xB0) {
       const cc = data[1];
       const val = data[2];
@@ -187,7 +188,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // Gestione SysEx per nomi preset (Semplificata per il NUX)
     if (data.length > 10) {
       let foundName = "";
       let tempName = "";
@@ -259,7 +259,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       
-      // Richiesta SysEx per il nome (Basata su dump tipico NUX)
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
       get().output?.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
       
