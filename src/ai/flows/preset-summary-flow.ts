@@ -1,67 +1,38 @@
 'use server';
 
-export async function summarizePreset(input: { preset: any }) {
-  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('GOOGLE_GENAI_API_KEY non configurata in .env.local');
-  }
+/**
+ * @fileOverview Analizzatore sonoro per preset NUX MG-30.
+ * Utilizza Gemini 2.0 Flash Lite per fornire un riassunto qualitativo del tono.
+ */
 
-  try {
-    console.log('🎸 Analisi preset:', input.preset.name);
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Analizza preset chitarra: ${input.preset.name}
-Amp: ${input.preset.ampModel}
-Effetti: ${input.preset.effects?.filter((e: any) => e.enabled).map((e: any) => e.type).join(', ') || 'Nessuno'}
+const PresetSummaryInputSchema = z.object({
+  preset: z.any().describe('I dati completi del preset da analizzare'),
+});
 
-Rispondi SOLO con 3 punti brevi:
-1. Genere
-2. Suono
-3. Consiglio`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 300,
-            topP: 0.95,
-            topK: 40
-          }
-        })
-      }
-    );
+const PresetSummaryOutputSchema = z.object({
+  summary: z.string().describe('Analisi testuale in 3 punti'),
+});
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Errore API Gemini:', errorText);
-      throw new Error(`Gemini API Error ${response.status}: ${errorText}`);
-    }
+export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
+export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
-    const data = await response.json();
-    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!summary) {
-      throw new Error('Nessuna risposta valida da Gemini');
-    }
+const summarizePresetPrompt = ai.definePrompt({
+  name: 'summarizePresetPrompt',
+  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
+  input: { schema: PresetSummaryInputSchema },
+  output: { schema: PresetSummaryOutputSchema },
+  system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico.",
+  prompt: `Analizza questo preset:
+Nome: {{preset.name}}
+Amp: {{preset.ampModel}}
+Effetti: {{#each preset.effects}}{{#if enabled}}{{type}} ({{model}}), {{/if}}{{/each}}`,
+});
 
-    console.log('✅ Analisi completata:', summary);
-    return { summary };
-    
-  } catch (error: any) {
-    console.error('❌ Errore completo:', {
-      message: error.message,
-      stack: error.stack
-    });
-    throw new Error(error.message || 'Errore durante l\'analisi AI del preset');
-  }
+export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
+  const { output } = await summarizePresetPrompt(input);
+  if (!output) throw new Error('Impossibile generare l\'analisi del preset.');
+  return output;
 }
-
-export type PresetSummaryInput = { preset: any };
-export type PresetSummaryOutput = { summary: string };

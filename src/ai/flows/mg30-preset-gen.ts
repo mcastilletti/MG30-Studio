@@ -2,14 +2,14 @@
 
 /**
  * @fileOverview AI Agent "NUX MG-30 Preset Generator"
- * Genera una configurazione completa di preset per chitarra utilizzando Genkit 1.x.
+ * Genera una configurazione completa di preset utilizzando Gemini 2.0 Flash Lite.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const EffectSchema = z.object({
-  type: z.string().describe('Tipo di effetto (es. wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb)'),
+  type: z.string().describe('Tipo di effetto (es. wah, noise-gate, compressor, efx, amp, ir, modulation, delay, reverb, eq, vol, sr)'),
   model: z.string().describe('ID del modello specifico'),
   enabled: z.boolean().describe('Stato attivo/disattivo'),
   parameters: z.record(z.any()).describe('Mappa parametri-valore (0-100)')
@@ -30,7 +30,7 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
 const generatePresetPrompt = ai.definePrompt({
   name: 'generatePresetPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
   input: { schema: MG30PresetInputSchema },
   output: { schema: MG30PresetOutputSchema },
   system: `Sei un sound designer esperto per la pedaliera NUX MG-30.
@@ -47,12 +47,7 @@ REGOLE TECNICHE:
 });
 
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  try {
-    const { output } = await generatePresetPrompt(input);
-    if (!output) throw new Error('L\'AI non ha restituito una configurazione valida.');
-    return output;
-  } catch (error: any) {
-    console.error("AI Generation Error:", error);
-    throw new Error(error.message || 'Errore durante la generazione del preset');
-  }
+  const { output } = await generatePresetPrompt(input);
+  if (!output) throw new Error('Impossibile generare la configurazione del preset.');
+  return output;
 }
