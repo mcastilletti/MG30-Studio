@@ -3,7 +3,7 @@
 
 /**
  * @fileOverview A SysEx analysis AI agent.
- * Utilizza il modello stabile gemini-1.5-flash tramite endpoint v1.
+ * Utilizza il modello stabile gemini-1.5-flash via endpoint v1.
  */
 
 import {ai} from '@/ai/genkit';

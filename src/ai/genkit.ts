@@ -4,7 +4,7 @@ import { googleAI } from '@genkit-ai/google-genai';
 
 /**
  * Inizializzazione globale di Genkit.
- * Utilizziamo googleAI puntando agli endpoint stabili (v1) tramite l'SDK aggiornato.
+ * Configurazione ottimizzata per utilizzare l'endpoint stabile v1 di Google AI.
  */
 export const ai = genkit({
   plugins: [

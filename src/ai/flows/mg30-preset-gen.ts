@@ -4,7 +4,7 @@
 /**
  * @fileOverview AI Agent "Nux MG-30 preset"
  * Genera un preset completo partendo da una descrizione creativa.
- * Utilizza il modello stabile gemini-1.5-flash tramite endpoint v1.
+ * Utilizza l'endpoint stabile v1 tramite identificativo modello aggiornato.
  */
 
 import { ai } from '@/ai/genkit';
