@@ -1,11 +1,11 @@
 
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
-import { Preset } from '@/types/preset';
+import { Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass CC e Valori basata su tabella utente
+// Mappatura Bypass CC e Valori basata su tabella utente V5
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -34,7 +34,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// CC per i parametri dei blocchi (Knobs) basati su tabella utente
+// CC per i parametri dei blocchi (Knobs) basati su tabella utente V5
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12, 13],
   'compressor': [14, 15, 16, 17],
@@ -48,7 +48,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'ir': [66, 67, 68, 69, 70]
 };
 
-// Mappatura indici CC 75 (Current Block) basata su feedback utente
+// Mappatura indici CC 75 (Current Block) basata su tabella utente V5
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -73,6 +73,19 @@ const formatSlotLabel = (slot: number) => {
   return `${String(bank).padStart(2, '0')}${sub}`;
 };
 
+const createDefaultEffects = (): EffectState[] => [
+  { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
+  { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
+  { id: 'efx', type: 'efx', model: 'tscream', enabled: false, parameters: { drive: 50, tone: 50, level: 50 } },
+  { id: 'amp', type: 'amp', model: 'plexi100w', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
+  { id: 'eq', type: 'eq', model: 'eq-ge6', enabled: false, parameters: { '100hz': 50, '220hz': 50, '500hz': 50, '1.2khz': 50, '2.6khz': 50, '6.4khz': 50, 'level': 50 } },
+  { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
+  { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
+  { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
+  { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
+  { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 0, lowcut: 20, highcut: 20000 } }
+];
+
 const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   slot: i + 1,
   name: `Preset ${formatSlotLabel(i + 1)}`,
@@ -82,7 +95,7 @@ const INITIAL_PRESETS: Preset[] = Array.from({ length: 128 }, (_, i) => ({
   rating: 0,
   lastModified: new Date(),
   ampModel: 'NUX MG-30',
-  effects: []
+  effects: createDefaultEffects()
 }));
 
 interface MidiStore {
@@ -198,7 +211,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const pc = data[1];
       const slot = pc + 1;
       const activePreset = usePresetStore.getState().activePreset;
-      usePresetStore.getState().setActivePreset({ ...activePreset, slot });
+      // Cerchiamo il preset nella libreria locale per non perdere i nomi
+      const existingPreset = get().devicePresets.find(p => p.slot === slot);
+      usePresetStore.getState().setActivePreset(existingPreset || { ...activePreset, slot });
       setTimeout(() => get().syncActivePreset(), 50);
       return;
     }
@@ -239,7 +254,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // SysEx Capture (Nome Preset e Parametri se inviati come dump)
+    // SysEx Capture
     if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
       let tempName = "";
       for (let i = 0; i < data.length; i++) {
@@ -267,11 +282,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (!output) return;
     set({ isEditorSyncing: true });
-    // Richiesta stato attuale all'hardware (SysEx dump request)
+    // Richiesta dump completo
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
     
-    // Simula fine sincronizzazione dopo 1 secondo se non arrivano conferme SysEx specifiche
     setTimeout(() => {
       set({ isEditorSyncing: false });
     }, 1200);
@@ -308,7 +322,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
-      get().sendControlChange(75, index); // CC 75 per la selezione blocco su display hardware
+      get().sendControlChange(SELECT_BLOCK_CC, index);
     }
   },
 
