@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset } from '@/types/preset';
@@ -14,7 +13,8 @@ const BYPASS_CC: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9
+  'ir': 9,
+  'wah': 10 // Aggiunto Wah
 };
 
 // Valori specifici di ON/OFF catturati precedentemente dall'utente per la stabilità del segnale
@@ -27,7 +27,8 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'modulation': { on: 6, off: 70 },
   'delay': { on: 7, off: 71 },
   'reverb': { on: 1, off: 65 },
-  'ir': { on: 7, off: 71 }
+  'ir': { on: 7, off: 71 },
+  'wah': { on: 1, off: 65 }
 };
 
 // Mappatura manopole fisiche basata sulla colonna NEW MIDI CC
@@ -40,7 +41,8 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'modulation': [46, 47, 48, 49, 50, 51], // Knob 1-6 (ID 47-52)
   'delay': [52, 53, 54, 55, 56, 57, 58, 59], // Knob 1-8 (ID 53-60)
   'reverb': [60, 61, 62, 63], // Knob 1-4 (ID 61-64)
-  'ir': [64, 65, 66, 67, 68, 69] // Knob 1-6 (ID 65-70)
+  'ir': [64, 65, 66, 67, 68, 69], // Knob 1-6 (ID 65-70)
+  'wah': [79] // CC 79 catturato dal log dell'utente per la posizione Wah
 };
 
 // ID 74: CURRENT BLOCK -> New CC 73
@@ -55,7 +57,8 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'eq': 5,
   'modulation': 6,
   'delay': 7,
-  'reverb': 8
+  'reverb': 8,
+  'wah': 9
 };
 
 const formatSlotLabel = (slot: number) => {

@@ -43,6 +43,11 @@ const IR_BASS_PARAMS = [
 ];
 
 export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
+  'wah': [
+    { id: 'clyde', name: 'CLYDE', fullName: 'Fulltone Clyde Wah', parameters: [P1('position', 'Position')] },
+    { id: 'crybbn', name: 'CRY BBN', fullName: 'Dunlop Cry Baby', parameters: [P1('position', 'Position')] },
+    { id: 'v847', name: 'V847', fullName: 'VOX V847 Wah', parameters: [P1('position', 'Position')] }
+  ],
   'noise-gate': [
     { 
       id: 'gate', 

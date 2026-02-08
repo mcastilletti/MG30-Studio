@@ -27,6 +27,7 @@ const formatSlotLabel = (slot: number) => {
 
 const getBlockColorVar = (type: string) => {
   switch(type) {
+    case 'wah': return 'var(--block-wah)';
     case 'noise-gate': return 'var(--block-gate)';
     case 'compressor': return 'var(--block-cmp)';
     case 'efx': return 'var(--block-efx)';
@@ -107,13 +108,13 @@ export default function EditorPage() {
     setIsGenerating(true);
     setProposedPreset(null);
     try {
-      const result = await generateMG30Preset({ description: aiPrompt });
+      const result = await generateMG30Preset({ prompt: aiPrompt });
       setProposedPreset(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         title: "Errore AI Mode",
-        description: "Non è stato possibile generare il suono. Riprova con una descrizione diversa.",
+        description: error.message || "Non è stato possibile generare il suono. Riprova.",
         variant: "destructive"
       });
     } finally {
@@ -125,6 +126,7 @@ export default function EditorPage() {
     if (!proposedPreset) return;
 
     const typeToId: Record<string, string> = {
+      'wah': 'wah',
       'noise-gate': 'ng',
       'compressor': 'cmp',
       'efx': 'efx',

@@ -12,6 +12,7 @@ const DEFAULT_PRESET: Preset = {
   lastModified: new Date(),
   ampModel: 'Brit 800',
   effects: [
+    { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
     { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
     { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
     { id: 'efx', type: 'efx', model: 'dist-ts808', enabled: true, parameters: { drive: 50, tone: 50, level: 50 } },
