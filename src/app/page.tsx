@@ -1,4 +1,3 @@
-
 "use client"
 
 import { AppShell } from '@/components/layout/app-shell';
@@ -107,20 +106,6 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Link href="/editor" className="group">
-            <Card className="h-full border-border hover:border-primary/50 transition-colors bg-card/50">
-              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Sliders className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold">Visual Editor</h4>
-                  <p className="text-xs text-muted-foreground">Regola i parametri dei pedali</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
           <Link href="/library" className="group">
             <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
               <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
@@ -130,6 +115,20 @@ export default function HomePage() {
                 <div className="text-center">
                   <h4 className="font-bold">Libreria Preset</h4>
                   <p className="text-xs text-muted-foreground">Sfoglia la tua collezione</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/editor" className="group">
+            <Card className="h-full border-border hover:border-primary/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Sliders className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">Visual Editor</h4>
+                  <p className="text-xs text-muted-foreground">Regola i parametri dei pedali</p>
                 </div>
               </CardContent>
             </Card>

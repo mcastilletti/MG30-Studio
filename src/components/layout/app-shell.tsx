@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect } from 'react';
@@ -27,8 +26,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   const navItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Editor', href: '/editor', icon: Sliders },
     { label: 'Library', href: '/library', icon: Library },
+    { label: 'Editor', href: '/editor', icon: Sliders },
     { label: 'SysEx Analyzer', href: '/tools/sysex-analyzer', icon: Zap },
   ];
 
