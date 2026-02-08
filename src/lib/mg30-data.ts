@@ -12,10 +12,21 @@ export interface MG30Parameter {
 
 export interface MG30Model {
   id: string;
-  name: string; // From Column D (Short Name for Dropdown)
-  fullName: string; // From Column C (Full Name for Description)
+  name: string; // Colonna D (Short Name)
+  fullName: string; // Colonna C (Full Name)
   parameters: MG30Parameter[];
 }
+
+const AMP_PARAMS_STANDARD: MG30Parameter[] = [
+  { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 40 },
+  { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'sag', name: 'Sag', min: 0, max: 100, step: 1, default: 50 },
+  { id: 'bias', name: 'Bias', min: 0, max: 100, step: 1, default: 50 }
+];
 
 export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   'noise-gate': [
@@ -51,24 +62,36 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     { id: 'dist-stodr', name: 'ST-Odr', fullName: 'Nobels ODR-1', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'spectrum', name: 'Spectrum', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] }
   ],
   'amp': [
-    { id: 'amp-jazzclean', name: 'Jazz Clean', fullName: 'Roland JC-120', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 30 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-deluxerev', name: 'Deluxe Rev', fullName: 'Fender Deluxe Reverb', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 40 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-twinrev', name: 'Twin Rev', fullName: 'Fender Twin Reverb', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 30 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-superrev', name: 'Super Rev', fullName: 'Fender Super Reverb', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 40 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-classa15', name: 'Class A15', fullName: 'Vox AC-15', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 45 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'cut', name: 'Cut', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-classa30', name: 'Class A30', fullName: 'Vox AC-30', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 40 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'cut', name: 'Cut', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-plexi100', name: 'Plexi 100', fullName: 'Marshall Plexi 100', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 60 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-brit800', name: 'Brit 800', fullName: 'Marshall JCM-800', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 65 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-1987x', name: '1987 X 50W', fullName: 'Marshall 1987x', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 60 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-slo100', name: 'Slo 100', fullName: 'Soldano SLO-100', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 70 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-fireman', name: 'Fireman', fullName: 'Friedman BE-100', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 75 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-dualrect', name: 'Dual Rect', fullName: 'Mesa Dual Rectifier', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 80 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-die-vh4', name: 'Die VH4', fullName: 'Diezel VH4', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 85 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'deep', name: 'Deep', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-viberking', name: 'Viber King', fullName: 'Fender Vibro-King', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 40 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-budda', name: 'Budda', fullName: 'Budda Superdrive 30', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 55 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-mrz', name: 'Mr. Z', fullName: 'Dr. Z Maz 38', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 45 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-superlead', name: 'Super Lead', fullName: 'Marshall Super Lead', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 60 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
-    { id: 'amp-f-man', name: 'F-Man', fullName: 'Friedman Brown Eye', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 70 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] }
+    { id: 'amp-jazzclean', name: 'Jazz Clean', fullName: 'Roland JC-120', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-deluxerev', name: 'Deluxe Rev', fullName: 'Fender Deluxe Reverb', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-twinrev', name: 'Twin Rev', fullName: 'Fender Twin Reverb', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-superrev', name: 'Super Rev', fullName: 'Fender Super Reverb', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-classa15', name: 'Class A15', fullName: 'Vox AC-15', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-classa30', name: 'Class A30', fullName: 'Vox AC-30', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-plexi100', name: 'Plexi 100', fullName: 'Marshall Plexi 100', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-brit800', name: 'Brit 800', fullName: 'Marshall JCM-800', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-1987x', name: '1987 X 50W', fullName: 'Marshall 1987x', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-slo100', name: 'Slo 100', fullName: 'Soldano SLO-100', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-fireman', name: 'Fireman', fullName: 'Friedman BE-100', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-dualrect', name: 'Dual Rect', fullName: 'Mesa Dual Rectifier', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-die-vh4', name: 'Die VH4', fullName: 'Diezel VH4', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-viberking', name: 'Viber King', fullName: 'Fender Vibro-King', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-budda', name: 'Budda', fullName: 'Budda Superdrive 30', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-mrz', name: 'Mr. Z', fullName: 'Dr. Z Maz 38', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-superlead', name: 'Super Lead', fullName: 'Marshall Super Lead', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-f-man', name: 'F-Man', fullName: 'Friedman Brown Eye', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-bassguy', name: 'Bassguy', fullName: 'Fender Bassman', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-m212', name: 'M-212', fullName: 'Matchless DC30', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-gibo', name: 'Gibo', fullName: 'Gibson EH-185', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-rviber', name: 'R-Viber', fullName: 'Orange Rockerverb', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-brit2000', name: 'Brit 2000', fullName: 'Marshall JCM2000', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-uber', name: 'Uber', fullName: 'Bogner Uberschall', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-pv5150', name: 'PV 5150', fullName: 'Peavey 5150', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-angl', name: 'Angl', fullName: 'ENGL Savage', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-bassclean', name: 'Bass Clean', fullName: 'Bass Clean Preamp', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-bass500', name: 'Bass 500', fullName: 'Aguilar DB751', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-bass100', name: 'Bass 100', fullName: 'Ampeg SVT-100', parameters: AMP_PARAMS_STANDARD },
+    { id: 'amp-ag50', name: 'AG-50', fullName: 'Acoustic AG-50', parameters: AMP_PARAMS_STANDARD }
   ],
   'ir': [
     { id: 'ir-1960a', name: '1960A 4x12', fullName: 'Marshall 1960A', parameters: [{ id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }, { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 }, { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }] },
