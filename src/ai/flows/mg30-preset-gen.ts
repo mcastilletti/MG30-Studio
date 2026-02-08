@@ -31,7 +31,7 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: 'googleai/gemini-1.5-flash-latest',
       system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
       Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
       
