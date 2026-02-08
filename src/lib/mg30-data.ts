@@ -57,355 +57,61 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     }
   ],
   'efx': [
-    { 
-      id: 'dist-ts808', 
-      name: 'TS808',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-bluesdrv', 
-      name: 'Blues Drv',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-morningdrv', 
-      name: 'Morning Drv',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-eatdist', 
-      name: 'Eat Dist',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'filter', name: 'Filter', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-reddirt', 
-      name: 'Red Dirt',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-crunch', 
-      name: 'Crunch',
-      parameters: [
-        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dist-muff', 
-      name: 'Muff',
-      parameters: [
-        { id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    }
+    { id: 'dist-distplus', name: 'Dist +', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-rcboost', name: 'RC Boost', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-acboost', name: 'AC Boost', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-ts808', name: 'TS808', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-bluesdrv', name: 'Blues Drv', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-morningdrv', name: 'Morning Drv', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-reddirt', name: 'Red Dirt', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-crunch', name: 'Crunch', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-ds1', name: 'DS-1', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-eatdist', name: 'Eat Dist', parameters: [{ id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 }, { id: 'filter', name: 'Filter', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dist-muff', name: 'Muff', parameters: [{ id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }] }
   ],
   'amp': [
-    { 
-      id: 'amp-jazzclean', 
-      name: 'Jazz Clean',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-deluxerev', 
-      name: 'Deluxe Rev',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-twinrev', 
-      name: 'Twin Rev',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-classa30', 
-      name: 'Class A30',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-brit800', 
-      name: 'Brit 800',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-plexi100', 
-      name: 'Plexi 100',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-fireman', 
-      name: 'Fireman',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-dualrect', 
-      name: 'Dual Rect',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'amp-die-vh4', 
-      name: 'Die VH4',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    }
+    { id: 'amp-jazzclean', name: 'Jazz Clean', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-deluxerev', name: 'Deluxe Rev', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-twinrev', name: 'Twin Rev', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-classa15', name: 'Class A15', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-classa30', name: 'Class A30', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-brit800', name: 'Brit 800', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }, { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-plexi100', name: 'Plexi 100', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-fireman', name: 'Fireman', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-dualrect', name: 'Dual Rect', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-die-vh4', name: 'Die VH4', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-superlead', name: 'Super Lead', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'amp-f-man', name: 'F-Man', parameters: [{ id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 }, { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 }, { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 }, { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 }, { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }] }
   ],
   'ir': [
-    { 
-      id: 'ir-1960a', 
-      name: '1960A 4x12',
-      parameters: [
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 },
-        { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }
-      ]
-    },
-    { 
-      id: 'ir-1960b', 
-      name: '1960B 4x12',
-      parameters: [
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 },
-        { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }
-      ]
-    }
+    { id: 'ir-1960a', name: '1960A 4x12', parameters: [{ id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }, { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 }, { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }] },
+    { id: 'ir-1960b', name: '1960B 4x12', parameters: [{ id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }, { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 }, { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }] },
+    { id: 'ir-green', name: 'Green 4x12', parameters: [{ id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }, { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 }, { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }] },
+    { id: 'ir-v30', name: 'V30 4x12', parameters: [{ id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }, { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 }, { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }] }
   ],
   'eq': [
-    { 
-      id: 'eq-7band', 
-      name: '7-Band EQ',
-      parameters: [
-        { id: '62Hz', name: '62.5Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '125Hz', name: '125Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '250Hz', name: '250Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '500Hz', name: '500Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '1kHz', name: '1kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '2kHz', name: '2kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '4kHz', name: '4kHz', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'eq-10band', 
-      name: '10-Band EQ',
-      parameters: [
-        { id: '31Hz', name: '31.25Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '62Hz', name: '62.5Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '125Hz', name: '125Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '250Hz', name: '250Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '500Hz', name: '500Hz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '1kHz', name: '1kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '2kHz', name: '2kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '4kHz', name: '4kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '8kHz', name: '8kHz', min: 0, max: 100, step: 1, default: 50 },
-        { id: '16kHz', name: '16kHz', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    }
+    { id: 'eq-7band', name: '7-Band EQ', parameters: [{ id: '62Hz', name: '62.5Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '125Hz', name: '125Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '250Hz', name: '250Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '500Hz', name: '500Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '1kHz', name: '1kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '2kHz', name: '2kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '4kHz', name: '4kHz', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'eq-10band', name: '10-Band EQ', parameters: [{ id: '31Hz', name: '31.25Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '62Hz', name: '62.5Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '125Hz', name: '125Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '250Hz', name: '250Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '500Hz', name: '500Hz', min: 0, max: 100, step: 1, default: 50 }, { id: '1kHz', name: '1kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '2kHz', name: '2kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '4kHz', name: '4kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '8kHz', name: '8kHz', min: 0, max: 100, step: 1, default: 50 }, { id: '16kHz', name: '16kHz', min: 0, max: 100, step: 1, default: 50 }] }
   ],
   'modulation': [
-    { 
-      id: 'mod-ce1', 
-      name: 'CE-1',
-      parameters: [
-        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'mod-ce2', 
-      name: 'CE-2',
-      parameters: [
-        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'mod-flanger', 
-      name: 'Flanger',
-      parameters: [
-        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'regen', name: 'Regen', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'width', name: 'Width', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'mod-phase90', 
-      name: 'Phase 90',
-      parameters: [
-        { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'mod-vibe', 
-      name: 'Vibe',
-      parameters: [
-        { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'mod-rotary', 
-      name: 'Rotary',
-      parameters: [
-        { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    }
+    { id: 'mod-ce1', name: 'CE-1', parameters: [{ id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-ce2', name: 'CE-2', parameters: [{ id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-stchorus', name: 'ST Chorus', parameters: [{ id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-flanger', name: 'Flanger', parameters: [{ id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'regen', name: 'Regen', min: 0, max: 100, step: 1, default: 50 }, { id: 'width', name: 'Width', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-phase90', name: 'Phase 90', parameters: [{ id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-vibe', name: 'Vibe', parameters: [{ id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'mod-rotary', name: 'Rotary', parameters: [{ id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 }, { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }] }
   ],
   'delay': [
-    { 
-      id: 'dly-analog', 
-      name: 'Analog',
-      parameters: [
-        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
-        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    },
-    { 
-      id: 'dly-digital', 
-      name: 'Digital',
-      parameters: [
-        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
-        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    },
-    { 
-      id: 'dly-moddelay', 
-      name: 'Mod Delay',
-      parameters: [
-        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
-        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 },
-        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'dly-tapeecho', 
-      name: 'Tape Echo',
-      parameters: [
-        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
-        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    }
+    { id: 'dly-analog', name: 'Analog', parameters: [{ id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' }, { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] },
+    { id: 'dly-digital', name: 'Digital', parameters: [{ id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' }, { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] },
+    { id: 'dly-moddelay', name: 'Mod Delay', parameters: [{ id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' }, { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }, { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }] },
+    { id: 'dly-tapeecho', name: 'Tape Echo', parameters: [{ id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' }, { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] }
   ],
   'reverb': [
-    { 
-      id: 'rvb-room', 
-      name: 'Room',
-      parameters: [
-        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    },
-    { 
-      id: 'rvb-hall', 
-      name: 'Hall',
-      parameters: [
-        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    },
-    { 
-      id: 'rvb-plate', 
-      name: 'Plate',
-      parameters: [
-        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    },
-    { 
-      id: 'rvb-spring', 
-      name: 'Spring',
-      parameters: [
-        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
-      ]
-    }
+    { id: 'rvb-room', name: 'Room', parameters: [{ id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] },
+    { id: 'rvb-hall', name: 'Hall', parameters: [{ id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] },
+    { id: 'rvb-plate', name: 'Plate', parameters: [{ id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] },
+    { id: 'rvb-spring', name: 'Spring', parameters: [{ id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 }, { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 }, { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }] }
   ]
 };
