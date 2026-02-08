@@ -38,6 +38,8 @@ const IR_BASS_PARAMS = [
   { id: 'highcut', name: 'Hi Cut', min: 5000, max: 20000, step: 1, default: 20000, unit: 'Hz' }
 ];
 
+const MOD_SUBDIV = { id: 'subdiv', name: 'Sub Div', min: 0, max: 6, step: 1, default: 2 }; // 1/4., 1/8D, 1/8, etc
+
 export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   'noise-gate': [
     { 
@@ -165,13 +167,19 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
     }
   ],
   'modulation': [
-    { id: 'mod-ce1', name: 'CE-1', fullName: 'Boss CE-1', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), P1('mix', 'Mix')] },
-    { id: 'mod-ce2', name: 'CE-2', fullName: 'Boss CE-2', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), P1('mix', 'Mix')] },
-    { id: 'mod-stchorus', name: 'ST Chorus', fullName: 'MXR Stereo Chorus', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), P1('mix', 'Mix')] },
-    { id: 'mod-vibrato', name: 'Vibrato', fullName: 'Boss VB-2', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth')] },
-    { id: 'mod-flanger', name: 'Flanger', fullName: 'MXR Flanger', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), P1('regen', 'Regen'), P1('width', 'Width')] },
-    { id: 'mod-phase90', name: 'Phase 90', fullName: 'MXR Phase 90', parameters: [P1('speed', 'Speed'), P1('mix', 'Mix')] },
-    { id: 'mod-tremolo', name: 'Tremolo', fullName: 'Boss TR-2', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth')] }
+    { id: 'mod-ce1', name: 'CE-1', fullName: 'ROLAND CE-1 CHORUS', parameters: [P1('intensity', 'Intensity'), P1('depth', 'Depth'), P1('rate', 'Rate'), MOD_SUBDIV] },
+    { id: 'mod-ce2', name: 'CE-2', fullName: 'ROLAND CE-2 CHORUS', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), MOD_SUBDIV] },
+    { id: 'mod-stereo', name: 'STEREO CHORUS', fullName: 'MXR STEREO CHORUS', parameters: [P1('intensity', 'Intensity'), P1('width', 'Width'), P1('rate', 'Rate'), MOD_SUBDIV] },
+    { id: 'mod-vibrator', name: 'VIBRATOR', fullName: 'BOSS VB-2 Vibrato', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), MOD_SUBDIV] },
+    { id: 'mod-detune', name: 'DETUNE', fullName: 'Stereo DETUNE', parameters: [P1('shift_l', 'Shift L'), P1('mix_l', 'Mix L'), P1('shift_r', 'Shift R'), P1('mix_r', 'Mix R')] },
+    { id: 'mod-flanger', name: 'FLANGER', fullName: 'BOSS BF-2 Flanger', parameters: [P1('level', 'Level'), P1('rate', 'Rate'), P1('width', 'Width'), P1('fback', 'F.Back'), MOD_SUBDIV] },
+    { id: 'mod-ph90', name: 'PH 90', fullName: 'MXR PHASE 90', parameters: [P1('speed', 'Speed'), MOD_SUBDIV] },
+    { id: 'mod-ph100', name: 'PHASE 100', fullName: 'MXR PHASE 100', parameters: [P1('intensity', 'Intensity'), P1('speed', 'Speed'), MOD_SUBDIV] },
+    { id: 'mod-scf', name: 'S.C.F.', fullName: 'TC CHORUS', parameters: [P1('speed', 'Speed'), P1('width', 'Width'), { id: 'mode', name: 'Mode', min: 0, max: 2, step: 1, default: 0 }, P1('intensity', 'Intensity'), MOD_SUBDIV] },
+    { id: 'mod-uvibe', name: 'U-VIBE', fullName: 'DUNLOP UNIVIBE', parameters: [P1('speed', 'Speed'), P1('volume', 'Volume'), P1('intensity', 'Intensity'), { id: 'mode', name: 'Mode', min: 0, max: 1, step: 1, default: 0 }, MOD_SUBDIV] },
+    { id: 'mod-tremolo', name: 'TREMOLO', fullName: 'BOSS TR-3 TREMOLO', parameters: [P1('rate', 'Rate'), P1('depth', 'Depth'), MOD_SUBDIV] },
+    { id: 'mod-rty', name: 'RTY SPK', fullName: 'ROTARY SPEAKER', parameters: [P1('balance', 'Balance'), P1('speed', 'Speed'), MOD_SUBDIV] },
+    { id: 'mod-harmony', name: 'HARMONY', fullName: 'MXR HARMONIZER', parameters: [{ id: 'key', name: 'Key', min: 0, max: 11, step: 1, default: 0 }, { id: 'scale', name: 'Scale', min: 0, max: 1, step: 1, default: 0 }, { id: 'harm', name: 'Harm', min: 0, max: 9, step: 1, default: 5 }, P1('blend', 'Blend')] }
   ],
   'delay': [
     { id: 'dly-analog', name: 'Analog', fullName: 'NUX Analog Delay', parameters: [{ id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' }, P1('feedback', 'Feedback'), P1('mix', 'Mix')] },
