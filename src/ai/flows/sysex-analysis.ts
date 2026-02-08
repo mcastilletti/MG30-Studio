@@ -1,12 +1,7 @@
-// src/ai/flows/sysex-analysis.ts
 'use server';
 
 /**
  * @fileOverview A SysEx analysis AI agent.
- *
- * - analyzeSysEx - A function that handles the SysEx analysis process.
- * - AnalyzeSysExInput - The input type for the analyzeSysEx function.
- * - AnalyzeSysExOutput - The return type for the analyzeSysEx function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -31,42 +26,29 @@ const AnalyzeSysExOutputSchema = z.object({
 });
 export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 
-export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
-  return analyzeSysExFlow(input);
-}
-
-const prompt = ai.definePrompt({
+const sysexPrompt = ai.definePrompt({
   name: 'analyzeSysExPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: {schema: AnalyzeSysExInputSchema},
   output: {schema: AnalyzeSysExOutputSchema},
   prompt: `You are an expert MIDI engineer specializing in reverse engineering SysEx messages for the NUX MG-30 multi-effects pedal.
 
 You will be provided with a sequence of SysEx messages captured when a specific control is changed on the physical hardware. Your task is to analyze these messages and determine how they map to the control.
 
-Specifically, you should identify the following:
-
-*   The specific SysEx parameter that is being modified.
-*   The range of values that the parameter can take.
-*   Any scaling or offset that is applied to the parameter value.
-*   A human-readable description of the parameter mapping, including the parameter name, value range, and any scaling or offset.
-
 Here is the SysEx data:
-
 {{sysexData}}
 
 Here is a description of the control that was changed:
-
 {{controlDescription}}`,
 });
 
-const analyzeSysExFlow = ai.defineFlow(
-  {
-    name: 'analyzeSysExFlow',
-    inputSchema: AnalyzeSysExInputSchema,
-    outputSchema: AnalyzeSysExOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
+  try {
+    const { output } = await sysexPrompt(input);
+    if (!output) throw new Error('Analisi fallita');
+    return output;
+  } catch (error) {
+    console.error("SysEx Analysis Error:", error);
+    throw new Error('Errore durante l\'analisi SysEx');
   }
-);
+}

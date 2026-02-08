@@ -20,6 +20,7 @@ export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
 const summaryPrompt = ai.definePrompt({
   name: 'presetSummaryPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: PresetSummaryInputSchema },
   output: { schema: PresetSummaryOutputSchema },
   system: "Sei un critico di suoni di chitarra. Analizza i dati tecnici e fornisci un'opinione breve in italiano.",

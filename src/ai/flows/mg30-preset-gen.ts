@@ -32,6 +32,7 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
 const promptDefinition = ai.definePrompt({
   name: 'mg30PresetPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: MG30PresetInputSchema },
   output: { schema: MG30PresetOutputSchema },
   config: {
@@ -54,7 +55,6 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
     return output;
   } catch (error: any) {
     console.error("AI Generation Error:", error);
-    // Lanciamo un errore che possa essere catturato dal client con un messaggio pulito
     throw new Error(error.message || 'Errore durante la generazione del preset');
   }
 }
