@@ -38,24 +38,24 @@ export default function LibraryPage() {
     formatSlotLabel(p.slot).toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleLoadPreset = (preset: Preset) => {
-    if (status !== 'connected') {
+  const handleSelectAndEdit = (preset: Preset) => {
+    // 1. Invia MIDI Program Change se connesso
+    if (status === 'connected') {
+      sendProgramChange(preset.slot - 1);
+    } else {
       toast({
         title: "Dispositivo non connesso",
-        description: "Collega l'MG-30 via USB per cambiare preset.",
+        description: "Caricamento locale. Collega l'MG-30 per il sync hardware.",
         variant: "destructive"
       });
-      return;
     }
 
-    sendProgramChange(preset.slot - 1);
-    
-    // Assicuriamoci che il preset caricato nello store abbia gli effetti mappati se vuoto
+    // 2. Prepara il preset con una catena di default se vuota (per evitare editor vuoto)
     const presetToLoad = {
       ...preset,
       effects: preset.effects.length > 0 ? preset.effects : [
         { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-        { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
+        { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 40, level: 50 } },
         { id: 'efx', type: 'efx', model: 'tscream', enabled: true, parameters: { drive: 30, tone: 50, level: 50 } },
         { id: 'amp', type: 'amp', model: 'jazzclean', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, level: 50 } },
         { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 50, lowcut: 20, highcut: 20000, mic: 1, axis: 0 } },
@@ -66,21 +66,14 @@ export default function LibraryPage() {
       ]
     };
 
+    // 3. Imposta come preset attivo nello store
     setActivePreset(presetToLoad);
 
-    toast({
-      title: "Preset caricato",
-      description: `Caricato ${preset.name} nello slot ${formatSlotLabel(preset.slot)}`
-    });
-  };
-
-  const handleEditPreset = (e: React.MouseEvent, preset: Preset) => {
-    e.stopPropagation(); // Evitiamo il doppio trigger dal clic della card
-    handleLoadPreset(preset);
+    // 4. Naviga alla pagina Editor
     router.push('/editor');
   };
 
-  const startEditing = (e: React.MouseEvent, preset: Preset) => {
+  const startEditingName = (e: React.MouseEvent, preset: Preset) => {
     e.stopPropagation();
     setEditingSlot(preset.slot);
     setEditName(preset.name);
@@ -91,7 +84,7 @@ export default function LibraryPage() {
     if (editingSlot) {
       updatePresetName(editingSlot, editName);
       setEditingSlot(null);
-      toast({ title: "Nome aggiornato", description: "Il nome del preset è stato salvato localmente nell'app." });
+      toast({ title: "Nome aggiornato", description: "Il nome del preset è stato salvato localmente." });
     }
   };
 
@@ -182,7 +175,7 @@ export default function LibraryPage() {
             <RefreshCw className="w-12 h-12 mb-4 text-muted-foreground" />
             <h3 className="text-xl font-bold">Nessun Preset trovato</h3>
             <p className="max-w-xs mx-auto mt-2 text-sm">
-              I preset dovrebbero apparire automaticamente. Se non li vedi, riavvia l'app o ricarica la pagina.
+              I preset dovrebbero apparire automaticamente. Sincronizza l'hardware per iniziare.
             </p>
           </Card>
         ) : (
@@ -192,7 +185,7 @@ export default function LibraryPage() {
                 <Card 
                   key={preset.slot} 
                   className={`group overflow-hidden hover:border-primary/50 transition-all bg-card/40 backdrop-blur-sm cursor-pointer hover:shadow-xl border-border/50`}
-                  onClick={() => handleLoadPreset(preset)}
+                  onClick={() => handleSelectAndEdit(preset)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -204,7 +197,7 @@ export default function LibraryPage() {
                           variant="ghost" 
                           size="icon" 
                           className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" 
-                          onClick={(e) => startEditing(e, preset)}
+                          onClick={(e) => startEditingName(e, preset)}
                         >
                           <Edit2 className="w-3 h-3" />
                         </Button>
@@ -213,9 +206,8 @@ export default function LibraryPage() {
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleLoadPreset(preset); }}>Carica su MG-30</DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditPreset(e as any, preset); }}>Modifica Parametri</DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => startEditing(e as any, preset)}>Rinomina</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSelectAndEdit(preset); }}>Modifica Parametri</DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => startEditingName(e as any, preset)}>Rinomina</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -249,8 +241,7 @@ export default function LibraryPage() {
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      onClick={(e) => handleEditPreset(e, preset)}
-                      className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest group-hover:bg-primary group-hover:text-primary-foreground"
+                      className="h-7 text-[10px] px-2 font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground"
                     >
                       Modifica
                     </Button>
@@ -275,7 +266,7 @@ export default function LibraryPage() {
                       <tr 
                         key={preset.slot} 
                         className="hover:bg-primary/5 transition-colors group cursor-pointer" 
-                        onClick={() => handleLoadPreset(preset)}
+                        onClick={() => handleSelectAndEdit(preset)}
                       >
                         <td className="p-4 font-mono font-bold text-primary text-center">
                           {formatSlotLabel(preset.slot)}
@@ -300,9 +291,8 @@ export default function LibraryPage() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => startEditing(e as any, preset)}>Edit Name</Button>
-                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => handleEditPreset(e as any, preset)}>Modifica</Button>
-                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={() => handleLoadPreset(preset)}>Load</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase" onClick={(e) => startEditingName(e as any, preset)}>Rinomina</Button>
+                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase">Modifica</Button>
                           </div>
                         </td>
                       </tr>
