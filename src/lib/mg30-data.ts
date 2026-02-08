@@ -29,89 +29,102 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'compressor': [
     { 
-      id: 'vca', 
-      name: 'VCA',
+      id: 'rose', 
+      name: 'Rose Comp',
       parameters: [
         { id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'attack', name: 'Attack', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'clipping', name: 'Clipping', min: 0, max: 100, step: 1, default: 0 }
-      ]
-    },
-    { 
-      id: 'blue', 
-      name: 'Blue Comp',
-      parameters: [
-        { id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'attack', name: 'Attack', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     },
     { 
-      id: 'red', 
-      name: 'Red Comp',
+      id: 'kcomp', 
+      name: 'K Comp',
       parameters: [
         { id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'clipping', name: 'Clipping', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'studiocomp', 
+      name: 'Studio Comp',
+      parameters: [
+        { id: 'threshold', name: 'Threshold', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'ratio', name: 'Ratio', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'attack', name: 'Attack', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     }
   ],
   'efx': [
     { 
-      id: 'ts', 
-      name: 'T Screamer',
+      id: 'dist-ts808', 
+      name: 'TS808',
       parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
         { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     },
     { 
-      id: 'blues', 
+      id: 'dist-bluesdrv', 
       name: 'Blues Drv',
       parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
         { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     },
     { 
-      id: 'morning', 
+      id: 'dist-morningdrv', 
       name: 'Morning Drv',
       parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
         { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     },
     { 
-      id: 'rat', 
-      name: 'Rat',
+      id: 'dist-eatdist', 
+      name: 'Eat Dist',
       parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
         { id: 'filter', name: 'Filter', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'dist-reddirt', 
+      name: 'Red Dirt',
+      parameters: [
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'dist-crunch', 
+      name: 'Crunch',
+      parameters: [
+        { id: 'drive', name: 'Drive', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'dist-muff', 
+      name: 'Muff',
+      parameters: [
+        { id: 'sustain', name: 'Sustain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 }
       ]
     }
   ],
   'amp': [
     { 
-      id: 'brit800', 
-      name: 'Brit 800',
-      parameters: [
-        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'sag', name: 'Sag', min: 0, max: 100, step: 1, default: 50 },
-        { id: 'bias', name: 'Bias', min: 0, max: 100, step: 1, default: 50 }
-      ]
-    },
-    { 
-      id: 'plexi100', 
-      name: 'Plexi 100',
+      id: 'amp-jazzclean', 
+      name: 'Jazz Clean',
       parameters: [
         { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
         { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
@@ -122,8 +135,86 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
       ]
     },
     { 
-      id: 'deluxe', 
-      name: 'Deluxe Rvb',
+      id: 'amp-deluxerev', 
+      name: 'Deluxe Rev',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-twinrev', 
+      name: 'Twin Rev',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-classa30', 
+      name: 'Class A30',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-brit800', 
+      name: 'Brit 800',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'presence', name: 'Presence', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-plexi100', 
+      name: 'Plexi 100',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-fireman', 
+      name: 'Fireman',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-dualrect', 
+      name: 'Dual Rect',
+      parameters: [
+        { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'bass', name: 'Bass', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mid', name: 'Middle', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'treble', name: 'Treble', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'amp-die-vh4', 
+      name: 'Die VH4',
       parameters: [
         { id: 'gain', name: 'Gain', min: 0, max: 100, step: 1, default: 50 },
         { id: 'master', name: 'Master', min: 0, max: 100, step: 1, default: 50 },
@@ -135,8 +226,17 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'ir': [
     { 
-      id: '1960a', 
+      id: 'ir-1960a', 
       name: '1960A 4x12',
+      parameters: [
+        { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 },
+        { id: 'high-cut', name: 'High Cut', min: 0, max: 100, step: 1, default: 80 }
+      ]
+    },
+    { 
+      id: 'ir-1960b', 
+      name: '1960B 4x12',
       parameters: [
         { id: 'level', name: 'Level', min: 0, max: 100, step: 1, default: 50 },
         { id: 'low-cut', name: 'Low Cut', min: 0, max: 100, step: 1, default: 20 },
@@ -146,7 +246,20 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'eq': [
     { 
-      id: '10band', 
+      id: 'eq-7band', 
+      name: '7-Band EQ',
+      parameters: [
+        { id: '62Hz', name: '62.5Hz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '125Hz', name: '125Hz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '250Hz', name: '250Hz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '500Hz', name: '500Hz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '1kHz', name: '1kHz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '2kHz', name: '2kHz', min: 0, max: 100, step: 1, default: 50 },
+        { id: '4kHz', name: '4kHz', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'eq-10band', 
       name: '10-Band EQ',
       parameters: [
         { id: '31Hz', name: '31.25Hz', min: 0, max: 100, step: 1, default: 50 },
@@ -164,7 +277,7 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'modulation': [
     { 
-      id: 'ce1', 
+      id: 'mod-ce1', 
       name: 'CE-1',
       parameters: [
         { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
@@ -173,18 +286,83 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
       ]
     },
     { 
-      id: 'phase90', 
+      id: 'mod-ce2', 
+      name: 'CE-2',
+      parameters: [
+        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'mod-flanger', 
+      name: 'Flanger',
+      parameters: [
+        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'regen', name: 'Regen', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'width', name: 'Width', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'mod-phase90', 
       name: 'Phase 90',
       parameters: [
         { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'mod-vibe', 
+      name: 'Vibe',
+      parameters: [
+        { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'mod-rotary', 
+      name: 'Rotary',
+      parameters: [
+        { id: 'speed', name: 'Speed', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'depth', name: 'Depth', min: 0, max: 100, step: 1, default: 50 },
         { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 50 }
       ]
     }
   ],
   'delay': [
     { 
-      id: 'analog', 
+      id: 'dly-analog', 
       name: 'Analog',
+      parameters: [
+        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
+        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
+      ]
+    },
+    { 
+      id: 'dly-digital', 
+      name: 'Digital',
+      parameters: [
+        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
+        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
+      ]
+    },
+    { 
+      id: 'dly-moddelay', 
+      name: 'Mod Delay',
+      parameters: [
+        { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
+        { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 },
+        { id: 'rate', name: 'Rate', min: 0, max: 100, step: 1, default: 50 }
+      ]
+    },
+    { 
+      id: 'dly-tapeecho', 
+      name: 'Tape Echo',
       parameters: [
         { id: 'time', name: 'Time', min: 40, max: 2000, step: 1, default: 400, unit: 'ms' },
         { id: 'feedback', name: 'Feedback', min: 0, max: 100, step: 1, default: 30 },
@@ -194,8 +372,35 @@ export const MG30_MODELS: Record<EffectType, MG30Model[]> = {
   ],
   'reverb': [
     { 
-      id: 'hall', 
+      id: 'rvb-room', 
+      name: 'Room',
+      parameters: [
+        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
+      ]
+    },
+    { 
+      id: 'rvb-hall', 
       name: 'Hall',
+      parameters: [
+        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
+      ]
+    },
+    { 
+      id: 'rvb-plate', 
+      name: 'Plate',
+      parameters: [
+        { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },
+        { id: 'mix', name: 'Mix', min: 0, max: 100, step: 1, default: 30 }
+      ]
+    },
+    { 
+      id: 'rvb-spring', 
+      name: 'Spring',
       parameters: [
         { id: 'decay', name: 'Decay', min: 0, max: 100, step: 1, default: 50 },
         { id: 'tone', name: 'Tone', min: 0, max: 100, step: 1, default: 50 },

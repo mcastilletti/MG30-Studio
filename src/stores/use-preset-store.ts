@@ -13,14 +13,14 @@ const DEFAULT_PRESET: Preset = {
   ampModel: 'Brit 800',
   effects: [
     { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-    { id: 'cmp', type: 'compressor', model: 'vca', enabled: false, parameters: { sustain: 40, attack: 50, level: 50, clipping: 0 } },
-    { id: 'efx', type: 'efx', model: 'ts', enabled: true, parameters: { gain: 30, tone: 50, level: 50 } },
-    { id: 'amp', type: 'amp', model: 'brit800', enabled: true, parameters: { gain: 45, master: 60, bass: 50, mid: 50, treble: 50, presence: 50, sag: 50, bias: 50 } },
-    { id: 'ir', type: 'ir', model: '1960a', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80 } },
-    { id: 'eq', type: 'eq', model: '10band', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50, '8kHz': 50, '16kHz': 50 } },
-    { id: 'mod', type: 'modulation', model: 'ce1', enabled: false, parameters: { rate: 30, depth: 50, mix: 50 } },
-    { id: 'delay', type: 'delay', model: 'analog', enabled: false, parameters: { time: 400, feedback: 30, mix: 30 } },
-    { id: 'reverb', type: 'reverb', model: 'hall', enabled: true, parameters: { decay: 50, tone: 50, mix: 30 } }
+    { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
+    { id: 'efx', type: 'efx', model: 'dist-ts808', enabled: true, parameters: { drive: 50, tone: 50, level: 50 } },
+    { id: 'amp', type: 'amp', model: 'amp-brit800', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
+    { id: 'ir', type: 'ir', model: 'ir-1960a', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80 } },
+    { id: 'eq', type: 'eq', model: 'eq-10band', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50, '8kHz': 50, '16kHz': 50 } },
+    { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { rate: 50, depth: 50, mix: 50 } },
+    { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { time: 400, feedback: 30, mix: 30 } },
+    { id: 'reverb', type: 'reverb', model: 'rvb-hall', enabled: true, parameters: { decay: 50, tone: 50, mix: 30 } }
   ]
 };
 
@@ -65,7 +65,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {
       if (e.id === effectId) {
-        // Find the new model data to get default parameters
         const modelData = MG30_MODELS[e.type].find(m => m.id === modelId);
         const defaultParams: Record<string, number | string> = {};
         modelData?.parameters.forEach(p => {
