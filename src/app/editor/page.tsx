@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -10,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Undo2, Redo2, Save, Share2, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MG30_MODELS } from '@/lib/mg30-data';
 
 const formatSlotLabel = (slot: number) => {
   const group = Math.floor((slot - 1) / 4) + 1;
@@ -20,7 +21,7 @@ const formatSlotLabel = (slot: number) => {
 };
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
+  const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
   const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -61,6 +62,7 @@ export default function EditorPage() {
   };
 
   const selectedEffect = activePreset.effects.find(e => e.id === selectedBlockId);
+  const availableModels = selectedEffect ? MG30_MODELS[selectedEffect.type] : [];
 
   return (
     <AppShell>
@@ -95,7 +97,7 @@ export default function EditorPage() {
           </div>
         </div>
 
-        <Card className="border-border bg-background/50 overflow-hidden">
+        <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
           <CardHeader className="py-3 border-b border-border bg-secondary/20">
              <div className="flex items-center justify-between">
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -148,20 +150,45 @@ export default function EditorPage() {
         </Card>
 
         <div className="grid grid-cols-1 gap-6">
-          <Card className="border-primary/20 bg-primary/[0.02]">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border/50">
+          <Card className="border-primary/20 bg-primary/[0.02] shadow-xl">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <Settings2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg uppercase">{selectedEffect?.type.replace('-', ' ')} SECTION</CardTitle>
-                  <CardTitle className="text-xs text-muted-foreground font-normal">Editing parameters for {selectedEffect?.type}</CardTitle>
+                  <CardTitle className="text-lg uppercase flex items-center gap-2">
+                    {selectedEffect?.type.replace('-', ' ')}
+                    <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model.toUpperCase()}</Badge>
+                  </CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground font-normal">Section Model Selection & Parameters</CardTitle>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              
+              <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+                <div className="flex-1 sm:flex-none min-w-[180px]">
+                  <Select 
+                    value={selectedEffect?.model} 
+                    onValueChange={(val) => updateModel(selectedEffect!.id, val)}
+                  >
+                    <SelectTrigger className="w-full bg-background/50 border-primary/30">
+                      <Sparkles className="w-3 h-3 mr-2 text-primary" />
+                      <SelectValue placeholder="Select Model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableModels.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="h-8 w-[1px] bg-border hidden sm:block" />
+                
                 <div className="flex items-center gap-2">
-                   <span className="text-xs font-bold uppercase text-muted-foreground">Status</span>
+                   <span className="text-xs font-bold uppercase text-muted-foreground">Active</span>
                    <Switch 
                     checked={selectedEffect?.enabled} 
                     onCheckedChange={(v) => toggleEffect(selectedEffect!.id)} 
@@ -187,8 +214,12 @@ export default function EditorPage() {
                 </div>
               )}
               <div className="mt-8 p-4 rounded-lg bg-secondary/20 border border-border text-[10px] text-muted-foreground uppercase tracking-widest text-center flex flex-col gap-1">
-                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera (14-17, 18-21, etc.)</span>
-                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()} • Doppio click per Hardware Edit</span>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Sparkles className="w-3 h-3 text-primary" />
+                  <span className="font-bold">Hardware Link Active</span>
+                </div>
+                <span>Le manopole evidenziate corrispondono ai controller fisici sulla pedaliera per la sezione {selectedEffect?.type.toUpperCase()}</span>
+                <span className="font-mono text-primary/70">Mappa CC rilevata: {selectedEffect?.type.toUpperCase()} • Doppio click per Hardware Edit (CC 78)</span>
               </div>
             </CardContent>
           </Card>

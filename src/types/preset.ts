@@ -3,6 +3,7 @@ export type EffectType = 'noise-gate' | 'compressor' | 'efx' | 'amp' | 'ir' | 'e
 export interface EffectState {
   id: string;
   type: EffectType;
+  model: string;
   enabled: boolean;
   parameters: Record<string, number | string>;
 }
@@ -10,7 +11,7 @@ export interface EffectState {
 export interface Preset {
   id?: number;
   name: string;
-  slot: number; // 1-56
+  slot: number; // 1-128
   category: string;
   tags: string[];
   favorite: boolean;
