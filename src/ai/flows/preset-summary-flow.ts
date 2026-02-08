@@ -18,9 +18,14 @@ const PresetSummaryOutputSchema = z.object({
 export type PresetSummaryInput = z.infer<typeof PresetSummaryInputSchema>;
 export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 
-export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
-  try {
-    const response = await ai.generate({
+const summarizePresetFlow = ai.defineFlow(
+  {
+    name: 'summarizePresetFlow',
+    inputSchema: PresetSummaryInputSchema,
+    outputSchema: PresetSummaryOutputSchema,
+  },
+  async (input) => {
+    const { output } = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
       system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico.",
       prompt: `Analizza questo preset:
@@ -32,14 +37,14 @@ export async function summarizePreset(input: PresetSummaryInput): Promise<Preset
       output: { schema: PresetSummaryOutputSchema }
     });
 
-    const output = response.output;
     if (!output) {
       throw new Error('L\'AI non ha prodotto un risultato valido.');
     }
 
     return output;
-    
-  } catch (error: any) {
-    throw new Error(error.message || 'Errore durante la generazione dell\'analisi AI');
   }
+);
+
+export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
+  return summarizePresetFlow(input);
 }

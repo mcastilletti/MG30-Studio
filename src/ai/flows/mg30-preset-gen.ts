@@ -28,9 +28,14 @@ const MG30PresetOutputSchema = z.object({
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  try {
-    const response = await ai.generate({
+const mg30PresetFlow = ai.defineFlow(
+  {
+    name: 'mg30PresetFlow',
+    inputSchema: MG30PresetInputSchema,
+    outputSchema: MG30PresetOutputSchema,
+  },
+  async (input) => {
+    const { output } = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
       system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
       Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
@@ -49,13 +54,14 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
       output: { schema: MG30PresetOutputSchema }
     });
 
-    const output = response.output;
     if (!output) {
       throw new Error('Il modello AI non ha restituito una configurazione valida.');
     }
 
     return output;
-  } catch (error: any) {
-    throw new Error(error.message || 'Errore durante la generazione del preset AI');
   }
+);
+
+export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
+  return mg30PresetFlow(input);
 }

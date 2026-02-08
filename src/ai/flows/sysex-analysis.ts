@@ -19,9 +19,14 @@ const AnalyzeSysExOutputSchema = z.object({
 export type AnalyzeSysExInput = z.infer<typeof AnalyzeSysExInputSchema>;
 export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 
-export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
-  try {
-    const response = await ai.generate({
+const analyzeSysExFlow = ai.defineFlow(
+  {
+    name: 'analyzeSysExFlow',
+    inputSchema: AnalyzeSysExInputSchema,
+    outputSchema: AnalyzeSysExOutputSchema,
+  },
+  async (input) => {
+    const { output } = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
       system: "Sei un MIDI engineer esperto in reverse engineering di SysEx per il NUX MG-30.",
       prompt: `Analizza questi messaggi SysEx: ${input.sysexData}
@@ -30,10 +35,11 @@ export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSys
       output: { schema: AnalyzeSysExOutputSchema }
     });
 
-    const output = response.output;
     if (!output) throw new Error('Analisi AI fallita');
     return output;
-  } catch (error: any) {
-    throw new Error(error.message || 'Errore durante l\'analisi SysEx');
   }
+);
+
+export async function analyzeSysEx(input: AnalyzeSysExInput): Promise<AnalyzeSysExOutput> {
+  return analyzeSysExFlow(input);
 }
