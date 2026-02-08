@@ -5,7 +5,7 @@ import { Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Mappatura Bypass CC e Valori basata su tabella utente V5
+// Tabella Bypass CC e Valori basata sulle specifiche utente
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -34,7 +34,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// CC per i parametri dei blocchi (Knobs) basati su tabella utente V5
+// CC per i parametri dei blocchi (Knobs) basati su tabella completa
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12, 13],
   'compressor': [14, 15, 16, 17],
@@ -48,7 +48,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'ir': [66, 67, 68, 69, 70]
 };
 
-// Mappatura indici CC 75 (Current Block) basata su tabella utente V5
+// Mappatura indici CC 75 per visualizzazione su display MG-30
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -109,7 +109,6 @@ interface MidiStore {
   syncProgress: number;
   lastError: string | null;
   currentSyncSlot: number | null;
-  hasSyncedOnce: boolean;
   
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
@@ -137,7 +136,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   syncProgress: 0,
   lastError: null,
   currentSyncSlot: null,
-  hasSyncedOnce: false,
 
   initialize: async () => {
     if (typeof window === 'undefined' || !navigator.requestMIDIAccess) {
@@ -211,7 +209,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const pc = data[1];
       const slot = pc + 1;
       const activePreset = usePresetStore.getState().activePreset;
-      // Cerchiamo il preset nella libreria locale per non perdere i nomi
       const existingPreset = get().devicePresets.find(p => p.slot === slot);
       usePresetStore.getState().setActivePreset(existingPreset || { ...activePreset, slot });
       setTimeout(() => get().syncActivePreset(), 50);
@@ -254,7 +251,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       }
     }
 
-    // SysEx Capture
+    // SysEx for Name
     if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
       let tempName = "";
       for (let i = 0; i < data.length; i++) {
@@ -282,7 +279,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (!output) return;
     set({ isEditorSyncing: true });
-    // Richiesta dump completo
+    // Dump SysEx per lo slot attivo
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
     
@@ -345,16 +342,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     });
   },
 
-  syncPresets: async (force = false) => {
-    const { output, sendProgramChange, hasSyncedOnce } = get();
-    if (!output || (hasSyncedOnce && !force)) return;
+  syncPresets: async () => {
+    const { output, sendProgramChange } = get();
+    if (!output) return;
     set({ isSyncing: true, syncProgress: 0 });
     for (let i = 1; i <= 128; i++) {
-      set({ currentSyncSlot: i, syncProgress: Math.round((i / 128) * 100) });
+      set({ syncProgress: Math.round((i / 128) * 100) });
       sendProgramChange(i - 1);
       await new Promise(r => setTimeout(r, 450));
     }
-    set({ isSyncing: false, currentSyncSlot: null, hasSyncedOnce: true });
+    set({ isSyncing: false });
   },
 
   updatePresetName: (slot, newName) => {

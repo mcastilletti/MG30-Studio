@@ -1,28 +1,31 @@
+
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
+const createDefaultEffects = (): EffectState[] => [
+  { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
+  { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
+  { id: 'efx', type: 'efx', model: 'tscream', enabled: false, parameters: { drive: 50, tone: 50, level: 50 } },
+  { id: 'amp', type: 'amp', model: 'plexi100w', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
+  { id: 'eq', type: 'eq', model: 'eq-ge6', enabled: false, parameters: { '100hz': 50, '220hz': 50, '500hz': 50, '1.2khz': 50, '2.6khz': 50, '6.4khz': 50, 'level': 50 } },
+  { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
+  { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { intensity: 50, depth: 50, rate: 50 } },
+  { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { repeat: 30, echo: 30, intensity: 30 } },
+  { id: 'reverb', type: 'reverb', model: 'room', enabled: true, parameters: { decay: 50, tone: 50, level: 30 } },
+  { id: 'ir', type: 'ir', model: 'ir-jz120', enabled: true, parameters: { level: 0, lowcut: 20, highcut: 20000 } }
+];
+
 const DEFAULT_PRESET: Preset = {
-  name: 'New Custom Preset',
+  name: 'Active MG-30 Tone',
   slot: 1,
   category: 'Clean',
   tags: [],
   favorite: false,
   rating: 0,
   lastModified: new Date(),
-  ampModel: 'Brit 800',
-  effects: [
-    { id: 'wah', type: 'wah', model: 'clyde', enabled: false, parameters: { position: 0 } },
-    { id: 'ng', type: 'noise-gate', model: 'gate', enabled: true, parameters: { threshold: 20, decay: 50 } },
-    { id: 'cmp', type: 'compressor', model: 'rose', enabled: false, parameters: { sustain: 50, level: 50 } },
-    { id: 'efx', type: 'efx', model: 'dist-ts808', enabled: true, parameters: { drive: 50, tone: 50, level: 50 } },
-    { id: 'amp', type: 'amp', model: 'amp-brit800', enabled: true, parameters: { gain: 50, master: 50, bass: 50, mid: 50, treble: 50, presence: 50 } },
-    { id: 'ir', type: 'ir', model: 'ir-1960a', enabled: true, parameters: { level: 50, 'low-cut': 20, 'high-cut': 80 } },
-    { id: 'eq', type: 'eq', model: 'eq-10band', enabled: true, parameters: { '31Hz': 50, '62Hz': 50, '125Hz': 50, '250Hz': 50, '500Hz': 50, '1kHz': 50, '2kHz': 50, '4kHz': 50, '8kHz': 50, '16kHz': 50 } },
-    { id: 'mod', type: 'modulation', model: 'mod-ce1', enabled: false, parameters: { rate: 50, depth: 50, mix: 50 } },
-    { id: 'delay', type: 'delay', model: 'dly-analog', enabled: false, parameters: { time: 400, feedback: 30, mix: 30 } },
-    { id: 'reverb', type: 'reverb', model: 'rvb-hall', enabled: true, parameters: { decay: 50, tone: 50, mix: 30 } }
-  ]
+  ampModel: 'NUX MG-30',
+  effects: createDefaultEffects()
 };
 
 interface PresetStore {

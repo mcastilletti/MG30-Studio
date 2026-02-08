@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -44,7 +45,6 @@ export default function LibraryPage() {
     formatSlotLabel(p.slot).toLowerCase().includes(search.toLowerCase())
   );
 
-  // Solo selezione e invio MIDI (rimane nella pagina)
   const handleSelectPreset = (preset: Preset) => {
     if (status === 'connected') {
       sendProgramChange(preset.slot - 1);
@@ -56,7 +56,6 @@ export default function LibraryPage() {
     });
   };
 
-  // Selezione, invio MIDI e navigazione all'editor
   const handleConfigurePreset = (e: React.MouseEvent, preset: Preset) => {
     e.stopPropagation();
     if (status === 'connected') {
@@ -68,29 +67,23 @@ export default function LibraryPage() {
 
   const handleShowInfo = (e: React.MouseEvent, preset: Preset) => {
     e.stopPropagation();
-    
     const cleanPreset = JSON.parse(JSON.stringify(preset));
-    
     setSummaryPreset(preset);
     setIsSummarizing(true);
     setSummaryText(null);
     
     summarizePreset({ preset: cleanPreset })
-      .then((result) => {
-        setSummaryText(result.summary);
-      })
+      .then((result) => setSummaryText(result.summary))
       .catch((err) => {
         console.error(err);
         toast({
           title: "Errore AI",
-          description: "Impossibile generare il riassunto. Verifica la connessione o riprova.",
+          description: "Impossibile generare il riassunto.",
           variant: "destructive"
         });
         setSummaryPreset(null);
       })
-      .finally(() => {
-        setIsSummarizing(false);
-      });
+      .finally(() => setIsSummarizing(false));
   };
 
   const startEditingName = (e: React.MouseEvent, preset: Preset) => {
@@ -114,7 +107,7 @@ export default function LibraryPage() {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Libreria Preset</h2>
-            <p className="text-muted-foreground">Sincronizza e gestisci i 128 slot della tua pedaliera MG-30.</p>
+            <p className="text-muted-foreground">Gestisci i 128 slot della tua pedaliera MG-30.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -133,7 +126,7 @@ export default function LibraryPage() {
         {isSyncing && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-medium text-muted-foreground">
-              <span>Sincronizzazione hardware...</span>
+              <span>Sincronizzazione nomi...</span>
               <span>{syncProgress}%</span>
             </div>
             <Progress value={syncProgress} className="h-2" />
@@ -152,22 +145,8 @@ export default function LibraryPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border border-border p-1 bg-background/40">
-              <Button 
-                variant={view === 'grid' ? 'secondary' : 'ghost'} 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={() => setView('grid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant={view === 'list' ? 'secondary' : 'ghost'} 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={() => setView('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+              <Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setView('grid')}><LayoutGrid className="w-4 h-4" /></Button>
+              <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setView('list')}><List className="w-4 h-4" /></Button>
             </div>
           </div>
         </div>
@@ -187,22 +166,11 @@ export default function LibraryPage() {
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-[10px] border-primary/20 text-primary bg-primary/5">
-                        {formatSlotLabel(preset.slot)}
-                      </Badge>
+                      <Badge variant="outline" className="text-[10px] border-primary/20 text-primary bg-primary/5">{formatSlotLabel(preset.slot)}</Badge>
                       <div className="flex items-center gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
-                          onClick={(e) => handleShowInfo(e, preset)}
-                        >
-                          <Info className="w-4 h-4" />
-                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={(e) => handleShowInfo(e, preset)}><Info className="w-4 h-4" /></Button>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => handleConfigurePreset(e as any, preset)}>Modifica</DropdownMenuItem>
                             <DropdownMenuItem onClick={(e) => startEditingName(e as any, preset)}>Rinomina</DropdownMenuItem>
@@ -210,22 +178,13 @@ export default function LibraryPage() {
                         </DropdownMenu>
                       </div>
                     </div>
-                    
                     {editingSlot === preset.slot ? (
                       <div className="flex items-center gap-2 mt-2">
-                        <Input 
-                          value={editName} 
-                          onChange={(e) => setEditName(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-8"
-                          autoFocus
-                        />
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} onClick={(e) => e.stopPropagation()} className="h-8" autoFocus />
                         <Button size="icon" className="h-8 w-8" onClick={saveName}><Check className="w-4 h-4" /></Button>
                       </div>
                     ) : (
-                      <CardTitle className="text-lg mt-2 truncate font-bold">
-                        {preset.name}
-                      </CardTitle>
+                      <CardTitle className="text-lg mt-2 truncate font-bold">{preset.name}</CardTitle>
                     )}
                   </CardHeader>
                   <CardContent className="pb-4">
@@ -235,13 +194,8 @@ export default function LibraryPage() {
                      </div>
                   </CardContent>
                   <CardFooter className="pt-2 border-t border-border/30 flex items-center justify-between bg-secondary/10">
-                    <span className="text-[10px] text-muted-foreground font-mono">MIDI PC: {preset.slot - 1}</span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="h-7 text-[10px] font-bold uppercase tracking-widest hover:text-primary gap-1"
-                      onClick={(e) => handleConfigurePreset(e, preset)}
-                    >
+                    <span className="text-[10px] text-muted-foreground font-mono">PC: {preset.slot - 1}</span>
+                    <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-widest hover:text-primary gap-1" onClick={(e) => handleConfigurePreset(e, preset)}>
                       <Settings2 className="w-3 h-3" /> Configura
                     </Button>
                   </CardFooter>
@@ -262,38 +216,14 @@ export default function LibraryPage() {
                   </thead>
                   <tbody className="divide-y divide-border/30">
                     {filteredPresets.map((preset) => (
-                      <tr 
-                        key={preset.slot} 
-                        className="hover:bg-primary/5 transition-colors group cursor-pointer" 
-                        onClick={() => handleSelectPreset(preset)}
-                      >
-                        <td className="p-4 font-mono font-bold text-primary text-center">
-                          {formatSlotLabel(preset.slot)}
-                        </td>
-                        <td className="p-4 font-semibold">
-                          {preset.name}
-                        </td>
-                        <td className="p-4">
-                          <Badge variant="secondary" className="text-[10px] bg-secondary/50">{preset.ampModel}</Badge>
-                        </td>
+                      <tr key={preset.slot} className="hover:bg-primary/5 transition-colors group cursor-pointer" onClick={() => handleSelectPreset(preset)}>
+                        <td className="p-4 font-mono font-bold text-primary text-center">{formatSlotLabel(preset.slot)}</td>
+                        <td className="p-4 font-semibold">{preset.name}</td>
+                        <td className="p-4"><Badge variant="secondary" className="text-[10px] bg-secondary/50">{preset.ampModel}</Badge></td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-muted-foreground hover:text-primary"
-                              onClick={(e) => handleShowInfo(e, preset)}
-                            >
-                              <Info className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 text-xs font-bold uppercase gap-1"
-                              onClick={(e) => handleConfigurePreset(e, preset)}
-                            >
-                              <Settings2 className="w-3 h-3" /> Modifica
-                            </Button>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => handleShowInfo(e, preset)}><Info className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1" onClick={(e) => handleConfigurePreset(e, preset)}><Settings2 className="w-3 h-3" /> Modifica</Button>
                           </div>
                         </td>
                       </tr>
@@ -305,17 +235,12 @@ export default function LibraryPage() {
           )
         )}
 
-        {/* AI Preset Analysis Dialog */}
         <Dialog open={!!summaryPreset} onOpenChange={(open) => !open && setSummaryPreset(null)}>
           <DialogContent className="sm:max-w-[450px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Analisi Preset: {summaryPreset?.name}
+                <Sparkles className="w-5 h-5 text-primary" /> Analisi Preset: {summaryPreset?.name}
               </DialogTitle>
-              <DialogDescription>
-                Analisi del carattere sonoro generata da Gemini per lo slot {summaryPreset && formatSlotLabel(summaryPreset.slot)}.
-              </DialogDescription>
             </DialogHeader>
             <div className="py-6 min-h-[150px] flex flex-col items-center justify-center">
               {isSummarizing ? (
@@ -324,18 +249,14 @@ export default function LibraryPage() {
                   <p className="text-sm text-muted-foreground animate-pulse">L'AI sta analizzando il segnale...</p>
                 </div>
               ) : (
-                <div className="w-full space-y-4">
-                  <div className="p-4 rounded-lg bg-secondary/20 border border-border text-sm leading-relaxed whitespace-pre-wrap">
-                    {summaryText || "Nessuna analisi disponibile."}
-                  </div>
+                <div className="w-full p-4 rounded-lg bg-secondary/20 border border-border text-sm leading-relaxed whitespace-pre-wrap">
+                  {summaryText || "Nessuna analisi disponibile."}
                 </div>
               )}
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSummaryPreset(null)}>Chiudi</Button>
-              <Button onClick={(e) => summaryPreset && handleConfigurePreset(e as any, summaryPreset)}>
-                Apri Editor
-              </Button>
+              <Button onClick={(e) => summaryPreset && handleConfigurePreset(e as any, summaryPreset)}>Apri Editor</Button>
             </div>
           </DialogContent>
         </Dialog>
