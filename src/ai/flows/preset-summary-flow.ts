@@ -6,6 +6,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const PresetSummaryInputSchema = z.object({
   preset: z.any().describe('I dati completi del preset da analizzare'),
@@ -21,7 +22,7 @@ export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: gemini15Flash,
       system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico.",
       prompt: `Analizza questo preset:
       Nome: ${input.preset.name}

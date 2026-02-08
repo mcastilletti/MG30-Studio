@@ -7,6 +7,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { gemini15Flash } from '@genkit-ai/google-genai';
 
 const MG30PresetInputSchema = z.object({
   description: z.string().describe('Descrizione del suono desiderato'),
@@ -31,7 +32,7 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
   try {
     const response = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: gemini15Flash,
       system: `Sei un sound designer esperto per la pedaliera NUX MG-30. 
       Il tuo compito è generare un preset JSON valido basato sulla descrizione dell'utente.
       
