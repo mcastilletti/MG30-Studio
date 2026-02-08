@@ -43,7 +43,7 @@ const getBlockColorVar = (type: string) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, syncBlockParameters } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -83,13 +83,14 @@ export default function EditorPage() {
   const handleSelectBlock = (effectId: string, type: string) => {
     setSelectedBlockId(effectId);
     if (status === 'connected') {
+      // 1. Sposta lo schermo della pedaliera sul blocco selezionato
       selectBlock(type);
-    }
-  };
-
-  const handleHardwareSync = (type: string) => {
-    if (status === 'connected') {
-      selectBlock(type);
+      
+      // 2. Sincronizza i parametri correnti dell'editor con l'hardware
+      const effect = activePreset.effects.find(e => e.id === effectId);
+      if (effect) {
+        syncBlockParameters(type, effect.parameters);
+      }
     }
   };
 
@@ -310,7 +311,7 @@ export default function EditorPage() {
                 <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <LayoutGrid className="w-3 h-3" /> Signal Chain
                 </CardTitle>
-                <span className="text-[10px] text-muted-foreground italic">Click: Select UI • Double Click: Edit Hardware</span>
+                <span className="text-[10px] text-muted-foreground italic">Click: Select & Sync • Double Click: Hard Sync</span>
              </div>
           </CardHeader>
           <CardContent className="py-8">
@@ -322,7 +323,6 @@ export default function EditorPage() {
                   <React.Fragment key={effect.id}>
                     <div 
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
-                      onDoubleClick={() => handleHardwareSync(effect.type)}
                       className={cn(
                         "relative group cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
                         "bg-secondary/40",

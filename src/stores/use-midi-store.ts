@@ -99,6 +99,7 @@ interface MidiStore {
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
+  syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   refreshDevices: () => void;
   syncPresets: () => Promise<void>;
   updatePresetName: (slot: number, newName: string) => void;
@@ -187,14 +188,11 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       // 1. Gestione Bypass (On/Off)
       const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
       if (blockTypeForBypass) {
-        const vals = BYPASS_VALS[blockTypeForBypass];
-        if (vals) {
-          const isEnabled = val < 64;
-          usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
-        }
+        const isEnabled = val < 64;
+        usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
       }
 
-      // 2. Gestione Parametri Real-time (Position Wah, Gain Amp, ecc.)
+      // 2. Gestione Parametri Real-time
       for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)) {
         const knobIndex = ccs.indexOf(cc);
         if (knobIndex !== -1) {
@@ -204,7 +202,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
              const modelData = MG30_MODELS[effect.type as any]?.find(m => m.id === effect.model);
              const paramDef = modelData?.parameters[knobIndex];
              if (paramDef) {
-               // Aggiorna il valore nel componente UI (senza salvare in history per non saturarla)
                usePresetStore.getState().updateParameter(effect.id, paramDef.id, val);
              }
           }
@@ -271,6 +268,26 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (value !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, value);
     }
+  },
+
+  syncBlockParameters: (blockType, parameters) => {
+    const ccs = BLOCK_PARAM_CCS[blockType];
+    if (!ccs) return;
+
+    // Troviamo il modello attivo per mappare l'ordine dei parametri
+    const presetState = usePresetStore.getState().activePreset;
+    const effect = presetState.effects.find(e => e.type === blockType);
+    if (!effect) return;
+
+    const modelData = MG30_MODELS[effect.type as any]?.find(m => m.id === effect.model);
+    if (!modelData) return;
+
+    modelData.parameters.forEach((param, index) => {
+      const val = Number(parameters[param.id] ?? param.default);
+      if (ccs[index] !== undefined) {
+        get().sendControlChange(ccs[index], Math.round(val));
+      }
+    });
   },
 
   syncPresets: async () => {
