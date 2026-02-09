@@ -85,6 +85,9 @@ export default function EditorPage() {
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
+      // Se stiamo cambiando pedale mentre siamo in sezione parametri,
+      // aggiorna anche la visualizzazione hardware sulla pedaliera (CC 78)
+      enterBlockEditor(type);
     }
   };
 
