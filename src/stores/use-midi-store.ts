@@ -34,12 +34,13 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// CC per la selezione del MODELLO (Basati su mappatura hardware MG-30)
+// CC per la selezione del MODELLO
+// AMP mappato su CC 3 come da specifica utente
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 11,
   'compressor': 13,
   'efx': 17,
-  'amp': 23,
+  'amp': 3, // SPECIFICA UTENTE: AMP = CC 3
   'eq': 31,
   'noise-gate': 43,
   'modulation': 47,
@@ -306,7 +307,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendModelChange: (blockType, modelId) => {
-    const { output, sendControlChange, selectBlock } = get();
+    const { output, sendControlChange } = get();
     if (!output) return;
 
     const cc = BLOCK_MODEL_CC[blockType];
@@ -317,17 +318,23 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const modelIndex = models?.findIndex(m => m.id === modelId);
 
     if (modelIndex !== undefined && modelIndex !== -1) {
+      // Come da specifica utente, per l'AMP il valore va da 1 a 35
+      let midiValue = modelIndex;
+      if (blockType === 'amp') {
+        midiValue = modelIndex + 1;
+      }
+
       // 1. Forza il focus del blocco (CC 75)
       sendControlChange(SELECT_BLOCK_CC, index);
       
-      // 2. Invia SysEx di "Edit Mode" per sbloccare la pedaliera
+      // 2. Invia SysEx di "Edit Mode"
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
 
       setTimeout(() => {
-        // 3. Invia il cambio modello effettivo
-        sendControlChange(cc, modelIndex);
+        // 3. Invia il cambio modello (CC 3 per AMP)
+        sendControlChange(cc, midiValue);
         
-        // 4. Forza il refresh del display hardware
+        // 4. Forza il refresh del display
         setTimeout(() => {
           output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
         }, 150);

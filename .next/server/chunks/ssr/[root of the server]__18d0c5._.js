@@ -2672,12 +2672,13 @@ const BYPASS_VALS = {
         off: 65
     }
 };
-// CC per la selezione del MODELLO (Basati su mappatura hardware MG-30)
+// CC per la selezione del MODELLO
+// AMP mappato su CC 3 come da specifica utente
 const BLOCK_MODEL_CC = {
     'wah': 11,
     'compressor': 13,
     'efx': 17,
-    'amp': 23,
+    'amp': 3,
     'eq': 31,
     'noise-gate': 43,
     'modulation': 47,
@@ -3064,7 +3065,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             }
         },
         sendModelChange: (blockType, modelId)=>{
-            const { output, sendControlChange, selectBlock } = get();
+            const { output, sendControlChange } = get();
             if (!output) return;
             const cc = BLOCK_MODEL_CC[blockType];
             const index = BLOCK_INDEX_MAP[blockType];
@@ -3072,9 +3073,14 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
             const modelIndex = models?.findIndex((m)=>m.id === modelId);
             if (modelIndex !== undefined && modelIndex !== -1) {
+                // Come da specifica utente, per l'AMP il valore va da 1 a 35
+                let midiValue = modelIndex;
+                if (blockType === 'amp') {
+                    midiValue = modelIndex + 1;
+                }
                 // 1. Forza il focus del blocco (CC 75)
                 sendControlChange(SELECT_BLOCK_CC, index);
-                // 2. Invia SysEx di "Edit Mode" per sbloccare la pedaliera
+                // 2. Invia SysEx di "Edit Mode"
                 output.send([
                     0xF0,
                     0x00,
@@ -3086,9 +3092,9 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     0xF7
                 ]);
                 setTimeout(()=>{
-                    // 3. Invia il cambio modello effettivo
-                    sendControlChange(cc, modelIndex);
-                    // 4. Forza il refresh del display hardware
+                    // 3. Invia il cambio modello (CC 3 per AMP)
+                    sendControlChange(cc, midiValue);
+                    // 4. Forza il refresh del display
                     setTimeout(()=>{
                         output.send([
                             0xF0,
