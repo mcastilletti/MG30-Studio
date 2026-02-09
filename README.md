@@ -34,9 +34,9 @@ Per caricare questo progetto sul tuo account GitHub, segui questi passaggi dal t
 4. Collega il repository remoto (sostituisci l'URL con il tuo):
    ```bash
    git remote add origin https://github.com/mcastilletti/MG30-Studio.git
-   git branch -M main
    git push -u origin main
    ```
 
 ---
 *Nota: Il file `.env` è stato escluso dal caricamento per sicurezza. Ricordati di configurare le tue API KEY nel nuovo ambiente.*
+
