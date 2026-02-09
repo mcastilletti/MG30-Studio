@@ -2749,7 +2749,6 @@ const BLOCK_INDEX_MAP = {
 };
 const SELECT_BLOCK_CC = 75;
 const ENTER_EDITOR_CC = 78;
-const PEDAL_CC = 76;
 const formatSlotLabel = (slot)=>{
     const bank = Math.floor((slot - 1) / 4) + 1;
     const sub = [
@@ -2959,7 +2958,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             ]);
             setTimeout(()=>set({
                     isEditorSyncing: false
-                }), 800);
+                }), 1200);
         },
         sendControlChange: (cc, value)=>{
             const { output } = get();
@@ -2976,7 +2975,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     0xC0,
                     pc
                 ]);
-                setTimeout(()=>get().syncActivePreset(), 100);
+                setTimeout(()=>get().syncActivePreset(), 150);
             }
         },
         sendKnobParameter: (blockType, knobIndex, value)=>{
@@ -3009,8 +3008,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                             0x01,
                             0xF7
                         ]);
-                    }, 150);
-                }, 150);
+                    }, 250);
+                }, 250);
             }
         },
         toggleBlock: (blockType, enabled)=>{
@@ -3022,7 +3021,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const modelIndex = models?.findIndex((m)=>m.id === effect.model);
             const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
             const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
-            // NUX logic: ModelID for ON, ModelID + 64 for OFF
             const midiValue = enabled ? modelIdValue : modelIdValue + 64;
             get().sendControlChange(cc, midiValue);
         },
@@ -3034,7 +3032,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const index = BLOCK_INDEX_MAP[blockType];
             if (index !== undefined) {
                 get().sendControlChange(SELECT_BLOCK_CC, index);
-                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 100);
+                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 150);
             }
         },
         exitBlockEditor: ()=>{
@@ -3042,7 +3040,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         },
         resetToPresetView: ()=>{
             get().sendControlChange(ENTER_EDITOR_CC, 127);
-            setTimeout(()=>get().syncActivePreset(), 100);
+            setTimeout(()=>get().syncActivePreset(), 200);
         },
         syncBlockParameters: (blockType, parameters)=>{
             const ccs = BLOCK_PARAM_CCS[blockType];
@@ -3054,7 +3052,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 30);
+                    // Invio dei parametri ancora più lento per precisione millimetrica
+                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 60);
                 }
             });
         },
@@ -3064,6 +3063,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             set({
                 isEditorSyncing: true
             });
+            // Sincronizzazione "Bulk" più lenta: 1.2 secondi per ogni blocco
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
                     // 1. Cambia Modello
@@ -3074,13 +3074,14 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         setTimeout(()=>{
                             // 3. Invia tutti i parametri delle manopole
                             syncBlockParameters(e.type, e.parameters);
-                        }, 150);
-                    }, 200);
-                }, idx * 600); // Stagger di 600ms per ogni blocco per evitare overflow buffer
+                        }, 350);
+                    }, 400);
+                }, idx * 1200);
             });
+            const totalSyncTime = preset.effects.length * 1200 + 1000;
             setTimeout(()=>set({
                     isEditorSyncing: false
-                }), preset.effects.length * 600 + 500);
+                }), totalSyncTime);
         },
         syncPresets: async ()=>{
             set({
@@ -3092,7 +3093,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     syncProgress: Math.round(i / 128 * 100)
                 });
                 get().sendProgramChange(i - 1);
-                await new Promise((r)=>setTimeout(r, 400));
+                // Rallentato anche il caricamento dei nomi per sicurezza
+                await new Promise((r)=>setTimeout(r, 600));
             }
             set({
                 isSyncing: false

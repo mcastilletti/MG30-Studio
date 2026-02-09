@@ -84,7 +84,6 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
 
 const SELECT_BLOCK_CC = 75; 
 const ENTER_EDITOR_CC = 78;
-const PEDAL_CC = 76;
 
 const formatSlotLabel = (slot: number) => {
   const bank = Math.floor((slot - 1) / 4) + 1;
@@ -221,7 +220,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     set({ isEditorSyncing: true });
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-    setTimeout(() => set({ isEditorSyncing: false }), 800);
+    setTimeout(() => set({ isEditorSyncing: false }), 1200);
   },
 
   sendControlChange: (cc, value) => {
@@ -233,7 +232,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (output) {
       output.send([0xC0, pc]);
-      setTimeout(() => get().syncActivePreset(), 100);
+      setTimeout(() => get().syncActivePreset(), 150);
     }
   },
 
@@ -263,8 +262,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         sendControlChange(cc, midiValue);
         setTimeout(() => {
           output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-        }, 150);
-      }, 150);
+        }, 250);
+      }, 250);
     }
   },
 
@@ -280,7 +279,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
     const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
 
-    // NUX logic: ModelID for ON, ModelID + 64 for OFF
     const midiValue = enabled ? modelIdValue : modelIdValue + 64;
     get().sendControlChange(cc, midiValue);
   },
@@ -294,7 +292,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 100);
+      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 150);
     }
   },
 
@@ -304,7 +302,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   resetToPresetView: () => {
     get().sendControlChange(ENTER_EDITOR_CC, 127);
-    setTimeout(() => get().syncActivePreset(), 100);
+    setTimeout(() => get().syncActivePreset(), 200);
   },
 
   syncBlockParameters: (blockType, parameters) => {
@@ -320,7 +318,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
-        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 30);
+        // Invio dei parametri ancora più lento per precisione millimetrica
+        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 60);
       }
     });
   },
@@ -331,6 +330,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     set({ isEditorSyncing: true });
 
+    // Sincronizzazione "Bulk" più lenta: 1.2 secondi per ogni blocco
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
         // 1. Cambia Modello
@@ -343,12 +343,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           setTimeout(() => {
             // 3. Invia tutti i parametri delle manopole
             syncBlockParameters(e.type, e.parameters);
-          }, 150);
-        }, 200);
-      }, idx * 600); // Stagger di 600ms per ogni blocco per evitare overflow buffer
+          }, 350);
+        }, 400);
+      }, idx * 1200); 
     });
 
-    setTimeout(() => set({ isEditorSyncing: false }), preset.effects.length * 600 + 500);
+    const totalSyncTime = preset.effects.length * 1200 + 1000;
+    setTimeout(() => set({ isEditorSyncing: false }), totalSyncTime);
   },
 
   syncPresets: async () => {
@@ -356,7 +357,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     for (let i = 1; i <= 128; i++) {
       set({ syncProgress: Math.round((i / 128) * 100) });
       get().sendProgramChange(i - 1);
-      await new Promise(r => setTimeout(r, 400));
+      // Rallentato anche il caricamento dei nomi per sicurezza
+      await new Promise(r => setTimeout(r, 600));
     }
     set({ isSyncing: false });
   },

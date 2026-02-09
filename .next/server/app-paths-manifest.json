@@ -1,5 +1,6 @@
 {
   "/page": "app/page.js",
   "/editor/page": "app/editor/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/tools/sysex-analyzer/page": "app/tools/sysex-analyzer/page.js"
 }
