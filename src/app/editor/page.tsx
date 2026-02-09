@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -74,6 +74,18 @@ export default function EditorPage() {
     updateParameter(selectedBlockId, paramId, value);
     if (status === 'connected') {
       sendKnobParameter(selectedBlockId, index, value);
+    }
+  };
+
+  const handleModelChange = (effectId: string, type: string, modelId: string) => {
+    updateModel(effectId, modelId);
+    if (status === 'connected') {
+      sendModelChange(type, modelId);
+      // Opzionale: risincronizza i parametri del nuovo modello perché potrebbero differire
+      const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
+      if (updatedEffect) {
+        syncBlockParameters(type, updatedEffect.parameters);
+      }
     }
   };
 
@@ -120,7 +132,7 @@ export default function EditorPage() {
       syncFullPreset(activePreset);
       toast({ 
         title: "Sincronizzazione Completa", 
-        description: `Tutti i parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.` 
+        description: `Modelli e parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.` 
       });
     } else {
       toast({ 
@@ -179,6 +191,7 @@ export default function EditorPage() {
     
     if (status === 'connected') {
       updatedEffects.forEach(e => {
+        sendModelChange(e.type, e.model);
         toggleBlock(e.type, e.enabled);
         syncBlockParameters(e.type, e.parameters);
       });
@@ -357,7 +370,7 @@ export default function EditorPage() {
                   </CardTitle>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Select value={selectedEffect?.model} onValueChange={(val) => updateModel(selectedEffect!.id, val)}>
+                  <Select value={selectedEffect?.model} onValueChange={(val) => handleModelChange(selectedEffect!.id, selectedEffect!.type, val)}>
                     <SelectTrigger className="w-[200px]" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Model" /></SelectTrigger>
                     <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
                   </Select>

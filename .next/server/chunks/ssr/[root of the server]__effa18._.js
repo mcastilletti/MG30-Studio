@@ -2672,6 +2672,21 @@ const BYPASS_VALS = {
         off: 65
     }
 };
+// CC per la selezione del MODELLO (solitamente CC precedente ai parametri)
+const BLOCK_MODEL_CC = {
+    'wah': 11,
+    'compressor': 13,
+    'efx': 17,
+    'amp': 23,
+    'eq': 31,
+    'noise-gate': 43,
+    'modulation': 47,
+    'delay': 53,
+    'reverb': 61,
+    'ir': 65,
+    'sr': 71,
+    'vol': 73
+};
 // CC per i parametri dei blocchi (Knobs) basati su tabella completa
 const BLOCK_PARAM_CCS = {
     'wah': [
@@ -3081,6 +3096,16 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 get().sendControlChange(ccs[knobIndex], value);
             }
         },
+        sendModelChange: (blockType, modelId)=>{
+            const cc = BLOCK_MODEL_CC[blockType];
+            if (cc === undefined) return;
+            const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
+            if (!models) return;
+            const modelIndex = models.findIndex((m)=>m.id === modelId);
+            if (modelIndex !== -1) {
+                get().sendControlChange(cc, modelIndex);
+            }
+        },
         toggleBlock: (blockType, enabled)=>{
             const cc = BYPASS_CC[blockType];
             const vals = BYPASS_VALS[blockType];
@@ -3163,11 +3188,13 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             });
         },
         syncFullPreset: (preset)=>{
-            const { toggleBlock, syncBlockParameters } = get();
+            const { toggleBlock, syncBlockParameters, sendModelChange } = get();
             preset.effects.forEach((e)=>{
-                // Sincronizza lo stato ON/OFF del blocco
+                // 1. Imposta il modello del blocco
+                sendModelChange(e.type, e.model);
+                // 2. Sincronizza lo stato ON/OFF del blocco
                 toggleBlock(e.type, e.enabled);
-                // Sincronizza tutti i parametri del blocco specifico
+                // 3. Sincronizza tutti i parametri del blocco specifico
                 syncBlockParameters(e.type, e.parameters);
             });
         },
@@ -4859,7 +4886,7 @@ const formatSlotLabel = (slot)=>{
 };
 function EditorPage() {
     const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"])();
-    const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$midi$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMidiStore"])();
+    const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$midi$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMidiStore"])();
     const { toast } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$toast$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToast"])();
     const [selectedBlockId, setSelectedBlockId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('amp');
     const [isAiModalOpen, setIsAiModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -4888,6 +4915,17 @@ function EditorPage() {
         updateParameter(selectedBlockId, paramId, value);
         if (status === 'connected') {
             sendKnobParameter(selectedBlockId, index, value);
+        }
+    };
+    const handleModelChange = (effectId, type, modelId)=>{
+        updateModel(effectId, modelId);
+        if (status === 'connected') {
+            sendModelChange(type, modelId);
+            // Opzionale: risincronizza i parametri del nuovo modello perché potrebbero differire
+            const updatedEffect = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset.effects.find((e)=>e.id === effectId);
+            if (updatedEffect) {
+                syncBlockParameters(type, updatedEffect.parameters);
+            }
         }
     };
     const handleBlockClick = (effectId, type, currentEnabled)=>{
@@ -4930,7 +4968,7 @@ function EditorPage() {
             syncFullPreset(activePreset);
             toast({
                 title: "Sincronizzazione Completa",
-                description: `Tutti i parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.`
+                description: `Modelli e parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.`
             });
         } else {
             toast({
@@ -4990,6 +5028,7 @@ function EditorPage() {
         setActivePreset(newPreset);
         if (status === 'connected') {
             updatedEffects.forEach((e)=>{
+                sendModelChange(e.type, e.model);
                 toggleBlock(e.type, e.enabled);
                 syncBlockParameters(e.type, e.parameters);
             });
@@ -5017,7 +5056,7 @@ function EditorPage() {
                                 className: "w-10 h-10 animate-spin text-primary"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/editor/page.tsx",
-                                lineNumber: 202,
+                                lineNumber: 215,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5028,7 +5067,7 @@ function EditorPage() {
                                         children: "Hardware Sync..."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 204,
+                                        lineNumber: 217,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5036,24 +5075,24 @@ function EditorPage() {
                                         children: "Lettura Chain in corso"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 205,
+                                        lineNumber: 218,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/editor/page.tsx",
-                                lineNumber: 203,
+                                lineNumber: 216,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/editor/page.tsx",
-                        lineNumber: 201,
+                        lineNumber: 214,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/editor/page.tsx",
-                    lineNumber: 200,
+                    lineNumber: 213,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5076,12 +5115,12 @@ function EditorPage() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 217,
+                                                lineNumber: 230,
                                                 columnNumber: 157
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 217,
+                                            lineNumber: 230,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5089,7 +5128,7 @@ function EditorPage() {
                                             children: formatSlotLabel(activePreset.slot)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 218,
+                                            lineNumber: 231,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5102,18 +5141,18 @@ function EditorPage() {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 219,
+                                                lineNumber: 232,
                                                 columnNumber: 157
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 219,
+                                            lineNumber: 232,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 216,
+                                    lineNumber: 229,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5126,20 +5165,20 @@ function EditorPage() {
                                                     children: activePreset.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                    lineNumber: 223,
+                                                    lineNumber: 236,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$panels$2d$top$2d$left$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Layout$3e$__["Layout"], {
                                                     className: "w-4 h-4 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                    lineNumber: 224,
+                                                    lineNumber: 237,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 222,
+                                            lineNumber: 235,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -5148,19 +5187,19 @@ function EditorPage() {
                                             children: "TORNA ALLA VISTA COMPLESSIVA"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 226,
+                                            lineNumber: 239,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 221,
+                                    lineNumber: 234,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 212,
+                            lineNumber: 225,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5180,19 +5219,19 @@ function EditorPage() {
                                                         className: "w-4 h-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 233,
+                                                        lineNumber: 246,
                                                         columnNumber: 19
                                                     }, this),
                                                     " AI Mode"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 232,
+                                                lineNumber: 245,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 231,
+                                            lineNumber: 244,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogContent"], {
@@ -5208,27 +5247,27 @@ function EditorPage() {
                                                                         className: "w-5 h-5 text-primary"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 240,
+                                                                        lineNumber: 253,
                                                                         columnNumber: 72
                                                                     }, this),
                                                                     " AI Mode: Tone Designer"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 240,
+                                                                lineNumber: 253,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                                                 children: "Descrivi il suono o incolla un JSON tecnico. L'AI configurerà ogni singolo parametro."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 241,
+                                                                lineNumber: 254,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 239,
+                                                        lineNumber: 252,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5240,12 +5279,12 @@ function EditorPage() {
                                                             className: "min-h-[150px] bg-secondary/20"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/editor/page.tsx",
-                                                            lineNumber: 244,
+                                                            lineNumber: 257,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 256,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -5258,25 +5297,25 @@ function EditorPage() {
                                                                     className: "w-4 h-4 animate-spin mr-2"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                                    lineNumber: 253,
+                                                                    lineNumber: 266,
                                                                     columnNumber: 41
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"], {
                                                                     className: "w-4 h-4 mr-2"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                                    lineNumber: 253,
+                                                                    lineNumber: 266,
                                                                     columnNumber: 93
                                                                 }, this),
                                                                 "Genera Preset"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/editor/page.tsx",
-                                                            lineNumber: 252,
+                                                            lineNumber: 265,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 251,
+                                                        lineNumber: 264,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
@@ -5291,7 +5330,7 @@ function EditorPage() {
                                                                         className: "w-5 h-5 text-green-500"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 261,
+                                                                        lineNumber: 274,
                                                                         columnNumber: 72
                                                                     }, this),
                                                                     " Preset Generato: ",
@@ -5299,20 +5338,20 @@ function EditorPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 261,
+                                                                lineNumber: 274,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                                                 children: "L'AI ha mappato tutti i blocchi. Ecco l'analisi:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 262,
+                                                                lineNumber: 275,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 260,
+                                                        lineNumber: 273,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5327,7 +5366,7 @@ function EditorPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 265,
+                                                                lineNumber: 278,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5338,7 +5377,7 @@ function EditorPage() {
                                                                         children: "Anteprima Blocchi"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 269,
+                                                                        lineNumber: 282,
                                                                         columnNumber: 26
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5359,7 +5398,7 @@ function EditorPage() {
                                                                                                         }
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                        lineNumber: 275,
+                                                                                                        lineNumber: 288,
                                                                                                         columnNumber: 36
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5370,7 +5409,7 @@ function EditorPage() {
                                                                                                         ]
                                                                                                     }, void 0, true, {
                                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                        lineNumber: 276,
+                                                                                                        lineNumber: 289,
                                                                                                         columnNumber: 36
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5378,13 +5417,13 @@ function EditorPage() {
                                                                                                         children: e.model
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                        lineNumber: 277,
+                                                                                                        lineNumber: 290,
                                                                                                         columnNumber: 36
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                lineNumber: 274,
+                                                                                                lineNumber: 287,
                                                                                                 columnNumber: 34
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -5393,13 +5432,13 @@ function EditorPage() {
                                                                                                 children: e.enabled ? "ON" : "OFF"
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                lineNumber: 279,
+                                                                                                lineNumber: 292,
                                                                                                 columnNumber: 34
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                        lineNumber: 273,
+                                                                                        lineNumber: 286,
                                                                                         columnNumber: 32
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5411,7 +5450,7 @@ function EditorPage() {
                                                                                                         children: p.name
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                        lineNumber: 284,
+                                                                                                        lineNumber: 297,
                                                                                                         columnNumber: 39
                                                                                                     }, this),
                                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5419,41 +5458,41 @@ function EditorPage() {
                                                                                                         children: p.value
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                        lineNumber: 285,
+                                                                                                        lineNumber: 298,
                                                                                                         columnNumber: 39
                                                                                                     }, this)
                                                                                                 ]
                                                                                             }, p.name, true, {
                                                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                                                lineNumber: 283,
+                                                                                                lineNumber: 296,
                                                                                                 columnNumber: 36
                                                                                             }, this))
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                                        lineNumber: 281,
+                                                                                        lineNumber: 294,
                                                                                         columnNumber: 32
                                                                                     }, this)
                                                                                 ]
                                                                             }, e.type, true, {
                                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                                lineNumber: 272,
+                                                                                lineNumber: 285,
                                                                                 columnNumber: 30
                                                                             }, this))
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 270,
+                                                                        lineNumber: 283,
                                                                         columnNumber: 26
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 268,
+                                                                lineNumber: 281,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 264,
+                                                        lineNumber: 277,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -5468,14 +5507,14 @@ function EditorPage() {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 295,
+                                                                        lineNumber: 308,
                                                                         columnNumber: 105
                                                                     }, this),
                                                                     " Scarta"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 295,
+                                                                lineNumber: 308,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5486,40 +5525,40 @@ function EditorPage() {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                                        lineNumber: 296,
+                                                                        lineNumber: 309,
                                                                         columnNumber: 129
                                                                     }, this),
                                                                     " Applica Settaggi"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                                lineNumber: 296,
+                                                                lineNumber: 309,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 294,
+                                                        lineNumber: 307,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 236,
+                                            lineNumber: 249,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 230,
+                                    lineNumber: 243,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "w-[1px] h-8 bg-border mx-2"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 302,
+                                    lineNumber: 315,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5531,12 +5570,12 @@ function EditorPage() {
                                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["cn"])("w-4 h-4", isEditorSyncing && "animate-spin")
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 303,
+                                        lineNumber: 316,
                                         columnNumber: 115
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 303,
+                                    lineNumber: 316,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5548,12 +5587,12 @@ function EditorPage() {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 304,
+                                        lineNumber: 317,
                                         columnNumber: 82
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 304,
+                                    lineNumber: 317,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5565,12 +5604,12 @@ function EditorPage() {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 305,
+                                        lineNumber: 318,
                                         columnNumber: 85
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 305,
+                                    lineNumber: 318,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5581,26 +5620,26 @@ function EditorPage() {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 306,
+                                            lineNumber: 319,
                                             columnNumber: 60
                                         }, this),
                                         " Save"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 306,
+                                    lineNumber: 319,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 229,
+                            lineNumber: 242,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/editor/page.tsx",
-                    lineNumber: 211,
+                    lineNumber: 224,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -5616,14 +5655,14 @@ function EditorPage() {
                                             className: "w-3 h-3"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 312,
+                                            lineNumber: 325,
                                             columnNumber: 117
                                         }, this),
                                         " Signal Chain"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 312,
+                                    lineNumber: 325,
                                     columnNumber: 14
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -5636,20 +5675,20 @@ function EditorPage() {
                                             className: "w-3 h-3"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 313,
+                                            lineNumber: 326,
                                             columnNumber: 145
                                         }, this),
                                         " Chiudi Parametri"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 313,
+                                    lineNumber: 326,
                                     columnNumber: 14
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 311,
+                            lineNumber: 324,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -5676,12 +5715,12 @@ function EditorPage() {
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/editor/page.tsx",
-                                                            lineNumber: 332,
+                                                            lineNumber: 345,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 331,
+                                                        lineNumber: 344,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5692,43 +5731,43 @@ function EditorPage() {
                                                         children: effect.type === 'noise-gate' ? 'GATE' : effect.type === 'compressor' ? 'COMP' : effect.type === 'sr' ? 'S/R' : effect.type === 'vol' ? 'VOL' : effect.type
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 334,
+                                                        lineNumber: 347,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 321,
+                                                lineNumber: 334,
                                                 columnNumber: 21
                                             }, this),
                                             idx < activePreset.effects.length - 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex-1 min-w-[20px] h-[2px] bg-border/40"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 338,
+                                                lineNumber: 351,
                                                 columnNumber: 63
                                             }, this)
                                         ]
                                     }, effect.id, true, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 320,
+                                        lineNumber: 333,
                                         columnNumber: 19
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/app/editor/page.tsx",
-                                lineNumber: 316,
+                                lineNumber: 329,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 315,
+                            lineNumber: 328,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/editor/page.tsx",
-                    lineNumber: 310,
+                    lineNumber: 323,
                     columnNumber: 9
                 }, this),
                 selectedEffect && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -5751,7 +5790,7 @@ function EditorPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 354,
+                                            lineNumber: 367,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardTitle"], {
@@ -5768,19 +5807,19 @@ function EditorPage() {
                                                     children: selectedEffect?.model
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                    lineNumber: 356,
+                                                    lineNumber: 369,
                                                     columnNumber: 44
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 355,
+                                            lineNumber: 368,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 353,
+                                    lineNumber: 366,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5788,7 +5827,7 @@ function EditorPage() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
                                             value: selectedEffect?.model,
-                                            onValueChange: (val)=>updateModel(selectedEffect.id, val),
+                                            onValueChange: (val)=>handleModelChange(selectedEffect.id, selectedEffect.type, val),
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
                                                     className: "w-[200px]",
@@ -5797,12 +5836,12 @@ function EditorPage() {
                                                         placeholder: "Model"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/editor/page.tsx",
-                                                        lineNumber: 361,
+                                                        lineNumber: 374,
                                                         columnNumber: 95
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                    lineNumber: 361,
+                                                    lineNumber: 374,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5811,18 +5850,18 @@ function EditorPage() {
                                                             children: m.name
                                                         }, m.id, false, {
                                                             fileName: "[project]/src/app/editor/page.tsx",
-                                                            lineNumber: 362,
+                                                            lineNumber: 375,
                                                             columnNumber: 62
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/editor/page.tsx",
-                                                    lineNumber: 362,
+                                                    lineNumber: 375,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 360,
+                                            lineNumber: 373,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5832,24 +5871,24 @@ function EditorPage() {
                                                 onCheckedChange: ()=>handleBlockClick(selectedEffect.id, selectedEffect.type, selectedEffect.enabled)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/editor/page.tsx",
-                                                lineNumber: 365,
+                                                lineNumber: 378,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 364,
+                                            lineNumber: 377,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/editor/page.tsx",
-                                    lineNumber: 359,
+                                    lineNumber: 372,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 352,
+                            lineNumber: 365,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -5868,39 +5907,39 @@ function EditorPage() {
                                             color: currentBlockColor
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/editor/page.tsx",
-                                            lineNumber: 374,
+                                            lineNumber: 387,
                                             columnNumber: 25
                                         }, this)
                                     }, param.id, false, {
                                         fileName: "[project]/src/app/editor/page.tsx",
-                                        lineNumber: 373,
+                                        lineNumber: 386,
                                         columnNumber: 23
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/editor/page.tsx",
-                                lineNumber: 371,
+                                lineNumber: 384,
                                 columnNumber: 19
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/editor/page.tsx",
-                            lineNumber: 369,
+                            lineNumber: 382,
                             columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/editor/page.tsx",
-                    lineNumber: 347,
+                    lineNumber: 360,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/editor/page.tsx",
-            lineNumber: 198,
+            lineNumber: 211,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/editor/page.tsx",
-        lineNumber: 197,
+        lineNumber: 210,
         columnNumber: 5
     }, this);
 }

@@ -34,6 +34,22 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
+// CC per la selezione del MODELLO (solitamente CC precedente ai parametri)
+const BLOCK_MODEL_CC: Record<string, number> = {
+  'wah': 11,
+  'compressor': 13,
+  'efx': 17,
+  'amp': 23,
+  'eq': 31,
+  'noise-gate': 43,
+  'modulation': 47,
+  'delay': 53,
+  'reverb': 61,
+  'ir': 65,
+  'sr': 71,
+  'vol': 73
+};
+
 // CC per i parametri dei blocchi (Knobs) basati su tabella completa
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12, 13],
@@ -118,6 +134,7 @@ interface MidiStore {
   sendControlChange: (cc: number, value: number) => void;
   sendProgramChange: (pc: number) => void;
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
+  sendModelChange: (blockType: string, modelId: string) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
   enterBlockEditor: (blockType: string) => void;
@@ -316,6 +333,19 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     }
   },
 
+  sendModelChange: (blockType, modelId) => {
+    const cc = BLOCK_MODEL_CC[blockType];
+    if (cc === undefined) return;
+
+    const models = MG30_MODELS[blockType as any];
+    if (!models) return;
+
+    const modelIndex = models.findIndex(m => m.id === modelId);
+    if (modelIndex !== -1) {
+      get().sendControlChange(cc, modelIndex);
+    }
+  },
+
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType];
     const vals = BYPASS_VALS[blockType];
@@ -390,11 +420,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   syncFullPreset: (preset) => {
-    const { toggleBlock, syncBlockParameters } = get();
+    const { toggleBlock, syncBlockParameters, sendModelChange } = get();
     preset.effects.forEach(e => {
-      // Sincronizza lo stato ON/OFF del blocco
+      // 1. Imposta il modello del blocco
+      sendModelChange(e.type, e.model);
+      // 2. Sincronizza lo stato ON/OFF del blocco
       toggleBlock(e.type, e.enabled);
-      // Sincronizza tutti i parametri del blocco specifico
+      // 3. Sincronizza tutti i parametri del blocco specifico
       syncBlockParameters(e.type, e.parameters);
     });
   },

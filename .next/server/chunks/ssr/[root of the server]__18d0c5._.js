@@ -2672,6 +2672,21 @@ const BYPASS_VALS = {
         off: 65
     }
 };
+// CC per la selezione del MODELLO (solitamente CC precedente ai parametri)
+const BLOCK_MODEL_CC = {
+    'wah': 11,
+    'compressor': 13,
+    'efx': 17,
+    'amp': 23,
+    'eq': 31,
+    'noise-gate': 43,
+    'modulation': 47,
+    'delay': 53,
+    'reverb': 61,
+    'ir': 65,
+    'sr': 71,
+    'vol': 73
+};
 // CC per i parametri dei blocchi (Knobs) basati su tabella completa
 const BLOCK_PARAM_CCS = {
     'wah': [
@@ -3081,6 +3096,16 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 get().sendControlChange(ccs[knobIndex], value);
             }
         },
+        sendModelChange: (blockType, modelId)=>{
+            const cc = BLOCK_MODEL_CC[blockType];
+            if (cc === undefined) return;
+            const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
+            if (!models) return;
+            const modelIndex = models.findIndex((m)=>m.id === modelId);
+            if (modelIndex !== -1) {
+                get().sendControlChange(cc, modelIndex);
+            }
+        },
         toggleBlock: (blockType, enabled)=>{
             const cc = BYPASS_CC[blockType];
             const vals = BYPASS_VALS[blockType];
@@ -3163,11 +3188,13 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             });
         },
         syncFullPreset: (preset)=>{
-            const { toggleBlock, syncBlockParameters } = get();
+            const { toggleBlock, syncBlockParameters, sendModelChange } = get();
             preset.effects.forEach((e)=>{
-                // Sincronizza lo stato ON/OFF del blocco
+                // 1. Imposta il modello del blocco
+                sendModelChange(e.type, e.model);
+                // 2. Sincronizza lo stato ON/OFF del blocco
                 toggleBlock(e.type, e.enabled);
-                // Sincronizza tutti i parametri del blocco specifico
+                // 3. Sincronizza tutti i parametri del blocco specifico
                 syncBlockParameters(e.type, e.parameters);
             });
         },
