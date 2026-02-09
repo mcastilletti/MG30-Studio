@@ -5,7 +5,7 @@ import { Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Tabella Bypass basata sullo standard NUX: ModelID = ON, ModelID + 64 = OFF
+// Tabella Bypass basata sullo standard NUX: Value = ModelID per ON, ModelID + 64 per OFF
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -31,12 +31,10 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9,
-  'sr': 10,
-  'vol': 73
+  'ir': 9
 };
 
-// Offset richiesti: 1 per la maggior parte, 65 per WAH/COMP/MOD
+// Offset richiesti: 65 per WAH/COMP/MOD, 1 per gli altri
 const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'wah': 65,
   'compressor': 65,
@@ -47,8 +45,7 @@ const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'modulation': 65,
   'delay': 1,
   'reverb': 1,
-  'ir': 1,
-  'sr': 1
+  'ir': 1
 };
 
 // CC per i parametri dei blocchi (Knobs)
@@ -67,19 +64,20 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'vol': [74]
 };
 
+// Mappatura per CC 75 (Select) e CC 78 (Enter Editor)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
-  'noise-gate': 5,
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'ir': 9,
-  'sr': 10,
+  'eq': 4,
+  'noise-gate': 5,
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'vol': 11,
-  'eq': 4
+  'ir': 9,
+  'sr': 10,
+  'vol': 11
 };
 
 const SELECT_BLOCK_CC = 75; 
@@ -138,7 +136,6 @@ interface MidiStore {
   selectBlock: (blockType: string) => void;
   enterBlockEditor: (blockType: string) => void;
   exitBlockEditor: () => void;
-  resetToPresetView: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   syncFullPreset: (preset: Preset) => void;
   refreshDevices: () => void;
@@ -222,7 +219,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     // Richiesta stato corrente hardware
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-    setTimeout(() => set({ isEditorSyncing: false }), 1200);
+    setTimeout(() => set({ isEditorSyncing: false }), 1500);
   },
 
   sendControlChange: (cc, value) => {
@@ -261,9 +258,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendModelChange: (blockType, modelId) => {
-    const { output, sendControlChange, enterBlockEditor } = get();
-    if (!output) return;
-
+    const { sendControlChange, enterBlockEditor } = get();
     const cc = BLOCK_MODEL_CC[blockType];
     const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
     if (cc === undefined) return;
@@ -274,15 +269,12 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     if (modelIndex !== undefined && modelIndex !== -1) {
       const midiValue = modelIndex + offset;
       
-      // Cruciale: Forza il focus sul blocco prima di cambiare modello
+      // Focus rigoroso sul blocco
       enterBlockEditor(blockType);
       
+      // Ritardo per permettere all'hardware di "spostarsi"
       setTimeout(() => {
         sendControlChange(cc, midiValue);
-        // Refresh hardware display
-        setTimeout(() => {
-          output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-        }, 300);
       }, 300);
     }
   },
@@ -299,7 +291,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
     const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
 
-    // NUX logic: Value = ModelID for ON, ModelID + 64 for OFF
     const midiValue = enabled ? modelIdValue : modelIdValue + 64;
     get().sendControlChange(cc, midiValue);
   },
@@ -313,18 +304,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      // Entra esplicitamente nella visualizzazione editor del blocco
+      // Forza l'hardware in modalità editor per quel blocco (CC 78)
       setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 200);
     }
   },
 
   exitBlockEditor: () => {
     get().sendControlChange(ENTER_EDITOR_CC, 127);
-  },
-
-  resetToPresetView: () => {
-    get().sendControlChange(ENTER_EDITOR_CC, 127);
-    setTimeout(() => get().syncActivePreset(), 200);
   },
 
   syncBlockParameters: (blockType, parameters) => {
@@ -341,45 +327,39 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
         // Invio dei parametri molto lento per massima precisione hardware
-        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 80);
+        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 100);
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, output } = get();
-    if (!output) return;
-
+    const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName } = get();
     set({ isEditorSyncing: true });
 
-    // 1. Salva il nome del preset via SysEx
+    // 1. Nome Preset
     sendPresetName(preset.name);
 
-    // 2. Sincronizzazione "Bulk" lenta e precisa blocco per blocco
+    // 2. Scansione catena lenta (1.5s per blocco)
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
-        // Forza focus su blocco
         get().enterBlockEditor(e.type);
         
         setTimeout(() => {
-          // Cambia Modello
           sendModelChange(e.type, e.model);
           
           setTimeout(() => {
-            // Imposta Stato Bypass
             toggleBlock(e.type, e.enabled);
             
             setTimeout(() => {
-              // Invia tutti i parametri delle manopole
               syncBlockParameters(e.type, e.parameters);
-            }, 500);
-          }, 600);
-        }, 600);
-      }, idx * 2500); // 2.5 secondi per blocco per sicurezza totale
+            }, 400);
+          }, 400);
+        }, 400);
+      }, idx * 1500); 
     });
 
-    const totalSyncTime = preset.effects.length * 2500 + 1000;
-    setTimeout(() => set({ isEditorSyncing: false }), totalSyncTime);
+    const totalTime = preset.effects.length * 1500 + 1000;
+    setTimeout(() => set({ isEditorSyncing: false }), totalTime);
   },
 
   syncPresets: async () => {

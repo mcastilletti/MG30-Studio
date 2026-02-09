@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, XCircle, Layout, X } from 'lucide-react';
+import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, Layout, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -112,7 +112,7 @@ export default function EditorPage() {
       syncFullPreset(activePreset);
       toast({ 
         title: "Hardware Save", 
-        description: `Preset '${activePreset.name}' salvato nella pedaliera.` 
+        description: `Salvataggio di '${activePreset.name}' in corso...` 
       });
     } else {
       toast({ 
@@ -171,7 +171,7 @@ export default function EditorPage() {
     
     toast({ 
       title: "AI Tone Applied", 
-      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per inviarlo all'MG-30.` 
+      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per sincronizzare la pedaliera.` 
     });
     
     setProposedPreset(null);
