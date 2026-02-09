@@ -34,21 +34,35 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// CC per la selezione del MODELLO
-// AMP mappato su CC 3 come da specifica utente
+// CC per la selezione del MODELLO (Basato su schema utente)
 const BLOCK_MODEL_CC: Record<string, number> = {
-  'wah': 11,
-  'compressor': 13,
-  'efx': 17,
-  'amp': 3, // SPECIFICA UTENTE: AMP = CC 3
-  'eq': 31,
-  'noise-gate': 43,
-  'modulation': 47,
-  'delay': 53,
-  'reverb': 61,
-  'ir': 65,
-  'sr': 71,
+  'wah': 0,
+  'compressor': 1,
+  'efx': 2,
+  'amp': 3,
+  'eq': 4,
+  'noise-gate': 5,
+  'modulation': 6,
+  'delay': 7,
+  'reverb': 8,
+  'ir': 9,
+  'sr': 10,
   'vol': 73
+};
+
+// Offset di partenza per i valori dei modelli (Basato su schema utente)
+const BLOCK_MODEL_OFFSET: Record<string, number> = {
+  'wah': 65,
+  'compressor': 65,
+  'efx': 1,
+  'amp': 1,
+  'eq': 1,
+  'noise-gate': 1,
+  'modulation': 65,
+  'delay': 1,
+  'reverb': 1,
+  'ir': 1,
+  'sr': 1
 };
 
 // CC per i parametri dei blocchi (Knobs)
@@ -307,34 +321,31 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendModelChange: (blockType, modelId) => {
-    const { output, sendControlChange } = get();
+    const { output, sendControlChange, enterBlockEditor } = get();
     if (!output) return;
 
     const cc = BLOCK_MODEL_CC[blockType];
-    const index = BLOCK_INDEX_MAP[blockType];
-    if (cc === undefined || index === undefined) return;
+    const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
+    
+    if (cc === undefined) return;
 
     const models = MG30_MODELS[blockType as any];
     const modelIndex = models?.findIndex(m => m.id === modelId);
 
     if (modelIndex !== undefined && modelIndex !== -1) {
-      // Come da specifica utente, per l'AMP il valore va da 1 a 35
-      let midiValue = modelIndex;
-      if (blockType === 'amp') {
-        midiValue = modelIndex + 1;
-      }
+      const midiValue = modelIndex + offset;
 
-      // 1. Forza il focus del blocco (CC 75)
-      sendControlChange(SELECT_BLOCK_CC, index);
+      // 1. Entra nell'editor del blocco per forzare il focus hardware
+      enterBlockEditor(blockType);
       
       // 2. Invia SysEx di "Edit Mode"
       output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
 
       setTimeout(() => {
-        // 3. Invia il cambio modello (CC 3 per AMP)
+        // 3. Invia il cambio modello tramite CC specificato
         sendControlChange(cc, midiValue);
         
-        // 4. Forza il refresh del display
+        // 4. Forza il refresh del display hardware
         setTimeout(() => {
           output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
         }, 150);
