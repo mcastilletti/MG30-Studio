@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { MidiConnectionStatus, MidiDevice } from '@/types/midi';
 import { Preset, EffectState } from '@/types/preset';
@@ -120,6 +121,7 @@ interface MidiStore {
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
   enterBlockEditor: (blockType: string) => void;
+  exitBlockEditor: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
@@ -330,11 +332,20 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   enterBlockEditor: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
-      // Per entrare nell'editor dalla vista preset, spesso serve selezionare (75) e poi entrare (78)
+      // Per forzare l'ingresso dalla Home Screen, serve una sequenza precisa:
+      // 1. Seleziona il blocco (Highlight)
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      // Piccolo delay opzionale rimosso per massimizzare la velocità, ma i messaggi MIDI sono sequenziali
-      get().sendControlChange(ENTER_EDITOR_CC, index);
+      
+      // 2. Entra nell'editor con un leggero delay per permettere alla pedaliera di processare il cambio stato
+      setTimeout(() => {
+        get().sendControlChange(ENTER_EDITOR_CC, index);
+      }, 100);
     }
+  },
+
+  exitBlockEditor: () => {
+    // Valore 127 su CC 78 solitamente torna alla vista preset o chiude l'editor corrente
+    get().sendControlChange(ENTER_EDITOR_CC, 127);
   },
 
   syncBlockParameters: (blockType, parameters) => {

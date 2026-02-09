@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, XCircle, Layout } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, isEditorSyncing, syncActivePreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -78,15 +78,13 @@ export default function EditorPage() {
   };
 
   const handleBlockClick = (effectId: string, type: string, currentEnabled: boolean) => {
-    // Toggle stato On/Off e selezione nell'app
     toggleEffect(effectId);
     setSelectedBlockId(effectId);
     
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
-      // Se stiamo cambiando pedale mentre siamo in sezione parametri,
-      // aggiorna anche la visualizzazione hardware sulla pedaliera (CC 78)
+      // Forza l'aggiornamento della visualizzazione sulla pedaliera
       enterBlockEditor(type);
     }
   };
@@ -94,6 +92,13 @@ export default function EditorPage() {
   const handleEnterHardwareEditor = (type: string) => {
     if (status === 'connected') {
       enterBlockEditor(type);
+    }
+  };
+
+  const handleExitEditor = () => {
+    setSelectedBlockId('');
+    if (status === 'connected') {
+      exitBlockEditor();
     }
   };
 
@@ -149,7 +154,6 @@ export default function EditorPage() {
 
     setActivePreset(newPreset);
     
-    // Sincronizzazione hardware dopo applicazione AI
     if (status === 'connected') {
       updatedEffects.forEach(e => {
         toggleBlock(e.type, e.enabled);
@@ -181,14 +185,21 @@ export default function EditorPage() {
         )}
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
-          <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group"
+            onClick={handleExitEditor}
+            title="Torna alla vista complessiva"
+          >
             <div className="flex items-center gap-2">
-              <button onClick={() => handleSlotChange('prev')} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-              <div className="w-16 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">{formatSlotLabel(activePreset.slot)}</div>
-              <button onClick={() => handleSlotChange('next')} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronRight className="w-4 h-4" /></button>
+              <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+              <div className="w-16 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20 group-hover:border-primary/50">{formatSlotLabel(activePreset.slot)}</div>
+              <button onClick={(e) => { e.stopPropagation(); handleSlotChange('next'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronRight className="w-4 h-4" /></button>
             </div>
             <div>
-              <h3 className="text-xl font-bold">{activePreset.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold">{activePreset.name}</h3>
+                <Layout className="w-4 h-4 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
+              </div>
               <Badge variant="outline" className="text-[10px] mt-1">MIDI {status.toUpperCase()}</Badge>
             </div>
           </div>
@@ -266,8 +277,9 @@ export default function EditorPage() {
         </div>
 
         <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
-          <CardHeader className="py-3 border-b border-border bg-secondary/20">
+          <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
              <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
+             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold" onClick={handleExitEditor}>Chiudi Parametri</Button>
           </CardHeader>
           <CardContent className="py-8">
             <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
@@ -300,40 +312,42 @@ export default function EditorPage() {
           </CardContent>
         </Card>
 
-        <Card 
-          className="shadow-xl cursor-pointer hover:border-primary/30 transition-colors" 
-          style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
-          onClick={() => selectedEffect && handleEnterHardwareEditor(selectedEffect.type)}
-        >
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
-              <div className="flex items-center gap-4">
-                <Settings2 className="w-5 h-5" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }} />
-                <CardTitle className="text-lg uppercase" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }}>
-                  {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
-                </CardTitle>
-              </div>
-              <div className="flex items-center gap-4">
-                <Select value={selectedEffect?.model} onValueChange={(val) => updateModel(selectedEffect!.id, val)}>
-                  <SelectTrigger className="w-[200px]" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Model" /></SelectTrigger>
-                  <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-                </Select>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleBlockClick(selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
+        {selectedEffect && (
+          <Card 
+            className="shadow-xl cursor-pointer hover:border-primary/30 transition-colors" 
+            style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
+            onClick={() => handleEnterHardwareEditor(selectedEffect.type)}
+          >
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
+                <div className="flex items-center gap-4">
+                  <Settings2 className="w-5 h-5" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }} />
+                  <CardTitle className="text-lg uppercase" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }}>
+                    {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
+                  </CardTitle>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10">
-              {selectedEffect && currentModelData && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
-                  {currentModelData.parameters.map((param, index) => (
-                    <div key={param.id} onClick={(e) => e.stopPropagation()}>
-                      <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
-                    </div>
-                  ))}
+                <div className="flex items-center gap-4">
+                  <Select value={selectedEffect?.model} onValueChange={(val) => updateModel(selectedEffect!.id, val)}>
+                    <SelectTrigger className="w-[200px]" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Model" /></SelectTrigger>
+                    <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleBlockClick(selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="p-10">
+                {currentModelData && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
+                    {currentModelData.parameters.map((param, index) => (
+                      <div key={param.id} onClick={(e) => e.stopPropagation()}>
+                        <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+        )}
       </div>
     </AppShell>
   );
