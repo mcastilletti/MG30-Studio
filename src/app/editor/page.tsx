@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -84,14 +84,23 @@ export default function EditorPage() {
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
-      // Forza l'aggiornamento della visualizzazione sulla pedaliera
-      enterBlockEditor(type);
+      // If parameters view is active in app, ensure hardware detail is also active
+      if (selectedBlockId) {
+        enterBlockEditor(type);
+      }
     }
   };
 
-  const handleEnterHardwareEditor = (type: string) => {
+  const handleAreaParamClick = () => {
+    if (selectedEffect && status === 'connected') {
+      enterBlockEditor(selectedEffect.type);
+    }
+  };
+
+  const handlePresetAreaClick = () => {
     if (status === 'connected') {
-      enterBlockEditor(type);
+      // Hardware goes to Home/Preset view, App stays the same
+      resetToPresetView();
     }
   };
 
@@ -187,8 +196,8 @@ export default function EditorPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div 
             className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group"
-            onClick={handleExitEditor}
-            title="Torna alla vista complessiva"
+            onClick={handlePresetAreaClick}
+            title="Sincronizza Hardware su Vista Preset"
           >
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
@@ -316,7 +325,7 @@ export default function EditorPage() {
           <Card 
             className="shadow-xl cursor-pointer hover:border-primary/30 transition-colors" 
             style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
-            onClick={() => handleEnterHardwareEditor(selectedEffect.type)}
+            onClick={handleAreaParamClick}
           >
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
                 <div className="flex items-center gap-4">

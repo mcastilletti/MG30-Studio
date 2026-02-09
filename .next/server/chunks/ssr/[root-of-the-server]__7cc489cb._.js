@@ -2799,17 +2799,17 @@ const BLOCK_PARAM_CCS = {
 // Mappatura indici per CC 75 (Highlight) e CC 78 (Enter Editor)
 const BLOCK_INDEX_MAP = {
     'wah': 0,
+    'noise-gate': 5,
     'compressor': 1,
     'efx': 2,
     'amp': 3,
-    'eq': 4,
-    'noise-gate': 5,
+    'ir': 9,
+    'sr': 10,
     'modulation': 6,
     'delay': 7,
     'reverb': 8,
-    'ir': 9,
-    'sr': 10,
-    'vol': 11
+    'vol': 11,
+    'eq': 4
 };
 const SELECT_BLOCK_CC = 75; // CURRENT BLOCK
 const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR
@@ -3137,8 +3137,18 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         enterBlockEditor: (blockType)=>{
             const index = BLOCK_INDEX_MAP[blockType];
             if (index !== undefined) {
-                get().sendControlChange(ENTER_EDITOR_CC, index);
+                // Per forzare l'ingresso dalla Home Screen, serve una sequenza precisa:
+                // 1. Seleziona il blocco (Highlight)
+                get().sendControlChange(SELECT_BLOCK_CC, index);
+                // 2. Entra nell'editor con un leggero delay per permettere alla pedaliera di processare il cambio stato
+                setTimeout(()=>{
+                    get().sendControlChange(ENTER_EDITOR_CC, index);
+                }, 100);
             }
+        },
+        exitBlockEditor: ()=>{
+            // Valore 127 su CC 78 solitamente torna alla vista preset o chiude l'editor corrente
+            get().sendControlChange(ENTER_EDITOR_CC, 127);
         },
         syncBlockParameters: (blockType, parameters)=>{
             const ccs = BLOCK_PARAM_CCS[blockType];

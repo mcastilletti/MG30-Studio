@@ -122,6 +122,7 @@ interface MidiStore {
   selectBlock: (blockType: string) => void;
   enterBlockEditor: (blockType: string) => void;
   exitBlockEditor: () => void;
+  resetToPresetView: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
@@ -332,11 +333,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   enterBlockEditor: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
-      // Per forzare l'ingresso dalla Home Screen, serve una sequenza precisa:
-      // 1. Seleziona il blocco (Highlight)
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      
-      // 2. Entra nell'editor con un leggero delay per permettere alla pedaliera di processare il cambio stato
       setTimeout(() => {
         get().sendControlChange(ENTER_EDITOR_CC, index);
       }, 100);
@@ -344,8 +341,32 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   exitBlockEditor: () => {
-    // Valore 127 su CC 78 solitamente torna alla vista preset o chiude l'editor corrente
     get().sendControlChange(ENTER_EDITOR_CC, 127);
+  },
+
+  resetToPresetView: () => {
+    const { output } = get();
+    if (!output) return;
+    
+    const activePreset = usePresetStore.getState().activePreset;
+    const pc = activePreset.slot - 1;
+
+    // Send Program Change for the current slot
+    output.send([0xC0, pc]);
+
+    // Send the SysEx sequence as requested to return to base preset view
+    const s1 = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7];
+    const s2 = [0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7];
+
+    // Repeated sequence
+    setTimeout(() => {
+      output.send(s1);
+      output.send(s2);
+      output.send(s1);
+      output.send(s2);
+      output.send(s1);
+      output.send(s2);
+    }, 150);
   },
 
   syncBlockParameters: (blockType, parameters) => {
