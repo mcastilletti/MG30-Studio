@@ -1,6 +1,7 @@
+
 "use client"
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -53,11 +54,6 @@ export default function EditorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
 
-  // Timer per long press e double click
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const clickCount = useRef(0);
-  const clickTimer = useRef<NodeJS.Timeout | null>(null);
-
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
     [activePreset.effects, selectedBlockId]
@@ -81,68 +77,25 @@ export default function EditorPage() {
     }
   };
 
-  const handleToggleBlock = (e: React.MouseEvent, effectId: string, type: string, enabled: boolean) => {
-    e.stopPropagation();
+  // Nuovo sistema: click sulla chain = toggle + select + enter editor
+  const handleBlockClick = (effectId: string, type: string, currentEnabled: boolean) => {
+    // 1. Toggle Stato
     toggleEffect(effectId);
     if (status === 'connected') {
-      toggleBlock(type, !enabled);
+      toggleBlock(type, !currentEnabled);
     }
-  };
-
-  const handleSelectBlock = (effectId: string, type: string) => {
+    
+    // 2. Seleziona e Entra nell'Editor hardware
     setSelectedBlockId(effectId);
     if (status === 'connected') {
       selectBlock(type);
-      const effect = activePreset.effects.find(e => e.id === effectId);
-      if (effect) syncBlockParameters(type, effect.parameters);
+      enterBlockEditor(type);
     }
   };
 
   const handleEnterHardwareEditor = (type: string) => {
     if (status === 'connected') {
       enterBlockEditor(type);
-      toast({ 
-        title: "Hardware Editor", 
-        description: `Entrato nell'editor di ${type.toUpperCase()} sulla pedaliera.`,
-        duration: 2000 
-      });
-    }
-  };
-
-  // Logica universale per Click, Double Click e Long Press
-  const handlePointerDown = (e: React.PointerEvent, effectId: string, type: string) => {
-    // Avvia timer per pressione prolungata (700ms)
-    longPressTimer.current = setTimeout(() => {
-      handleEnterHardwareEditor(type);
-      longPressTimer.current = null;
-    }, 700);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent, effectId: string, type: string) => {
-    // Se il timer del long press è ancora attivo, non è stata una pressione lunga
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-
-      // Gestione Click e Double Click
-      clickCount.current += 1;
-      if (clickCount.current === 1) {
-        clickTimer.current = setTimeout(() => {
-          handleSelectBlock(effectId, type);
-          clickCount.current = 0;
-        }, 250); // Timeout per distinguere il singolo dal doppio clic
-      } else if (clickCount.current === 2) {
-        if (clickTimer.current) clearTimeout(clickTimer.current);
-        handleEnterHardwareEditor(type);
-        clickCount.current = 0;
-      }
-    }
-  };
-
-  const handlePointerLeave = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
     }
   };
 
@@ -325,10 +278,7 @@ export default function EditorPage() {
                 return (
                   <React.Fragment key={effect.id}>
                     <div 
-                      onPointerDown={(e) => handlePointerDown(e, effect.id, effect.type)}
-                      onPointerUp={(e) => handlePointerUp(e, effect.id, effect.type)}
-                      onPointerLeave={handlePointerLeave}
-                      onContextMenu={(e) => e.preventDefault()}
+                      onClick={() => handleBlockClick(effect.id, effect.type, effect.enabled)}
                       className={cn(
                         "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none touch-none",
                         "bg-secondary/40",
@@ -338,7 +288,7 @@ export default function EditorPage() {
                       style={{ borderColor: isSelected ? `hsl(${getBlockColorVar(effect.type)})` : '' }}
                     >
                       <div className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50">
-                        <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)} />
+                        <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} />
                       </div>
                       <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>
                         {effect.type === 'noise-gate' ? 'GATE' : effect.type === 'compressor' ? 'COMP' : effect.type === 'sr' ? 'S/R' : effect.type === 'vol' ? 'VOL' : effect.type}
@@ -352,7 +302,12 @@ export default function EditorPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-xl" style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}>
+        {/* Cliccando sulla card dei parametri inviamo CC 78 alla pedaliera */}
+        <Card 
+          className="shadow-xl" 
+          style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
+          onClick={() => selectedEffect && handleEnterHardwareEditor(selectedEffect.type)}
+        >
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
               <div className="flex items-center gap-4">
                 <Settings2 className="w-5 h-5" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }} />
@@ -362,13 +317,15 @@ export default function EditorPage() {
               </div>
               <div className="flex items-center gap-4">
                 <Select value={selectedEffect?.model} onValueChange={(val) => updateModel(selectedEffect!.id, val)}>
-                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Model" /></SelectTrigger>
+                  <SelectTrigger className="w-[200px]" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Model" /></SelectTrigger>
                   <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
                 </Select>
-                <Switch checked={selectedEffect?.enabled} onCheckedChange={() => toggleEffect(selectedEffect!.id)} />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => toggleEffect(selectedEffect!.id)} />
+                </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10">
+            <CardContent className="p-10" onClick={(e) => e.stopPropagation()}>
               {selectedEffect && currentModelData && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
                   {currentModelData.parameters.map((param, index) => (
