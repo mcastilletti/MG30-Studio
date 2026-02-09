@@ -22,7 +22,7 @@ export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 
 const analyzeSysExPrompt = ai.definePrompt({
   name: 'analyzeSysExPrompt',
-  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
+  model: 'googleai/gemini-2.0-flash-lite',
   input: { schema: AnalyzeSysExInputSchema },
   output: { schema: AnalyzeSysExOutputSchema },
   system: "Sei un ingegnere MIDI esperto nel reverse engineering dei protocolli NUX. Analizza i dati SysEx per identificare parametri, range di valori e offset.",
