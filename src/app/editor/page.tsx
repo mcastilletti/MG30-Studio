@@ -81,21 +81,30 @@ export default function EditorPage() {
     updateModel(effectId, modelId);
     if (status === 'connected') {
       sendModelChange(type, modelId);
+      // Attendiamo che il modello sia caricato prima di inviare i parametri
       setTimeout(() => {
         const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
         if (updatedEffect) {
           syncBlockParameters(type, updatedEffect.parameters);
         }
-      }, 300);
+      }, 500);
     }
   };
 
-  const handleBlockClick = (effectId: string, type: string, currentEnabled: boolean) => {
-    toggleEffect(effectId);
+  // Funzione per la sola selezione del blocco (visualizzazione parametri)
+  const handleSelectBlock = (effectId: string, type: string) => {
     setSelectedBlockId(effectId);
     if (status === 'connected') {
-      toggleBlock(type, !currentEnabled);
       selectBlock(type);
+    }
+  };
+
+  // Funzione specifica per l'accensione/spegnimento (clic sul simbolo power)
+  const handleToggleBlock = (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => {
+    e.stopPropagation(); // Evita di triggerare handleSelectBlock se cliccato il simbolo
+    toggleEffect(effectId);
+    if (status === 'connected') {
+      toggleBlock(type, !currentEnabled);
     }
   };
 
@@ -284,7 +293,7 @@ export default function EditorPage() {
                 return (
                   <React.Fragment key={effect.id}>
                     <div 
-                      onClick={() => handleBlockClick(effect.id, effect.type, effect.enabled)}
+                      onClick={() => handleSelectBlock(effect.id, effect.type)}
                       className={cn(
                         "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
                         "bg-secondary/40",
@@ -293,7 +302,10 @@ export default function EditorPage() {
                       )}
                       style={{ borderColor: isSelected ? `hsl(${getBlockColorVar(effect.type)})` : '' }}
                     >
-                      <div className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50">
+                      <div 
+                        onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
+                        className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50 hover:bg-background/80 transition-colors"
+                      >
                         <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} />
                       </div>
                       <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>
@@ -325,7 +337,7 @@ export default function EditorPage() {
                     <SelectTrigger className="w-[200px]"><SelectValue placeholder="Model" /></SelectTrigger>
                     <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleBlockClick(selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
+                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleToggleBlock({ stopPropagation: () => {} } as any, selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
                 </div>
               </CardHeader>
               <CardContent className="p-10">
