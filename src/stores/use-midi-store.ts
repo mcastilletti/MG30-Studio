@@ -330,6 +330,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   enterBlockEditor: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
+      // Per entrare nell'editor dalla vista preset, spesso serve selezionare (75) e poi entrare (78)
+      get().sendControlChange(SELECT_BLOCK_CC, index);
+      // Piccolo delay opzionale rimosso per massimizzare la velocità, ma i messaggi MIDI sono sequenziali
       get().sendControlChange(ENTER_EDITOR_CC, index);
     }
   },
