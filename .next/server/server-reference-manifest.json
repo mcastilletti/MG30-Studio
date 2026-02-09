@@ -1,5 +1,17 @@
 {
-  "node": {},
+  "node": {
+    "4067253c5670b2a325022d3ce23cf3ee8837dac914": {
+      "workers": {
+        "app/editor/page": {
+          "moduleId": "[project]/.next-internal/server/app/editor/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/editor/page": "action-browser"
+      }
+    }
+  },
   "edge": {},
   "encryptionKey": "bR7IdqwKIP6CxYvQ58gIGI3oOPRPdRbFon01Y8voaOE="
 }
