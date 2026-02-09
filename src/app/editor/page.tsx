@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, syncBlockParameters, isEditorSyncing, syncActivePreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, isEditorSyncing, syncActivePreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -77,19 +77,14 @@ export default function EditorPage() {
     }
   };
 
-  // Nuovo sistema: click sulla chain = toggle + select + enter editor
   const handleBlockClick = (effectId: string, type: string, currentEnabled: boolean) => {
-    // 1. Toggle Stato
+    // Toggle stato On/Off e selezione nell'app
     toggleEffect(effectId);
+    setSelectedBlockId(effectId);
+    
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
-    }
-    
-    // 2. Seleziona e Entra nell'Editor hardware
-    setSelectedBlockId(effectId);
-    if (status === 'connected') {
       selectBlock(type);
-      enterBlockEditor(type);
     }
   };
 
@@ -151,10 +146,10 @@ export default function EditorPage() {
 
     setActivePreset(newPreset);
     
+    // Sincronizzazione hardware dopo applicazione AI
     if (status === 'connected') {
       updatedEffects.forEach(e => {
         toggleBlock(e.type, e.enabled);
-        syncBlockParameters(e.type, e.parameters);
       });
     }
 
@@ -185,9 +180,9 @@ export default function EditorPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => handleSlotChange('prev')} className="h-8 w-8"><ChevronLeft className="w-4 h-4" /></Button>
+              <button onClick={() => handleSlotChange('prev')} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
               <div className="w-16 h-12 rounded-lg bg-primary/10 flex items-center justify-center font-mono font-bold text-xl text-primary border border-primary/20">{formatSlotLabel(activePreset.slot)}</div>
-              <Button variant="ghost" size="icon" onClick={() => handleSlotChange('next')} className="h-8 w-8"><ChevronRight className="w-4 h-4" /></Button>
+              <button onClick={() => handleSlotChange('next')} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronRight className="w-4 h-4" /></button>
             </div>
             <div>
               <h3 className="text-xl font-bold">{activePreset.name}</h3>
@@ -260,10 +255,10 @@ export default function EditorPage() {
               </DialogContent>
             </Dialog>
             <div className="w-[1px] h-8 bg-border mx-2" />
-            <Button variant="outline" size="icon" onClick={() => syncActivePreset()}><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
-            <Button variant="outline" size="icon" onClick={undo}><Undo2 className="w-4 h-4" /></Button>
-            <Button variant="outline" size="icon" onClick={redo}><Redo2 className="w-4 h-4" /></Button>
-            <Button className="gap-2" onClick={() => toast({ title: "Salvataggio locale eseguito" })}><Save className="w-4 h-4" /> Save</Button>
+            <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sincronizza Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
+            <Button variant="outline" size="icon" onClick={undo} title="Annulla"><Undo2 className="w-4 h-4" /></Button>
+            <Button variant="outline" size="icon" onClick={redo} title="Ripristina"><Redo2 className="w-4 h-4" /></Button>
+            <Button className="gap-2" onClick={() => toast({ title: "Preset salvato in locale" })}><Save className="w-4 h-4" /> Save</Button>
           </div>
         </div>
 
@@ -282,7 +277,7 @@ export default function EditorPage() {
                       className={cn(
                         "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none touch-none",
                         "bg-secondary/40",
-                        isSelected ? "border-primary/50 shadow-md scale-105" : "border-border/40",
+                        isSelected ? "border-primary shadow-md scale-105" : "border-border/40",
                         !effect.enabled && "opacity-60"
                       )}
                       style={{ borderColor: isSelected ? `hsl(${getBlockColorVar(effect.type)})` : '' }}
@@ -302,9 +297,8 @@ export default function EditorPage() {
           </CardContent>
         </Card>
 
-        {/* Cliccando sulla card dei parametri inviamo CC 78 alla pedaliera */}
         <Card 
-          className="shadow-xl" 
+          className="shadow-xl cursor-pointer hover:border-primary/30 transition-colors" 
           style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
           onClick={() => selectedEffect && handleEnterHardwareEditor(selectedEffect.type)}
         >
@@ -321,15 +315,17 @@ export default function EditorPage() {
                   <SelectContent>{availableModels.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
                 </Select>
                 <div onClick={(e) => e.stopPropagation()}>
-                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => toggleEffect(selectedEffect!.id)} />
+                  <Switch checked={selectedEffect?.enabled} onCheckedChange={() => handleBlockClick(selectedEffect!.id, selectedEffect!.type, selectedEffect!.enabled)} />
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="p-10">
               {selectedEffect && currentModelData && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
                   {currentModelData.parameters.map((param, index) => (
-                    <RotaryKnob key={param.id} label={param.name} value={Number(selectedEffect.parameters[param.id] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                    <div key={param.id} onClick={(e) => e.stopPropagation()}>
+                      <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                    </div>
                   ))}
                 </div>
               )}
