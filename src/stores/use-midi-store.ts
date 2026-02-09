@@ -5,7 +5,7 @@ import { Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Tabella Bypass CC e Valori basata sulle specifiche utente
+// Tabella Bypass basata sullo standard NUX: ModelID = ON, ModelID + 64 = OFF
 const BYPASS_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -17,24 +17,10 @@ const BYPASS_CC: Record<string, number> = {
   'delay': 7,
   'reverb': 8,
   'ir': 9,
-  'sr': 10 // Send Return
+  'sr': 10
 };
 
-const BYPASS_VALS: Record<string, { on: number; off: number }> = {
-  'wah': { on: 1, off: 65 },
-  'compressor': { on: 2, off: 66 },
-  'efx': { on: 5, off: 69 },
-  'amp': { on: 13, off: 77 },
-  'eq': { on: 1, off: 65 },
-  'noise-gate': { on: 5, off: 69 },
-  'modulation': { on: 6, off: 70 },
-  'delay': { on: 7, off: 71 },
-  'reverb': { on: 1, off: 65 },
-  'ir': { on: 7, off: 71 },
-  'sr': { on: 1, off: 65 }
-};
-
-// CC per la selezione del MODELLO (Basato su schema utente)
+// CC per la selezione del MODELLO (Basato su tabella utente)
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -50,7 +36,7 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'vol': 73
 };
 
-// Offset di partenza per i valori dei modelli (Basato su schema utente)
+// Offset di partenza per i valori dei modelli (Tabella Utente)
 const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'wah': 65,
   'compressor': 65,
@@ -81,7 +67,6 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'vol': [74]
 };
 
-// Mappatura indici per CC 75 (Highlight/Focus)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'noise-gate': 5,
@@ -97,9 +82,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'eq': 4
 };
 
-const SELECT_BLOCK_CC = 75; // CURRENT BLOCK FOCUS
-const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR VIEW
-const PEDAL_CC = 76; // EXP PEDAL POSITION
+const SELECT_BLOCK_CC = 75; 
+const ENTER_EDITOR_CC = 78;
+const PEDAL_CC = 76;
 
 const formatSlotLabel = (slot: number) => {
   const bank = Math.floor((slot - 1) / 4) + 1;
@@ -143,7 +128,6 @@ interface MidiStore {
   isEditorSyncing: boolean;
   syncProgress: number;
   lastError: string | null;
-  currentSyncSlot: number | null;
   
   initialize: () => Promise<void>;
   sendControlChange: (cc: number, value: number) => void;
@@ -174,7 +158,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   isEditorSyncing: false,
   syncProgress: 0,
   lastError: null,
-  currentSyncSlot: null,
 
   initialize: async () => {
     if (typeof window === 'undefined' || !navigator.requestMIDIAccess) {
@@ -190,40 +173,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
         const outputs: MidiDevice[] = [];
         
         midiAccess.inputs.forEach(port => {
-          inputs.push({
-            id: port.id,
-            name: port.name || 'Unknown',
-            manufacturer: port.manufacturer || 'Unknown',
-            version: port.version || 'Unknown',
-            state: port.state,
-            connection: port.connection
-          });
+          inputs.push({ id: port.id, name: port.name || 'Unknown', manufacturer: port.manufacturer || 'Unknown', version: port.version || 'Unknown', state: port.state, connection: port.connection });
         });
 
         midiAccess.outputs.forEach(port => {
-          outputs.push({
-            id: port.id,
-            name: port.name || 'Unknown',
-            manufacturer: port.manufacturer || 'Unknown',
-            version: port.version || 'Unknown',
-            state: port.state,
-            connection: port.connection
-          });
+          outputs.push({ id: port.id, name: port.name || 'Unknown', manufacturer: port.manufacturer || 'Unknown', version: port.version || 'Unknown', state: port.state, connection: port.connection });
         });
 
         set({ availableDevices: { inputs, outputs } });
 
-        const nuxInput = Array.from(midiAccess.inputs.values()).find(i => 
-          i.name?.toUpperCase().includes('NUX') || i.name?.toUpperCase().includes('MG-30')
-        );
-        const nuxOutput = Array.from(midiAccess.outputs.values()).find(o => 
-          o.name?.toUpperCase().includes('NUX') || o.name?.toUpperCase().includes('MG-30')
-        );
+        const nuxInput = Array.from(midiAccess.inputs.values()).find(i => i.name?.toUpperCase().includes('NUX') || i.name?.toUpperCase().includes('MG-30'));
+        const nuxOutput = Array.from(midiAccess.outputs.values()).find(o => o.name?.toUpperCase().includes('NUX') || o.name?.toUpperCase().includes('MG-30'));
 
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
           set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
-          get().syncActivePreset();
         } else {
           set({ status: 'disconnected' });
         }
@@ -231,7 +195,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
       midiAccess.onstatechange = updateDevices;
       updateDevices();
-
     } catch (err) {
       set({ status: 'error', lastError: 'Errore accesso MIDI' });
     }
@@ -240,7 +203,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   handleIncomingMidi: (message) => {
     const data = message.data;
     if (!data) return;
-
     const statusByte = data[0] & 0xF0;
 
     if (statusByte === 0xC0) {
@@ -250,44 +212,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const existingPreset = get().devicePresets.find(p => p.slot === slot);
       usePresetStore.getState().setActivePreset(existingPreset || { ...activePreset, slot });
       setTimeout(() => get().syncActivePreset(), 50);
-      return;
-    }
-
-    if (statusByte === 0xB0) {
-      const cc = data[1];
-      const val = data[2];
-      
-      if (cc === PEDAL_CC) {
-        usePresetStore.getState().updateParameter('wah', 'position', val);
-        return;
-      }
-
-      const blockTypeForBypass = Object.keys(BYPASS_CC).find(key => BYPASS_CC[key] === cc);
-      if (blockTypeForBypass) {
-        const vals = BYPASS_VALS[blockTypeForBypass];
-        const isEnabled = val === vals.on;
-        usePresetStore.getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
-      }
-    }
-
-    if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
-      let tempName = "";
-      for (let i = 0; i < data.length; i++) {
-        const byte = data[i];
-        if (byte >= 32 && byte <= 126) tempName += String.fromCharCode(byte);
-        else {
-          if (tempName.trim().length >= 3) {
-            const candidate = tempName.trim();
-            if (!["NUX", "MG-30", "VER", "HDR", "EDIT", "PRESET"].includes(candidate.toUpperCase())) {
-              const activePreset = usePresetStore.getState().activePreset;
-              get().updatePresetName(activePreset.slot, candidate);
-              usePresetStore.getState().setActivePreset({ ...activePreset, name: candidate });
-              break; 
-            }
-          }
-          tempName = "";
-        }
-      }
     }
   },
 
@@ -297,7 +221,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     set({ isEditorSyncing: true });
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-    setTimeout(() => set({ isEditorSyncing: false }), 1200);
+    setTimeout(() => set({ isEditorSyncing: false }), 800);
   },
 
   sendControlChange: (cc, value) => {
@@ -326,7 +250,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     const cc = BLOCK_MODEL_CC[blockType];
     const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
-    
     if (cc === undefined) return;
 
     const models = MG30_MODELS[blockType as any];
@@ -334,18 +257,10 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     if (modelIndex !== undefined && modelIndex !== -1) {
       const midiValue = modelIndex + offset;
-
-      // 1. Entra nell'editor del blocco per forzare il focus hardware
       enterBlockEditor(blockType);
       
-      // 2. Invia SysEx di "Edit Mode"
-      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
-
       setTimeout(() => {
-        // 3. Invia il cambio modello tramite CC specificato
         sendControlChange(cc, midiValue);
-        
-        // 4. Forza il refresh del display hardware
         setTimeout(() => {
           output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
         }, 150);
@@ -355,26 +270,31 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
   toggleBlock: (blockType, enabled) => {
     const cc = BYPASS_CC[blockType];
-    const vals = BYPASS_VALS[blockType];
-    if (cc !== undefined && vals) {
-      get().sendControlChange(cc, enabled ? vals.on : vals.off);
-    }
+    if (cc === undefined) return;
+
+    const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
+    if (!effect) return;
+
+    const models = MG30_MODELS[blockType as any];
+    const modelIndex = models?.findIndex(m => m.id === effect.model);
+    const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
+    const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
+
+    // NUX logic: ModelID for ON, ModelID + 64 for OFF
+    const midiValue = enabled ? modelIdValue : modelIdValue + 64;
+    get().sendControlChange(cc, midiValue);
   },
 
   selectBlock: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
-    if (index !== undefined) {
-      get().sendControlChange(SELECT_BLOCK_CC, index);
-    }
+    if (index !== undefined) get().sendControlChange(SELECT_BLOCK_CC, index);
   },
 
   enterBlockEditor: (blockType) => {
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      setTimeout(() => {
-        get().sendControlChange(ENTER_EDITOR_CC, index);
-      }, 150);
+      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 100);
     }
   },
 
@@ -383,73 +303,66 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   resetToPresetView: () => {
-    const { output } = get();
-    if (!output) return;
-    const pc = usePresetStore.getState().activePreset.slot - 1;
-    output.send([0xC0, pc]);
-    const s1 = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7];
-    const s2 = [0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7];
-    setTimeout(() => {
-      output.send(s1); output.send(s2);
-      output.send(s1); output.send(s2);
-    }, 150);
+    get().sendControlChange(ENTER_EDITOR_CC, 127);
+    setTimeout(() => get().syncActivePreset(), 100);
   },
 
   syncBlockParameters: (blockType, parameters) => {
     const ccs = BLOCK_PARAM_CCS[blockType];
     if (!ccs) return;
 
-    const presetState = usePresetStore.getState().activePreset;
-    const effect = presetState.effects.find(e => e.type === blockType);
+    const effect = usePresetStore.getState().activePreset.effects.find(e => e.type === blockType);
     if (!effect) return;
 
     const modelData = MG30_MODELS[effect.type as any]?.find(m => m.id === effect.model);
     if (!modelData) return;
 
     modelData.parameters.forEach((param, index) => {
-      const val = Number(parameters[param.id] ?? param.default);
+      const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
-        setTimeout(() => {
-          get().sendControlChange(ccs[index], Math.round(val));
-        }, index * 40);
+        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 30);
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { toggleBlock, syncBlockParameters, sendModelChange } = get();
-    
+    const { sendModelChange, toggleBlock, syncBlockParameters, output } = get();
+    if (!output) return;
+
+    set({ isEditorSyncing: true });
+
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
+        // 1. Cambia Modello
         sendModelChange(e.type, e.model);
         
         setTimeout(() => {
+          // 2. Imposta Stato Bypass
           toggleBlock(e.type, e.enabled);
           
           setTimeout(() => {
+            // 3. Invia tutti i parametri delle manopole
             syncBlockParameters(e.type, e.parameters);
           }, 150);
         }, 200);
-      }, idx * 700);
+      }, idx * 600); // Stagger di 600ms per ogni blocco per evitare overflow buffer
     });
+
+    setTimeout(() => set({ isEditorSyncing: false }), preset.effects.length * 600 + 500);
   },
 
   syncPresets: async () => {
-    const { output, sendProgramChange } = get();
-    if (!output) return;
     set({ isSyncing: true, syncProgress: 0 });
     for (let i = 1; i <= 128; i++) {
       set({ syncProgress: Math.round((i / 128) * 100) });
-      sendProgramChange(i - 1);
-      await new Promise(r => setTimeout(r, 450));
+      get().sendProgramChange(i - 1);
+      await new Promise(r => setTimeout(r, 400));
     }
     set({ isSyncing: false });
   },
 
   updatePresetName: (slot, newName) => {
-    set(state => ({
-      devicePresets: state.devicePresets.map(p => p.slot === slot ? { ...p, name: newName } : p)
-    }));
+    set(state => ({ devicePresets: state.devicePresets.map(p => p.slot === slot ? { ...p, name: newName } : p) }));
   },
 
   refreshDevices: () => get().initialize()
