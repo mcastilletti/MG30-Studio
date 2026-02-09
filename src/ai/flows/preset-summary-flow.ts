@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,8 +8,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-// Assicurati che nel file genkit.ts sia configurato il plugin googleAI
-import { gemini20FlashLite } from '@genkit-ai/googleai'; 
 
 const PresetSummaryInputSchema = z.object({
   preset: z.any().describe('I dati completi del preset da analizzare'),
@@ -24,7 +23,6 @@ export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 const presetSummaryPrompt = ai.definePrompt(
   {
     name: 'presetSummaryPrompt',
-    // Usa il riferimento diretto al modello se disponibile nel tuo setup genkit
     model: 'googleai/gemini-2.0-flash-lite', 
     input: { schema: PresetSummaryInputSchema },
     output: { schema: PresetSummaryOutputSchema },
@@ -45,12 +43,7 @@ const presetSummaryPrompt = ai.definePrompt(
 );
 
 export async function summarizePreset(input: PresetSummaryInput): Promise<PresetSummaryOutput> {
-  try {
-    const { output } = await presetSummaryPrompt(input);
-    if (!output) throw new Error('Analisi AI fallita.');
-    return output;
-  } catch (error) {
-    console.error("Errore durante l'analisi del preset:", error);
-    throw new Error('Impossibile generare il riepilogo.');
-  }
+  const { output } = await presetSummaryPrompt(input);
+  if (!output) throw new Error('Analisi AI fallita.');
+  return output;
 }

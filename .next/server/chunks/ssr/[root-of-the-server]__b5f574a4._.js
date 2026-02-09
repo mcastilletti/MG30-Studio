@@ -230,7 +230,7 @@ const MG30PresetOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$n
 });
 const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
     name: 'mg30PresetPrompt',
-    model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
+    model: 'googleai/gemini-2.0-flash-lite',
     input: {
         schema: MG30PresetInputSchema
     },
@@ -238,14 +238,14 @@ const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$
         schema: MG30PresetOutputSchema
     },
     config: {
-        temperature: 0.4,
+        temperature: 0.1,
         responseMimeType: 'application/json'
     },
-    system: `Sei un traduttore tecnico per NUX MG-30. 
+    system: `Sei un traduttore tecnico rigoroso per NUX MG-30. 
     
     REGOLE MANDATORIE:
-    1. Se l'input contiene un JSON con "signal_chain" o valori numerici (es. GAIN: 65), DEVI APPLICARE ESATTAMENTE QUEI VALORI senza interpretarli.
-    2. Se l'input è testuale, genera un suono professionale coerente.
+    1. Se l'input contiene un JSON con "signal_chain" o valori numerici (es. GAIN: 65), DEVI APPLICARE ESATTAMENTE QUEI VALORI senza interpretarli o modificarli.
+    2. Non inventare parametri. Mappa i valori forniti sugli ID parametri esistenti.
     3. Usa SOLO questi ID Modello:
        - amp: jazzclean, deluxervb, bassmate, tweedy, twinrvb, hiwire, calicrunch, classa15, classa30, plexi100w, plexi45, brit800, 1987x50w, slo100, firemanhbe, dualrect, dievh4, vibroking, match, brit2000, uber.
        - efx: tscream, bluesdrv, morningdrv, reddirt, eatdist, mufffuzz, distone, rcboost, acboost, distplus, katana.
@@ -260,7 +260,7 @@ const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$
     4. MAPPATURA TIPI (Usa ESATTAMENTE questi nomi nel campo 'type'):
        wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol, eq.`
 }, `Richiesta: {{description}}
-  Analizza la richiesta. Se trovi parametri specifici o un oggetto JSON, mappa fedelmente ogni valore. Genera sempre almeno 8 blocchi per una catena completa.`);
+  Analizza la richiesta. Se trovi parametri specifici o un oggetto JSON, mappa fedelmente ogni valore senza alterarlo. Genera sempre una catena coerente.`);
 async function generateMG30Preset(input) {
     const { output } = await mg30PresetPrompt(input);
     if (!output) throw new Error('Generazione fallita: output vuoto.');

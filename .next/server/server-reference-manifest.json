@@ -1,51 +1,5 @@
 {
-  "node": {
-    "4072a901f6eb6ec0890adbed0387295ac692c1580a": {
-      "workers": {
-        "app/library/page": {
-          "moduleId": "[project]/.next-internal/server/app/library/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/preset-summary-flow.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "summarizePreset",
-          "filename": "src/ai/flows/preset-summary-flow.ts"
-        }
-      },
-      "layer": {
-        "app/library/page": "action-browser"
-      },
-      "filename": "src/ai/flows/preset-summary-flow.ts",
-      "exportedName": "summarizePreset"
-    },
-    "403e87fbef9231fbf53d551f620667f8ead20b9084": {
-      "workers": {
-        "app/editor/page": {
-          "moduleId": "[project]/.next-internal/server/app/editor/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "generateMG30Preset",
-          "filename": "src/ai/flows/mg30-preset-gen.ts"
-        }
-      },
-      "layer": {
-        "app/editor/page": "action-browser"
-      },
-      "filename": "src/ai/flows/mg30-preset-gen.ts",
-      "exportedName": "generateMG30Preset"
-    },
-    "40b567608a81e77c8c29532aa33ced566a46bd98f5": {
-      "workers": {
-        "app/tools/sysex-analyzer/page": {
-          "moduleId": "[project]/.next-internal/server/app/tools/sysex-analyzer/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/sysex-analysis.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "analyzeSysEx",
-          "filename": "src/ai/flows/sysex-analysis.ts"
-        }
-      },
-      "layer": {
-        "app/tools/sysex-analyzer/page": "action-browser"
-      },
-      "filename": "src/ai/flows/sysex-analysis.ts",
-      "exportedName": "analyzeSysEx"
-    }
-  },
+  "node": {},
   "edge": {},
   "encryptionKey": "bR7IdqwKIP6CxYvQ58gIGI3oOPRPdRbFon01Y8voaOE="
 }
