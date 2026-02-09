@@ -2835,7 +2835,7 @@ const BYPASS_CC = {
     'ir': 9,
     'sr': 10
 };
-// CC per la selezione del MODELLO (Basato su tabella utente)
+// CC per la selezione del MODELLO basato sullo schema utente
 const BLOCK_MODEL_CC = {
     'wah': 0,
     'compressor': 1,
@@ -2850,7 +2850,7 @@ const BLOCK_MODEL_CC = {
     'sr': 10,
     'vol': 73
 };
-// Offset di partenza per i valori dei modelli (Tabella Utente)
+// Offset richiesti: 1 per la maggior parte, 65 per WAH/COMP/MOD
 const BLOCK_MODEL_OFFSET = {
     'wah': 65,
     'compressor': 65,
@@ -3200,6 +3200,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             set({
                 isEditorSyncing: true
             });
+            // Richiesta stato corrente hardware
             output.send([
                 0xF0,
                 0x00,
@@ -3242,6 +3243,33 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 setTimeout(()=>get().syncActivePreset(), 150);
             }
         },
+        sendPresetName: (name)=>{
+            const { output } = get();
+            if (!output) return;
+            // NUX MG-30 SysEx per Nome Preset: F0 00 20 6B 01 01 07 [16 characters ASCII] F7
+            const header = [
+                0xF0,
+                0x00,
+                0x20,
+                0x6B,
+                0x01,
+                0x01,
+                0x07
+            ];
+            const nameBytes = new Array(16).fill(0x20); // Pad con spazi
+            for(let i = 0; i < Math.min(name.length, 16); i++){
+                nameBytes[i] = name.charCodeAt(i) & 0x7F;
+            }
+            const footer = [
+                0xF7
+            ];
+            const message = new Uint8Array([
+                ...header,
+                ...nameBytes,
+                ...footer
+            ]);
+            output.send(message);
+        },
         sendKnobParameter: (blockType, knobIndex, value)=>{
             const ccs = BLOCK_PARAM_CCS[blockType];
             if (ccs && ccs[knobIndex] !== undefined) {
@@ -3258,9 +3286,11 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const modelIndex = models?.findIndex((m)=>m.id === modelId);
             if (modelIndex !== undefined && modelIndex !== -1) {
                 const midiValue = modelIndex + offset;
+                // Cruciale: Forza il focus sul blocco prima di cambiare modello
                 enterBlockEditor(blockType);
                 setTimeout(()=>{
                     sendControlChange(cc, midiValue);
+                    // Refresh hardware display
                     setTimeout(()=>{
                         output.send([
                             0xF0,
@@ -3272,8 +3302,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                             0x01,
                             0xF7
                         ]);
-                    }, 250);
-                }, 250);
+                    }, 300);
+                }, 300);
             }
         },
         toggleBlock: (blockType, enabled)=>{
@@ -3285,6 +3315,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const modelIndex = models?.findIndex((m)=>m.id === effect.model);
             const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
             const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
+            // NUX logic: Value = ModelID for ON, ModelID + 64 for OFF
             const midiValue = enabled ? modelIdValue : modelIdValue + 64;
             get().sendControlChange(cc, midiValue);
         },
@@ -3296,7 +3327,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const index = BLOCK_INDEX_MAP[blockType];
             if (index !== undefined) {
                 get().sendControlChange(SELECT_BLOCK_CC, index);
-                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 150);
+                // Entra esplicitamente nella visualizzazione editor del blocco
+                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 200);
             }
         },
         exitBlockEditor: ()=>{
@@ -3316,33 +3348,39 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    // Invio dei parametri ancora più lento per precisione millimetrica
-                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 60);
+                    // Invio dei parametri molto lento per massima precisione hardware
+                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 80);
                 }
             });
         },
         syncFullPreset: (preset)=>{
-            const { sendModelChange, toggleBlock, syncBlockParameters, output } = get();
+            const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, output } = get();
             if (!output) return;
             set({
                 isEditorSyncing: true
             });
-            // Sincronizzazione "Bulk" più lenta: 1.2 secondi per ogni blocco
+            // 1. Salva il nome del preset via SysEx
+            sendPresetName(preset.name);
+            // 2. Sincronizzazione "Bulk" lenta e precisa blocco per blocco
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
-                    // 1. Cambia Modello
-                    sendModelChange(e.type, e.model);
+                    // Forza focus su blocco
+                    get().enterBlockEditor(e.type);
                     setTimeout(()=>{
-                        // 2. Imposta Stato Bypass
-                        toggleBlock(e.type, e.enabled);
+                        // Cambia Modello
+                        sendModelChange(e.type, e.model);
                         setTimeout(()=>{
-                            // 3. Invia tutti i parametri delle manopole
-                            syncBlockParameters(e.type, e.parameters);
-                        }, 350);
-                    }, 400);
-                }, idx * 1200);
+                            // Imposta Stato Bypass
+                            toggleBlock(e.type, e.enabled);
+                            setTimeout(()=>{
+                                // Invia tutti i parametri delle manopole
+                                syncBlockParameters(e.type, e.parameters);
+                            }, 500);
+                        }, 600);
+                    }, 600);
+                }, idx * 2500); // 2.5 secondi per blocco per sicurezza totale
             });
-            const totalSyncTime = preset.effects.length * 1200 + 1000;
+            const totalSyncTime = preset.effects.length * 2500 + 1000;
             setTimeout(()=>set({
                     isEditorSyncing: false
                 }), totalSyncTime);
@@ -3357,8 +3395,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     syncProgress: Math.round(i / 128 * 100)
                 });
                 get().sendProgramChange(i - 1);
-                // Rallentato anche il caricamento dei nomi per sicurezza
-                await new Promise((r)=>setTimeout(r, 600));
+                await new Promise((r)=>setTimeout(r, 800));
             }
             set({
                 isSyncing: false

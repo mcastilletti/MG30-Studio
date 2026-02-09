@@ -21,18 +21,18 @@ import { useToast } from '@/hooks/use-toast';
 
 const getBlockColorVar = (type: string) => {
   switch(type) {
-    case 'wah': return 'var(--block-wah)';
-    case 'noise-gate': return 'var(--block-gate)';
-    case 'compressor': return 'var(--block-cmp)';
-    case 'efx': return 'var(--block-efx)';
-    case 'amp': return 'var(--block-amp)';
-    case 'ir': return 'var(--block-ir)';
-    case 'sr': return 'var(--block-sr)';
-    case 'modulation': return 'var(--block-mod)';
-    case 'delay': return 'var(--block-dly)';
-    case 'reverb': return 'var(--block-rvb)';
-    case 'vol': return 'var(--block-vol)';
-    case 'eq': return 'var(--block-eq)';
+    case 'wah': return '300 100% 75%';
+    case 'noise-gate': return '70 100% 50%';
+    case 'compressor': return '60 100% 50%';
+    case 'efx': return '32 100% 50%';
+    case 'amp': return '0 100% 50%';
+    case 'ir': return '192 100% 50%';
+    case 'sr': return '120 100% 50%';
+    case 'modulation': return '220 100% 50%';
+    case 'delay': return '180 100% 50%';
+    case 'reverb': return '288 100% 50%';
+    case 'vol': return '0 0% 80%';
+    case 'eq': return '0 0% 100%';
     default: return 'var(--primary)';
   }
 };
@@ -81,12 +81,6 @@ export default function EditorPage() {
     updateModel(effectId, modelId);
     if (status === 'connected') {
       sendModelChange(type, modelId);
-      setTimeout(() => {
-        const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
-        if (updatedEffect) {
-          syncBlockParameters(type, updatedEffect.parameters);
-        }
-      }, 500);
     }
   };
 
@@ -105,13 +99,6 @@ export default function EditorPage() {
     }
   };
 
-  const handleExitEditor = () => {
-    setSelectedBlockId('');
-    if (status === 'connected') {
-      exitBlockEditor();
-    }
-  };
-
   const handleSlotChange = (direction: 'next' | 'prev') => {
     let nextSlot = activePreset.slot + (direction === 'next' ? 1 : -1);
     if (nextSlot < 1) nextSlot = 128;
@@ -124,13 +111,13 @@ export default function EditorPage() {
     if (status === 'connected') {
       syncFullPreset(activePreset);
       toast({ 
-        title: "Salvataggio Hardware", 
-        description: `Tutti i modelli e i parametri del preset sono stati inviati alla pedaliera.` 
+        title: "Hardware Save", 
+        description: `Preset '${activePreset.name}' salvato nella pedaliera.` 
       });
     } else {
       toast({ 
-        title: "Salvataggio Locale", 
-        description: "Pedaliera non connessa. I parametri sono stati aggiornati nella sessione dell'app." 
+        title: "Local Save", 
+        description: "Pedaliera non connessa. Preset aggiornato localmente." 
       });
     }
   };
@@ -143,7 +130,7 @@ export default function EditorPage() {
       const result = await generateMG30Preset({ description: aiPrompt });
       setProposedPreset(result);
     } catch (error: any) {
-      toast({ title: "Errore AI", description: error.message, variant: "destructive" });
+      toast({ title: "AI Error", description: error.message, variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -183,8 +170,8 @@ export default function EditorPage() {
     setActivePreset(newPreset);
     
     toast({ 
-      title: "Parametri AI Applicati", 
-      description: `Il preset '${proposedPreset.name}' è pronto nell'editor. Clicca SAVE per inviarlo alla pedaliera.` 
+      title: "AI Tone Applied", 
+      description: `Il preset '${proposedPreset.name}' è pronto. Clicca SAVE per inviarlo all'MG-30.` 
     });
     
     setProposedPreset(null);
@@ -219,7 +206,7 @@ export default function EditorPage() {
             </div>
             <div>
               <h3 className="text-xl font-bold">{activePreset.name}</h3>
-              <Badge variant="outline" className="text-[10px] mt-1">NUX MG-30 READY</Badge>
+              <Badge variant="outline" className="text-[10px] mt-1">MG-30 CONNECTED</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -233,12 +220,12 @@ export default function EditorPage() {
                 {!proposedPreset ? (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Tone Designer</DialogTitle>
-                      <DialogDescription>Descrivi il suono o incolla un JSON tecnico. L'AI configurerà ogni blocco.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
+                      <DialogDescription>Descrivi il suono desiderato. L'AI configurerà modelli e parametri hardware.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <Textarea 
-                        placeholder="Incolla qui le tue specifiche tecniche o scrivi la tua richiesta..." 
+                        placeholder="Es: Suono Gilmour anni '70 con molto delay e un ampli clean..." 
                         value={aiPrompt} 
                         onChange={(e) => setAiPrompt(e.target.value)} 
                         className="min-h-[150px] bg-secondary/20"
@@ -247,15 +234,15 @@ export default function EditorPage() {
                     <DialogFooter>
                       <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        Genera Parametri
+                        Genera Preset
                       </Button>
                     </DialogFooter>
                   </>
                 ) : (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Analizzato: {proposedPreset.name}</DialogTitle>
-                      <DialogDescription>L'AI ha mappato tutti i blocchi. Applica per vedere i parametri.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
+                      <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
@@ -264,16 +251,16 @@ export default function EditorPage() {
                     </div>
                     <DialogFooter className="gap-2">
                       <Button variant="ghost" onClick={() => setProposedPreset(null)}>Scarta</Button>
-                      <Button onClick={applyProposedPreset} className="bg-green-600 hover:bg-green-700 text-white flex-1">Carica nell'Editor</Button>
+                      <Button onClick={applyProposedPreset} className="bg-green-600 hover:bg-green-700 text-white flex-1">Applica all'Editor</Button>
                     </DialogFooter>
                   </>
                 )}
               </DialogContent>
             </Dialog>
             <div className="w-[1px] h-8 bg-border mx-2" />
-            <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sincronizza Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
-            <Button variant="outline" size="icon" onClick={undo} title="Annulla"><Undo2 className="w-4 h-4" /></Button>
-            <Button variant="outline" size="icon" onClick={redo} title="Ripristina"><Redo2 className="w-4 h-4" /></Button>
+            <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sync Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
+            <Button variant="outline" size="icon" onClick={undo} title="Undo"><Undo2 className="w-4 h-4" /></Button>
+            <Button variant="outline" size="icon" onClick={redo} title="Redo"><Redo2 className="w-4 h-4" /></Button>
             <Button className="gap-2" onClick={handleSave}><Save className="w-4 h-4" /> SAVE</Button>
           </div>
         </div>
@@ -281,12 +268,13 @@ export default function EditorPage() {
         <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
           <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
              <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
-             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2 text-destructive" onClick={handleExitEditor}><X className="w-3 h-3" /> Chiudi</Button>
+             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2" onClick={exitBlockEditor}><X className="w-3 h-3" /> Close Editor</Button>
           </CardHeader>
           <CardContent className="py-8">
             <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">
               {activePreset.effects.map((effect, idx) => {
                 const isSelected = selectedBlockId === effect.id;
+                const blockColor = getBlockColorVar(effect.type);
                 return (
                   <React.Fragment key={effect.id}>
                     <div 
@@ -294,18 +282,18 @@ export default function EditorPage() {
                       className={cn(
                         "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
                         "bg-secondary/40",
-                        isSelected ? "border-primary shadow-md scale-105" : "border-border/40",
+                        isSelected ? "scale-105 shadow-md" : "border-border/40",
                         !effect.enabled && "opacity-60"
                       )}
-                      style={{ borderColor: isSelected ? `hsl(${getBlockColorVar(effect.type)})` : '' }}
+                      style={{ borderColor: isSelected ? `hsl(${blockColor})` : '' }}
                     >
                       <div 
                         onClick={(e) => handleToggleBlock(e, effect.id, effect.type, effect.enabled)}
                         className="w-10 h-10 rounded-md flex items-center justify-center mb-1 bg-background/60 border border-border/50 hover:bg-background/80 transition-colors"
                       >
-                        <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }} />
+                        <Power className="w-5 h-5" style={{ color: effect.enabled ? `hsl(${blockColor})` : 'gray' }} />
                       </div>
-                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${getBlockColorVar(effect.type)})` : 'gray' }}>
+                      <span className="text-[9px] font-bold uppercase truncate" style={{ color: effect.enabled ? `hsl(${blockColor})` : 'gray' }}>
                         {effect.type}
                       </span>
                     </div>
@@ -320,12 +308,12 @@ export default function EditorPage() {
         {selectedEffect && (
           <Card 
             className="shadow-xl" 
-            style={{ borderColor: selectedEffect ? `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` : '' }}
+            style={{ borderColor: `hsla(${getBlockColorVar(selectedEffect.type)}, 0.3)` }}
           >
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border/50 gap-4">
                 <div className="flex items-center gap-4">
-                  <Settings2 className="w-5 h-5" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }} />
-                  <CardTitle className="text-lg uppercase" style={{ color: selectedEffect ? `hsl(${getBlockColorVar(selectedEffect.type)})` : '' }}>
+                  <Settings2 className="w-5 h-5" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }} />
+                  <CardTitle className="text-lg uppercase" style={{ color: `hsl(${getBlockColorVar(selectedEffect.type)})` }}>
                     {selectedEffect?.type} <Badge variant="outline" className="text-[10px] ml-2">{selectedEffect?.model}</Badge>
                   </CardTitle>
                 </div>

@@ -20,7 +20,7 @@ const BYPASS_CC: Record<string, number> = {
   'sr': 10
 };
 
-// CC per la selezione del MODELLO (Basato su tabella utente)
+// CC per la selezione del MODELLO basato sullo schema utente
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -36,7 +36,7 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'vol': 73
 };
 
-// Offset di partenza per i valori dei modelli (Tabella Utente)
+// Offset richiesti: 1 per la maggior parte, 65 per WAH/COMP/MOD
 const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'wah': 65,
   'compressor': 65,
@@ -133,6 +133,7 @@ interface MidiStore {
   sendProgramChange: (pc: number) => void;
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
   sendModelChange: (blockType: string, modelId: string) => void;
+  sendPresetName: (name: string) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
   enterBlockEditor: (blockType: string) => void;
@@ -218,6 +219,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const { output } = get();
     if (!output) return;
     set({ isEditorSyncing: true });
+    // Richiesta stato corrente hardware
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
     setTimeout(() => set({ isEditorSyncing: false }), 1200);
@@ -234,6 +236,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       output.send([0xC0, pc]);
       setTimeout(() => get().syncActivePreset(), 150);
     }
+  },
+
+  sendPresetName: (name: string) => {
+    const { output } = get();
+    if (!output) return;
+    
+    // NUX MG-30 SysEx per Nome Preset: F0 00 20 6B 01 01 07 [16 characters ASCII] F7
+    const header = [0xF0, 0x00, 0x20, 0x6B, 0x01, 0x01, 0x07];
+    const nameBytes = new Array(16).fill(0x20); // Pad con spazi
+    for (let i = 0; i < Math.min(name.length, 16); i++) {
+      nameBytes[i] = name.charCodeAt(i) & 0x7F;
+    }
+    const footer = [0xF7];
+    const message = new Uint8Array([...header, ...nameBytes, ...footer]);
+    output.send(message);
   },
 
   sendKnobParameter: (blockType, knobIndex, value) => {
@@ -256,14 +273,17 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     if (modelIndex !== undefined && modelIndex !== -1) {
       const midiValue = modelIndex + offset;
+      
+      // Cruciale: Forza il focus sul blocco prima di cambiare modello
       enterBlockEditor(blockType);
       
       setTimeout(() => {
         sendControlChange(cc, midiValue);
+        // Refresh hardware display
         setTimeout(() => {
           output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
-        }, 250);
-      }, 250);
+        }, 300);
+      }, 300);
     }
   },
 
@@ -279,6 +299,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
     const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
 
+    // NUX logic: Value = ModelID for ON, ModelID + 64 for OFF
     const midiValue = enabled ? modelIdValue : modelIdValue + 64;
     get().sendControlChange(cc, midiValue);
   },
@@ -292,7 +313,8 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
-      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 150);
+      // Entra esplicitamente nella visualizzazione editor del blocco
+      setTimeout(() => get().sendControlChange(ENTER_EDITOR_CC, index), 200);
     }
   },
 
@@ -318,37 +340,45 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
-        // Invio dei parametri ancora più lento per precisione millimetrica
-        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 60);
+        // Invio dei parametri molto lento per massima precisione hardware
+        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 80);
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { sendModelChange, toggleBlock, syncBlockParameters, output } = get();
+    const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, output } = get();
     if (!output) return;
 
     set({ isEditorSyncing: true });
 
-    // Sincronizzazione "Bulk" più lenta: 1.2 secondi per ogni blocco
+    // 1. Salva il nome del preset via SysEx
+    sendPresetName(preset.name);
+
+    // 2. Sincronizzazione "Bulk" lenta e precisa blocco per blocco
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
-        // 1. Cambia Modello
-        sendModelChange(e.type, e.model);
+        // Forza focus su blocco
+        get().enterBlockEditor(e.type);
         
         setTimeout(() => {
-          // 2. Imposta Stato Bypass
-          toggleBlock(e.type, e.enabled);
+          // Cambia Modello
+          sendModelChange(e.type, e.model);
           
           setTimeout(() => {
-            // 3. Invia tutti i parametri delle manopole
-            syncBlockParameters(e.type, e.parameters);
-          }, 350);
-        }, 400);
-      }, idx * 1200); 
+            // Imposta Stato Bypass
+            toggleBlock(e.type, e.enabled);
+            
+            setTimeout(() => {
+              // Invia tutti i parametri delle manopole
+              syncBlockParameters(e.type, e.parameters);
+            }, 500);
+          }, 600);
+        }, 600);
+      }, idx * 2500); // 2.5 secondi per blocco per sicurezza totale
     });
 
-    const totalSyncTime = preset.effects.length * 1200 + 1000;
+    const totalSyncTime = preset.effects.length * 2500 + 1000;
     setTimeout(() => set({ isEditorSyncing: false }), totalSyncTime);
   },
 
@@ -357,8 +387,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     for (let i = 1; i <= 128; i++) {
       set({ syncProgress: Math.round((i / 128) * 100) });
       get().sendProgramChange(i - 1);
-      // Rallentato anche il caricamento dei nomi per sicurezza
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 800));
     }
     set({ isSyncing: false });
   },
