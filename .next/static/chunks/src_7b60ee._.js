@@ -2881,7 +2881,7 @@ const BYPASS_VALS = {
         off: 65
     }
 };
-// CC per la selezione del MODELLO
+// CC per la selezione del MODELLO (Basati su mappatura hardware MG-30)
 const BLOCK_MODEL_CC = {
     'wah': 11,
     'compressor': 13,
@@ -2896,17 +2896,15 @@ const BLOCK_MODEL_CC = {
     'sr': 71,
     'vol': 73
 };
-// CC per i parametri dei blocchi (Knobs)
+// CC per i parametri dei blocchi (Knobs) - Evitiamo collisioni con i Model CC
 const BLOCK_PARAM_CCS = {
     'wah': [
-        12,
-        13
+        12
     ],
     'compressor': [
         14,
         15,
-        16,
-        17
+        16
     ],
     'efx': [
         18,
@@ -2922,8 +2920,7 @@ const BLOCK_PARAM_CCS = {
         27,
         28,
         29,
-        30,
-        31
+        30
     ],
     'eq': [
         32,
@@ -2936,8 +2933,7 @@ const BLOCK_PARAM_CCS = {
         39,
         40,
         41,
-        42,
-        43
+        42
     ],
     'noise-gate': [
         44,
@@ -2957,14 +2953,12 @@ const BLOCK_PARAM_CCS = {
         57,
         58,
         59,
-        60,
-        61
+        60
     ],
     'reverb': [
         62,
         63,
-        64,
-        65
+        64
     ],
     'ir': [
         66,
@@ -2974,14 +2968,13 @@ const BLOCK_PARAM_CCS = {
         70
     ],
     'sr': [
-        72,
-        73
+        72
     ],
     'vol': [
         74
     ]
 };
-// Mappatura indici per CC 75 (Highlight)
+// Mappatura indici per CC 75 (Highlight/Focus)
 const BLOCK_INDEX_MAP = {
     'wah': 0,
     'noise-gate': 5,
@@ -2996,9 +2989,9 @@ const BLOCK_INDEX_MAP = {
     'vol': 11,
     'eq': 4
 };
-const SELECT_BLOCK_CC = 75; // CURRENT BLOCK
-const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR
-const PEDAL_CC = 76; // PEDAL POSITION
+const SELECT_BLOCK_CC = 75; // CURRENT BLOCK FOCUS
+const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR VIEW
+const PEDAL_CC = 76; // EXP PEDAL POSITION
 const formatSlotLabel = (slot)=>{
     const bank = Math.floor((slot - 1) / 4) + 1;
     const sub = [
@@ -3343,12 +3336,12 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             if (!models) return;
             const modelIndex = models.findIndex((m)=>m.id === modelId);
             if (modelIndex !== -1) {
-                // Forza la selezione del blocco prima del cambio modello
+                // 1. Forza la selezione (Focus) del blocco hardware
                 selectBlock(blockType);
-                // Piccolo ritardo per permettere al blocco di essere selezionato nell'hardware
+                // 2. Invia il cambio modello dopo un breve ritardo per stabilità
                 setTimeout(()=>{
                     sendControlChange(cc, modelIndex);
-                }, 50);
+                }, 80);
             }
         },
         toggleBlock: (blockType, enabled)=>{
@@ -3370,7 +3363,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 get().sendControlChange(SELECT_BLOCK_CC, index);
                 setTimeout(()=>{
                     get().sendControlChange(ENTER_EDITOR_CC, index);
-                }, 100);
+                }, 150);
             }
         },
         exitBlockEditor: ()=>{
@@ -3422,19 +3415,17 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    // Usa un timeout per non inondare il buffer MIDI
                     setTimeout(()=>{
                         get().sendControlChange(ccs[index], Math.round(val));
-                    }, index * 20);
+                    }, index * 30);
                 }
             });
         },
         syncFullPreset: (preset)=>{
             const { toggleBlock, syncBlockParameters, sendModelChange } = get();
-            // Esegue la sincronizzazione sequenziale con ritardi per ogni blocco
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
-                    // 1. Modello
+                    // 1. Modello (include già selectBlock)
                     sendModelChange(e.type, e.model);
                     setTimeout(()=>{
                         // 2. Bypass
@@ -3442,9 +3433,9 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         setTimeout(()=>{
                             // 3. Parametri
                             syncBlockParameters(e.type, e.parameters);
-                        }, 40);
-                    }, 40);
-                }, idx * 250); // Ritardo significativo tra blocchi
+                        }, 60);
+                    }, 60);
+                }, idx * 350);
             });
         },
         syncPresets: async ()=>{

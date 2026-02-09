@@ -34,7 +34,7 @@ const BYPASS_VALS: Record<string, { on: number; off: number }> = {
   'sr': { on: 1, off: 65 }
 };
 
-// CC per la selezione del MODELLO
+// CC per la selezione del MODELLO (Basati su mappatura hardware MG-30)
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 11,
   'compressor': 13,
@@ -50,23 +50,23 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'vol': 73
 };
 
-// CC per i parametri dei blocchi (Knobs)
+// CC per i parametri dei blocchi (Knobs) - Evitiamo collisioni con i Model CC
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
-  'wah': [12, 13],
-  'compressor': [14, 15, 16, 17],
+  'wah': [12],
+  'compressor': [14, 15, 16],
   'efx': [18, 19, 20, 21, 22],
-  'amp': [24, 25, 26, 27, 28, 29, 30, 31],
-  'eq': [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43],
+  'amp': [24, 25, 26, 27, 28, 29, 30],
+  'eq': [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42],
   'noise-gate': [44, 45],
   'modulation': [48, 49, 50, 51, 52],
-  'delay': [54, 55, 56, 57, 58, 59, 60, 61],
-  'reverb': [62, 63, 64, 65],
+  'delay': [54, 55, 56, 57, 58, 59, 60],
+  'reverb': [62, 63, 64],
   'ir': [66, 67, 68, 69, 70],
-  'sr': [72, 73],
+  'sr': [72],
   'vol': [74]
 };
 
-// Mappatura indici per CC 75 (Highlight)
+// Mappatura indici per CC 75 (Highlight/Focus)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'noise-gate': 5,
@@ -82,9 +82,9 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'eq': 4
 };
 
-const SELECT_BLOCK_CC = 75; // CURRENT BLOCK
-const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR
-const PEDAL_CC = 76; // PEDAL POSITION
+const SELECT_BLOCK_CC = 75; // CURRENT BLOCK FOCUS
+const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR VIEW
+const PEDAL_CC = 76; // EXP PEDAL POSITION
 
 const formatSlotLabel = (slot: number) => {
   const bank = Math.floor((slot - 1) / 4) + 1;
@@ -315,13 +315,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     const modelIndex = models.findIndex(m => m.id === modelId);
     if (modelIndex !== -1) {
-      // Forza la selezione del blocco prima del cambio modello
+      // 1. Forza la selezione (Focus) del blocco hardware
       selectBlock(blockType);
       
-      // Piccolo ritardo per permettere al blocco di essere selezionato nell'hardware
+      // 2. Invia il cambio modello dopo un breve ritardo per stabilità
       setTimeout(() => {
         sendControlChange(cc, modelIndex);
-      }, 50);
+      }, 80);
     }
   },
 
@@ -346,7 +346,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       get().sendControlChange(SELECT_BLOCK_CC, index);
       setTimeout(() => {
         get().sendControlChange(ENTER_EDITOR_CC, index);
-      }, 100);
+      }, 150);
     }
   },
 
@@ -381,10 +381,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id] ?? param.default);
       if (ccs[index] !== undefined) {
-        // Usa un timeout per non inondare il buffer MIDI
         setTimeout(() => {
           get().sendControlChange(ccs[index], Math.round(val));
-        }, index * 20);
+        }, index * 30);
       }
     });
   },
@@ -392,10 +391,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   syncFullPreset: (preset) => {
     const { toggleBlock, syncBlockParameters, sendModelChange } = get();
     
-    // Esegue la sincronizzazione sequenziale con ritardi per ogni blocco
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
-        // 1. Modello
+        // 1. Modello (include già selectBlock)
         sendModelChange(e.type, e.model);
         
         setTimeout(() => {
@@ -405,9 +403,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           setTimeout(() => {
             // 3. Parametri
             syncBlockParameters(e.type, e.parameters);
-          }, 40);
-        }, 40);
-      }, idx * 250); // Ritardo significativo tra blocchi
+          }, 60);
+        }, 60);
+      }, idx * 350); 
     });
   },
 
