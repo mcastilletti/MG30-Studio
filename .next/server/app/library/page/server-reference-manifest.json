@@ -1,0 +1,20 @@
+{
+  "node": {
+    "4072a901f6eb6ec0890adbed0387295ac692c1580a": {
+      "workers": {
+        "app/library/page": {
+          "moduleId": "[project]/.next-internal/server/app/library/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/preset-summary-flow.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "summarizePreset",
+          "filename": "src/ai/flows/preset-summary-flow.ts"
+        }
+      },
+      "layer": {
+        "app/library/page": "action-browser"
+      },
+      "exportedName": "summarizePreset",
+      "filename": "src/ai/flows/preset-summary-flow.ts"
+    }
+  },
+  "edge": {}
+}

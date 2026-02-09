@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40b567608a81e77c8c29532aa33ced566a46bd98f5": {
+      "workers": {
+        "app/tools/sysex-analyzer/page": {
+          "moduleId": "[project]/.next-internal/server/app/tools/sysex-analyzer/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/sysex-analysis.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "analyzeSysEx",
+          "filename": "src/ai/flows/sysex-analysis.ts"
+        }
+      },
+      "layer": {
+        "app/tools/sysex-analyzer/page": "action-browser"
+      },
+      "exportedName": "analyzeSysEx",
+      "filename": "src/ai/flows/sysex-analysis.ts"
+    }
+  },
+  "edge": {}
+}

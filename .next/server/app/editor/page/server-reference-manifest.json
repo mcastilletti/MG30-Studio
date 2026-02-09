@@ -1,0 +1,20 @@
+{
+  "node": {
+    "403e87fbef9231fbf53d551f620667f8ead20b9084": {
+      "workers": {
+        "app/editor/page": {
+          "moduleId": "[project]/.next-internal/server/app/editor/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "generateMG30Preset",
+          "filename": "src/ai/flows/mg30-preset-gen.ts"
+        }
+      },
+      "layer": {
+        "app/editor/page": "action-browser"
+      },
+      "exportedName": "generateMG30Preset",
+      "filename": "src/ai/flows/mg30-preset-gen.ts"
+    }
+  },
+  "edge": {}
+}
