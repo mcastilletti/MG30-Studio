@@ -2672,7 +2672,7 @@ const BYPASS_VALS = {
         off: 65
     }
 };
-// CC per la selezione del MODELLO (solitamente CC precedente ai parametri)
+// CC per la selezione del MODELLO
 const BLOCK_MODEL_CC = {
     'wah': 11,
     'compressor': 13,
@@ -2687,7 +2687,7 @@ const BLOCK_MODEL_CC = {
     'sr': 71,
     'vol': 73
 };
-// CC per i parametri dei blocchi (Knobs) basati su tabella completa
+// CC per i parametri dei blocchi (Knobs)
 const BLOCK_PARAM_CCS = {
     'wah': [
         12,
@@ -2772,7 +2772,7 @@ const BLOCK_PARAM_CCS = {
         74
     ]
 };
-// Mappatura indici per CC 75 (Highlight) e CC 78 (Enter Editor)
+// Mappatura indici per CC 75 (Highlight)
 const BLOCK_INDEX_MAP = {
     'wah': 0,
     'noise-gate': 5,
@@ -2960,7 +2960,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const data = message.data;
             if (!data) return;
             const statusByte = data[0] & 0xF0;
-            // Program Change
             if (statusByte === 0xC0) {
                 const pc = data[1];
                 const slot = pc + 1;
@@ -2973,39 +2972,20 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 setTimeout(()=>get().syncActivePreset(), 50);
                 return;
             }
-            // Control Change
             if (statusByte === 0xB0) {
                 const cc = data[1];
                 const val = data[2];
-                // Pedal Position (CC 76)
                 if (cc === PEDAL_CC) {
                     __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().updateParameter('wah', 'position', val);
                     return;
                 }
-                // Bypass detection
                 const blockTypeForBypass = Object.keys(BYPASS_CC).find((key)=>BYPASS_CC[key] === cc);
                 if (blockTypeForBypass) {
                     const vals = BYPASS_VALS[blockTypeForBypass];
                     const isEnabled = val === vals.on;
                     __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().updateBlockStateLocally(blockTypeForBypass, isEnabled);
                 }
-                // Knob value detection (Real-time sync pedalboard -> app)
-                for (const [type, ccs] of Object.entries(BLOCK_PARAM_CCS)){
-                    const knobIndex = ccs.indexOf(cc);
-                    if (knobIndex !== -1) {
-                        const presetState = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset;
-                        const effect = presetState.effects.find((e)=>e.type === type);
-                        if (effect) {
-                            const modelData = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MG30_MODELS"][effect.type]?.find((m)=>m.id === effect.model);
-                            const paramDef = modelData?.parameters[knobIndex];
-                            if (paramDef) {
-                                __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().updateParameter(effect.id, paramDef.id, val);
-                            }
-                        }
-                    }
-                }
             }
-            // SysEx for Name
             if (data[0] === 0xF0 && data[data.length - 1] === 0xF7) {
                 let tempName = "";
                 for(let i = 0; i < data.length; i++){
@@ -3036,16 +3016,12 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 }
             }
         },
-        setEditorSyncing: (syncing)=>set({
-                isEditorSyncing: syncing
-            }),
         syncActivePreset: ()=>{
             const { output } = get();
             if (!output) return;
             set({
                 isEditorSyncing: true
             });
-            // Dump SysEx per lo slot attivo
             output.send([
                 0xF0,
                 0x00,
@@ -3066,11 +3042,9 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 0x01,
                 0xF7
             ]);
-            setTimeout(()=>{
-                set({
+            setTimeout(()=>set({
                     isEditorSyncing: false
-                });
-            }, 1200);
+                }), 1200);
         },
         sendControlChange: (cc, value)=>{
             const { output } = get();
@@ -3097,13 +3071,19 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             }
         },
         sendModelChange: (blockType, modelId)=>{
+            const { sendControlChange, selectBlock } = get();
             const cc = BLOCK_MODEL_CC[blockType];
             if (cc === undefined) return;
             const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
             if (!models) return;
             const modelIndex = models.findIndex((m)=>m.id === modelId);
             if (modelIndex !== -1) {
-                get().sendControlChange(cc, modelIndex);
+                // Forza la selezione del blocco prima del cambio modello
+                selectBlock(blockType);
+                // Piccolo ritardo per permettere al blocco di essere selezionato nell'hardware
+                setTimeout(()=>{
+                    sendControlChange(cc, modelIndex);
+                }, 50);
             }
         },
         toggleBlock: (blockType, enabled)=>{
@@ -3134,14 +3114,11 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         resetToPresetView: ()=>{
             const { output } = get();
             if (!output) return;
-            const activePreset = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset;
-            const pc = activePreset.slot - 1;
-            // Send Program Change for the current slot
+            const pc = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset.slot - 1;
             output.send([
                 0xC0,
                 pc
             ]);
-            // Send the SysEx sequence as requested to return to base preset view
             const s1 = [
                 0xF0,
                 0x00,
@@ -3162,10 +3139,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 0x01,
                 0xF7
             ];
-            // Repeated sequence
             setTimeout(()=>{
-                output.send(s1);
-                output.send(s2);
                 output.send(s1);
                 output.send(s2);
                 output.send(s1);
@@ -3183,19 +3157,29 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    get().sendControlChange(ccs[index], Math.round(val));
+                    // Usa un timeout per non inondare il buffer MIDI
+                    setTimeout(()=>{
+                        get().sendControlChange(ccs[index], Math.round(val));
+                    }, index * 20);
                 }
             });
         },
         syncFullPreset: (preset)=>{
             const { toggleBlock, syncBlockParameters, sendModelChange } = get();
-            preset.effects.forEach((e)=>{
-                // 1. Imposta il modello del blocco
-                sendModelChange(e.type, e.model);
-                // 2. Sincronizza lo stato ON/OFF del blocco
-                toggleBlock(e.type, e.enabled);
-                // 3. Sincronizza tutti i parametri del blocco specifico
-                syncBlockParameters(e.type, e.parameters);
+            // Esegue la sincronizzazione sequenziale con ritardi per ogni blocco
+            preset.effects.forEach((e, idx)=>{
+                setTimeout(()=>{
+                    // 1. Modello
+                    sendModelChange(e.type, e.model);
+                    setTimeout(()=>{
+                        // 2. Bypass
+                        toggleBlock(e.type, e.enabled);
+                        setTimeout(()=>{
+                            // 3. Parametri
+                            syncBlockParameters(e.type, e.parameters);
+                        }, 40);
+                    }, 40);
+                }, idx * 250); // Ritardo significativo tra blocchi
             });
         },
         syncPresets: async ()=>{

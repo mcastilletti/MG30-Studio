@@ -78,14 +78,21 @@ export default function EditorPage() {
   };
 
   const handleModelChange = (effectId: string, type: string, modelId: string) => {
+    // 1. Aggiorna lo stato locale (Zustand)
     updateModel(effectId, modelId);
+    
+    // 2. Sincronizza l'hardware se connesso
     if (status === 'connected') {
+      // Invia comando Cambio Modello (include già la selezione del blocco nello store)
       sendModelChange(type, modelId);
-      // Opzionale: risincronizza i parametri del nuovo modello perché potrebbero differire
-      const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
-      if (updatedEffect) {
-        syncBlockParameters(type, updatedEffect.parameters);
-      }
+      
+      // Risincronizza i parametri per il nuovo modello con un leggero ritardo
+      setTimeout(() => {
+        const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
+        if (updatedEffect) {
+          syncBlockParameters(type, updatedEffect.parameters);
+        }
+      }, 150);
     }
   };
 
@@ -131,8 +138,8 @@ export default function EditorPage() {
     if (status === 'connected') {
       syncFullPreset(activePreset);
       toast({ 
-        title: "Sincronizzazione Completa", 
-        description: `Modelli e parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.` 
+        title: "Salvataggio e Sincronizzazione", 
+        description: `Tutti i modelli e i parametri del preset '${activePreset.name}' sono stati inviati alla pedaliera.` 
       });
     } else {
       toast({ 
@@ -190,11 +197,7 @@ export default function EditorPage() {
     setActivePreset(newPreset);
     
     if (status === 'connected') {
-      updatedEffects.forEach(e => {
-        sendModelChange(e.type, e.model);
-        toggleBlock(e.type, e.enabled);
-        syncBlockParameters(e.type, e.parameters);
-      });
+      syncFullPreset(newPreset);
     }
 
     toast({ title: "AI Mode Applicato", description: `Il preset '${proposedPreset.name}' è ora attivo.` });
@@ -277,31 +280,6 @@ export default function EditorPage() {
                     <div className="py-4 space-y-4">
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs leading-relaxed italic">
                         "{proposedPreset.explanation}"
-                      </div>
-                      <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
-                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Anteprima Blocchi</h4>
-                         <div className="grid grid-cols-1 gap-2">
-                           {proposedPreset.effects.map(e => (
-                             <div key={e.type} className="flex flex-col gap-1 p-2 rounded border bg-card/50 text-[10px]">
-                               <div className="flex items-center justify-between">
-                                 <div className="flex items-center gap-2">
-                                   <div className={cn("w-2 h-2 rounded-full", !e.enabled && "opacity-30")} style={{ backgroundColor: `hsl(${getBlockColorVar(e.type)})` }} />
-                                   <span className="font-bold uppercase">{e.type}:</span>
-                                   <span className="truncate opacity-70">{e.model}</span>
-                                 </div>
-                                 <Badge variant={e.enabled ? "default" : "outline"} className="text-[8px] h-4">{e.enabled ? "ON" : "OFF"}</Badge>
-                               </div>
-                               <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-1 opacity-60">
-                                 {e.parameters?.slice(0, 6).map(p => (
-                                   <div key={p.name} className="flex justify-between border-b border-border/20">
-                                      <span>{p.name}</span>
-                                      <span className="font-bold text-primary">{p.value}</span>
-                                   </div>
-                                 ))}
-                               </div>
-                             </div>
-                           ))}
-                         </div>
                       </div>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
