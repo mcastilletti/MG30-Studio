@@ -83,7 +83,10 @@ export default function EditorPage() {
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
-      enterBlockEditor(type);
+      // Forzo l'aggiornamento se siamo già in visualizzazione parametri
+      if (selectedBlockId) {
+        enterBlockEditor(type);
+      }
     }
   };
 
@@ -94,9 +97,7 @@ export default function EditorPage() {
   };
 
   const handlePresetAreaClick = () => {
-    if (status === 'connected') {
-      resetToPresetView();
-    }
+    resetToPresetView();
   };
 
   const handleExitEditor = () => {
@@ -138,7 +139,7 @@ export default function EditorPage() {
         const paramRecord: Record<string, number> = {};
         if (propEffect.parameters) {
           propEffect.parameters.forEach(p => {
-            paramRecord[p.name] = p.value;
+            paramRecord[p.name.toLowerCase()] = p.value;
           });
         }
 
@@ -168,7 +169,7 @@ export default function EditorPage() {
       });
     }
 
-    toast({ title: "AI Mode Applicato", description: `Il preset '${proposedPreset.name}' è ora attivo sull'app e sulla pedaliera.` });
+    toast({ title: "AI Mode Applicato", description: `Il preset '${proposedPreset.name}' è ora attivo.` });
     setProposedPreset(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
@@ -196,7 +197,6 @@ export default function EditorPage() {
           <div 
             className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group"
             onClick={handlePresetAreaClick}
-            title="Torna alla vista Home sulla pedaliera"
           >
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
@@ -208,7 +208,7 @@ export default function EditorPage() {
                 <h3 className="text-xl font-bold">{activePreset.name}</h3>
                 <Layout className="w-4 h-4 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
               </div>
-              <Badge variant="outline" className="text-[10px] mt-1">MODALITÀ PRESET ATTIVA</Badge>
+              <Badge variant="outline" className="text-[10px] mt-1">TORNA ALLA VISTA COMPLESSIVA</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -223,14 +223,14 @@ export default function EditorPage() {
                   <>
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Tone Designer</DialogTitle>
-                      <DialogDescription>Descrivi il suono che desideri. L'AI sceglierà ampli, pedali e regolerà tutti i pomelli per te.</DialogDescription>
+                      <DialogDescription>Descrivi il suono o incolla un JSON tecnico. L'AI configurerà ogni singolo parametro.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <Textarea 
-                        placeholder="Esempio: Crea un suono lead alla David Gilmour, con un ampli pulito tipo Hiwire, un po' di delay analogico e riverbero Hall..." 
+                        placeholder="Incolla qui le tue specifiche tecniche o scrivi: Crea un suono lead tipo Pink Floyd..." 
                         value={aiPrompt} 
                         onChange={(e) => setAiPrompt(e.target.value)} 
-                        className="min-h-[120px] bg-secondary/20"
+                        className="min-h-[150px] bg-secondary/20"
                       />
                     </div>
                     <DialogFooter>
@@ -244,14 +244,14 @@ export default function EditorPage() {
                   <>
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
-                      <DialogDescription>L'AI ha configurato la catena e tutti i parametri. Ecco cosa ha fatto:</DialogDescription>
+                      <DialogDescription>L'AI ha mappato tutti i blocchi. Ecco l'analisi:</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs leading-relaxed italic">
                         "{proposedPreset.explanation}"
                       </div>
                       <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
-                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Anteprima Parametri</h4>
+                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Anteprima Blocchi</h4>
                          <div className="grid grid-cols-1 gap-2">
                            {proposedPreset.effects.map(e => (
                              <div key={e.type} className="flex flex-col gap-1 p-2 rounded border bg-card/50 text-[10px]">
@@ -264,7 +264,7 @@ export default function EditorPage() {
                                  <Badge variant={e.enabled ? "default" : "outline"} className="text-[8px] h-4">{e.enabled ? "ON" : "OFF"}</Badge>
                                </div>
                                <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-1 opacity-60">
-                                 {e.parameters?.map(p => (
+                                 {e.parameters?.slice(0, 6).map(p => (
                                    <div key={p.name} className="flex justify-between border-b border-border/20">
                                       <span>{p.name}</span>
                                       <span className="font-bold text-primary">{p.value}</span>
@@ -356,7 +356,7 @@ export default function EditorPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-8 justify-items-center">
                     {currentModelData.parameters.map((param, index) => (
                       <div key={param.id} onClick={(e) => e.stopPropagation()}>
-                        <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
+                        <RotaryKnob label={param.name} value={Number(selectedEffect.parameters[param.id.toLowerCase()] ?? param.default)} min={param.min} max={param.max} step={param.step} onChange={(v) => handleParamChange(selectedEffect.type, param.id, v, index)} color={currentBlockColor} />
                       </div>
                     ))}
                   </div>
