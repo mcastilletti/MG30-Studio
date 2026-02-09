@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -44,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -83,7 +84,6 @@ export default function EditorPage() {
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
-      // Forzo l'aggiornamento se siamo già in visualizzazione parametri
       if (selectedBlockId) {
         enterBlockEditor(type);
       }
@@ -113,6 +113,21 @@ export default function EditorPage() {
     if (nextSlot > 128) nextSlot = 1;
     sendProgramChange(nextSlot - 1);
     setActivePreset({ ...activePreset, slot: nextSlot });
+  };
+
+  const handleSave = () => {
+    if (status === 'connected') {
+      syncFullPreset(activePreset);
+      toast({ 
+        title: "Sincronizzazione Completa", 
+        description: `Tutti i parametri dello slot ${formatSlotLabel(activePreset.slot)} sono stati inviati alla pedaliera.` 
+      });
+    } else {
+      toast({ 
+        title: "Salvataggio Locale", 
+        description: "Pedaliera non connessa. I parametri sono salvati nella sessione dell'app." 
+      });
+    }
   };
 
   const handleAiModeGenerate = async () => {
@@ -288,7 +303,7 @@ export default function EditorPage() {
             <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sincronizza Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
             <Button variant="outline" size="icon" onClick={undo} title="Annulla"><Undo2 className="w-4 h-4" /></Button>
             <Button variant="outline" size="icon" onClick={redo} title="Ripristina"><Redo2 className="w-4 h-4" /></Button>
-            <Button className="gap-2" onClick={() => toast({ title: "Preset salvato in locale" })}><Save className="w-4 h-4" /> Save</Button>
+            <Button className="gap-2" onClick={handleSave}><Save className="w-4 h-4" /> Save</Button>
           </div>
         </div>
 

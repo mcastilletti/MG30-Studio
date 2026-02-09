@@ -124,6 +124,7 @@ interface MidiStore {
   exitBlockEditor: () => void;
   resetToPresetView: () => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
+  syncFullPreset: (preset: Preset) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
   syncActivePreset: () => void;
@@ -385,6 +386,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       if (ccs[index] !== undefined) {
         get().sendControlChange(ccs[index], Math.round(val));
       }
+    });
+  },
+
+  syncFullPreset: (preset) => {
+    const { toggleBlock, syncBlockParameters } = get();
+    preset.effects.forEach(e => {
+      // Sincronizza lo stato ON/OFF del blocco
+      toggleBlock(e.type, e.enabled);
+      // Sincronizza tutti i parametri del blocco specifico
+      syncBlockParameters(e.type, e.parameters);
     });
   },
 

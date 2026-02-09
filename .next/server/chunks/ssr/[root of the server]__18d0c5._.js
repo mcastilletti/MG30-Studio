@@ -3162,6 +3162,15 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 }
             });
         },
+        syncFullPreset: (preset)=>{
+            const { toggleBlock, syncBlockParameters } = get();
+            preset.effects.forEach((e)=>{
+                // Sincronizza lo stato ON/OFF del blocco
+                toggleBlock(e.type, e.enabled);
+                // Sincronizza tutti i parametri del blocco specifico
+                syncBlockParameters(e.type, e.parameters);
+            });
+        },
         syncPresets: async ()=>{
             const { output, sendProgramChange } = get();
             if (!output) return;
