@@ -52,17 +52,17 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
 // Mappatura indici per CC 75 (Highlight) e CC 78 (Enter Editor)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
+  'noise-gate': 5,
   'compressor': 1,
   'efx': 2,
   'amp': 3,
-  'eq': 4,
-  'noise-gate': 5,
+  'ir': 9,
+  'sr': 10,
   'modulation': 6,
   'delay': 7,
   'reverb': 8,
-  'ir': 9,
-  'sr': 10,
-  'vol': 11
+  'vol': 11,
+  'eq': 4
 };
 
 const SELECT_BLOCK_CC = 75; // CURRENT BLOCK

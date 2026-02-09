@@ -53,7 +53,10 @@ export default function EditorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
 
+  // Timer per long press e double click
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const clickCount = useRef(0);
+  const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -95,20 +98,48 @@ export default function EditorPage() {
     }
   };
 
-  const handleDoubleClickBlock = (type: string) => {
+  const handleEnterHardwareEditor = (type: string) => {
     if (status === 'connected') {
       enterBlockEditor(type);
-      toast({ title: "Hardware Sync", description: `Entrato nell'editor di ${type.toUpperCase()} sulla pedaliera.` });
+      toast({ 
+        title: "Hardware Editor", 
+        description: `Entrato nell'editor di ${type.toUpperCase()} sulla pedaliera.`,
+        duration: 2000 
+      });
     }
   };
 
-  const startLongPress = (type: string) => {
+  // Logica universale per Click, Double Click e Long Press
+  const handlePointerDown = (e: React.PointerEvent, effectId: string, type: string) => {
+    // Avvia timer per pressione prolungata (700ms)
     longPressTimer.current = setTimeout(() => {
-      handleDoubleClickBlock(type);
+      handleEnterHardwareEditor(type);
+      longPressTimer.current = null;
     }, 700);
   };
 
-  const clearLongPress = () => {
+  const handlePointerUp = (e: React.PointerEvent, effectId: string, type: string) => {
+    // Se il timer del long press è ancora attivo, non è stata una pressione lunga
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+
+      // Gestione Click e Double Click
+      clickCount.current += 1;
+      if (clickCount.current === 1) {
+        clickTimer.current = setTimeout(() => {
+          handleSelectBlock(effectId, type);
+          clickCount.current = 0;
+        }, 250); // Timeout per distinguere il singolo dal doppio clic
+      } else if (clickCount.current === 2) {
+        if (clickTimer.current) clearTimeout(clickTimer.current);
+        handleEnterHardwareEditor(type);
+        clickCount.current = 0;
+      }
+    }
+  };
+
+  const handlePointerLeave = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -294,13 +325,12 @@ export default function EditorPage() {
                 return (
                   <React.Fragment key={effect.id}>
                     <div 
-                      onClick={() => handleSelectBlock(effect.id, effect.type)}
-                      onDoubleClick={() => handleDoubleClickBlock(effect.type)}
-                      onTouchStart={() => startLongPress(effect.type)}
-                      onTouchEnd={clearLongPress}
+                      onPointerDown={(e) => handlePointerDown(e, effect.id, effect.type)}
+                      onPointerUp={(e) => handlePointerUp(e, effect.id, effect.type)}
+                      onPointerLeave={handlePointerLeave}
                       onContextMenu={(e) => e.preventDefault()}
                       className={cn(
-                        "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
+                        "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none touch-none",
                         "bg-secondary/40",
                         isSelected ? "border-primary/50 shadow-md scale-105" : "border-border/40",
                         !effect.enabled && "opacity-60"
