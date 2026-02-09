@@ -11,17 +11,17 @@ const MG30PresetInputSchema = z.object({
 });
 
 const MG30PresetOutputSchema = z.object({
-  name: z.string().describe('Nome del preset'),
-  explanation: z.string().describe('Spiegazione delle scelte fatte'),
+  name: z.string().describe('Nome del preset (breve e accattivante)'),
+  explanation: z.string().describe('Spiegazione professionale delle scelte di rig fatte'),
   effects: z.array(z.object({
-    type: z.string().describe('Tipo di blocco (es. amp, efx, delay, ecc.)'),
-    model: z.string().describe('ID del modello specifico'),
+    type: z.string().describe('Tipo di blocco (es. wah, compressor, efx, amp, ir, modulation, delay, reverb, eq, noise-gate)'),
+    model: z.string().describe('ID del modello specifico basato sulla lista fornita'),
     enabled: z.boolean().describe('Se il blocco deve essere attivo'),
     parameters: z.array(z.object({
-      name: z.string().describe('ID del parametro (es. gain, master, drive)'),
-      value: z.number().describe('Valore da 0 a 100')
-    })).describe('Lista dei parametri settati')
-  })).describe('Configurazione della catena degli effetti'),
+      name: z.string().describe('ID del parametro (es. gain, master, drive, tone, level, decay, repeat)'),
+      value: z.number().describe('Valore da 0 a 100 (o secondo il range del parametro)')
+    })).describe('Lista dei parametri settati per questo modello')
+  })).describe('Configurazione completa della catena degli effetti (almeno 8 blocchi)'),
 });
 
 export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
@@ -34,29 +34,36 @@ const mg30PresetPrompt = ai.definePrompt(
     input: { schema: MG30PresetInputSchema },
     output: { schema: MG30PresetOutputSchema },
     config: {
-      temperature: 0.7,
+      temperature: 0.8,
       responseMimeType: 'application/json',
     },
-    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta dell'utente.
+    system: `Sei un esperto tecnico del NUX MG-30 e un sound designer professionista.
+    Il tuo compito è generare un preset COMPLETO. Non limitarti solo all'amplificatore.
     
-    MAPPA I MODELLI USANDO QUESTI ID:
-    - AMP: jazzclean (Roland JC120), deluxervb (Fender Deluxe), plexi100w (Marshall Plexi), brit800 (JCM800), hiwire (Hiwatt), dualrect (Mesa Rectifier), dievh4 (Diezel).
-    - EFX: tscream (Tube Screamer), bluesdrv (Blues Driver), morningdrv (Morning Glory), reddirt (Red Dirt), eatdist (Rat), mufffuzz (Big Muff).
-    - MOD: mod-ce1 (Chorus CE-1), mod-ce2 (Chorus CE-2), mod-ph90 (Phase 90).
-    - DLY: dly-analog (Analog Delay), dly-digital (Digital Delay), dly-tape (Tape Echo).
+    REGOLE OBBLIGATORIE:
+    1. Genera SEMPRE una lista che includa i blocchi: compressor, efx, amp, ir, noise-gate, modulation, delay, reverb.
+    2. Per ogni blocco, scegli il modello più adatto al genere richiesto.
+    3. Imposta i parametri in modo realistico (es. non mettere tutto a 50).
+    4. Rendi 'enabled: true' solo i blocchi necessari per quel suono, ma configura i parametri anche per quelli spenti.
+    
+    MAPPA MODELLI (usa SOLO questi ID):
+    - AMP: jazzclean, deluxervb, bassmate, tweedy, twinrvb, hiwire, calicrunch, classa15, classa30, plexi100w, plexi45, brit800, 1987x50w, slo100, firemanhbe, dualrect, dievh4.
+    - EFX: tscream, bluesdrv, morningdrv, reddirt, eatdist, mufffuzz, distone, rcboost, acboost.
+    - COMP: rose, kcomp, studiocomp.
+    - MOD: mod-ce1, mod-ce2, mod-ph90, mod-uvibe, mod-tremolo.
+    - DLY: dly-analog, dly-digital, dly-tape, dly-mod.
     - RVB: room, hall, plate, spring, shimmer.
-    - IR: ir-jz120, ir-dr112, ir-1960, ir-v412.
+    - IR: ir-jz120, ir-dr112, ir-1960, ir-v412, ir-gb412.
+    - GATE: gate.
 
-    PARAMETRI:
-    - Valori sempre tra 0 e 100.
-    - Per AMP usa: gain, master, bass, mid, treble, presence.
-    - Per EFX usa: drive (o gain/distortion), tone, level.
-    - Per DLY usa: time, repeat, mix (o level).
-    - Per RVB usa: decay, level.
-
-    Rispondi sempre in JSON includendo TUTTI i blocchi della catena, settando 'enabled' a true solo per quelli necessari.`,
+    PARAMETRI (Range 0-100):
+    - AMP: gain, master, bass, mid, treble, presence.
+    - EFX/DIST: drive, tone, level.
+    - DLY: time, repeat, mix.
+    - RVB: decay, level.
+    - GATE: threshold, decay.`,
   },
-  `Crea un preset dettagliato per questo suono: {{description}}`
+  `Crea un preset professionale e articolato per questo scenario: {{description}}. Voglio un suono ricco, non limitarti ai settaggi base.`
 );
 
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
@@ -71,14 +78,26 @@ export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30Pr
   } catch (error) {
     console.error("Errore generazione preset:", error);
     return {
-      name: "Default Tone",
-      explanation: "Errore durante la generazione.",
+      name: "Emergency Patch",
+      explanation: "Si è verificato un errore nella generazione. Ecco un setup base funzionante.",
       effects: [
         { 
           type: "amp", 
           model: "brit800", 
           enabled: true, 
-          parameters: [{ name: "gain", value: 50 }, { name: "master", value: 50 }] 
+          parameters: [{ name: "gain", value: 60 }, { name: "master", value: 50 }, { name: "bass", value: 50 }, { name: "mid", value: 70 }, { name: "treble", value: 60 }] 
+        },
+        { 
+          type: "noise-gate", 
+          model: "gate", 
+          enabled: true, 
+          parameters: [{ name: "threshold", value: 30 }, { name: "decay", value: 50 }] 
+        },
+        { 
+          type: "ir", 
+          model: "ir-1960", 
+          enabled: true, 
+          parameters: [{ name: "level", value: 50 }] 
         }
       ]
     };

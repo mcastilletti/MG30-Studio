@@ -203,17 +203,17 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
     description: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Descrizione del suono desiderato')
 });
 const MG30PresetOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Nome del preset'),
-    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Spiegazione delle scelte fatte'),
+    name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Nome del preset (breve e accattivante)'),
+    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Spiegazione professionale delle scelte di rig fatte'),
     effects: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-        type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Tipo di blocco (es. amp, efx, delay, ecc.)'),
-        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del modello specifico'),
+        type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Tipo di blocco (es. wah, compressor, efx, amp, ir, modulation, delay, reverb, eq, noise-gate)'),
+        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del modello specifico basato sulla lista fornita'),
         enabled: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].boolean().describe('Se il blocco deve essere attivo'),
         parameters: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-            name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del parametro (es. gain, master, drive)'),
-            value: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].number().describe('Valore da 0 a 100')
-        })).describe('Lista dei parametri settati')
-    })).describe('Configurazione della catena degli effetti')
+            name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del parametro (es. gain, master, drive, tone, level, decay, repeat)'),
+            value: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].number().describe('Valore da 0 a 100 (o secondo il range del parametro)')
+        })).describe('Lista dei parametri settati per questo modello')
+    })).describe('Configurazione completa della catena degli effetti (almeno 8 blocchi)')
 });
 const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
     name: 'mg30PresetPrompt',
@@ -225,14 +225,35 @@ const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$
         schema: MG30PresetOutputSchema
     },
     config: {
-        temperature: 0.7,
+        temperature: 0.8,
         responseMimeType: 'application/json'
     },
-    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta.
-    Usa ESCLUSIVAMENTE i nomi dei modelli dell'hardware MG-30 (es. brit800, tscream, plexi100w).
-    Per ogni effetto, definisci 'enabled' (true/false) e una lista di 'parameters' con valori da 0 a 100.
-    I tipi validi sono: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, eq, vol.`
-}, `Crea un preset dettagliato per questo suono: {{description}}`);
+    system: `Sei un esperto tecnico del NUX MG-30 e un sound designer professionista.
+    Il tuo compito è generare un preset COMPLETO. Non limitarti solo all'amplificatore.
+    
+    REGOLE OBBLIGATORIE:
+    1. Genera SEMPRE una lista che includa i blocchi: compressor, efx, amp, ir, noise-gate, modulation, delay, reverb.
+    2. Per ogni blocco, scegli il modello più adatto al genere richiesto.
+    3. Imposta i parametri in modo realistico (es. non mettere tutto a 50).
+    4. Rendi 'enabled: true' solo i blocchi necessari per quel suono, ma configura i parametri anche per quelli spenti.
+    
+    MAPPA MODELLI (usa SOLO questi ID):
+    - AMP: jazzclean, deluxervb, bassmate, tweedy, twinrvb, hiwire, calicrunch, classa15, classa30, plexi100w, plexi45, brit800, 1987x50w, slo100, firemanhbe, dualrect, dievh4.
+    - EFX: tscream, bluesdrv, morningdrv, reddirt, eatdist, mufffuzz, distone, rcboost, acboost.
+    - COMP: rose, kcomp, studiocomp.
+    - MOD: mod-ce1, mod-ce2, mod-ph90, mod-uvibe, mod-tremolo.
+    - DLY: dly-analog, dly-digital, dly-tape, dly-mod.
+    - RVB: room, hall, plate, spring, shimmer.
+    - IR: ir-jz120, ir-dr112, ir-1960, ir-v412, ir-gb412.
+    - GATE: gate.
+
+    PARAMETRI (Range 0-100):
+    - AMP: gain, master, bass, mid, treble, presence.
+    - EFX/DIST: drive, tone, level.
+    - DLY: time, repeat, mix.
+    - RVB: decay, level.
+    - GATE: threshold, decay.`
+}, `Crea un preset professionale e articolato per questo scenario: {{description}}. Voglio un suono ricco, non limitarti ai settaggi base.`);
 async function generateMG30Preset(input) {
     try {
         const { output } = await mg30PresetPrompt(input);
@@ -243,8 +264,8 @@ async function generateMG30Preset(input) {
     } catch (error) {
         console.error("Errore generazione preset:", error);
         return {
-            name: "Default Tone",
-            explanation: "Errore durante la generazione.",
+            name: "Emergency Patch",
+            explanation: "Si è verificato un errore nella generazione. Ecco un setup base funzionante.",
             effects: [
                 {
                     type: "amp",
@@ -253,10 +274,48 @@ async function generateMG30Preset(input) {
                     parameters: [
                         {
                             name: "gain",
-                            value: 50
+                            value: 60
                         },
                         {
                             name: "master",
+                            value: 50
+                        },
+                        {
+                            name: "bass",
+                            value: 50
+                        },
+                        {
+                            name: "mid",
+                            value: 70
+                        },
+                        {
+                            name: "treble",
+                            value: 60
+                        }
+                    ]
+                },
+                {
+                    type: "noise-gate",
+                    model: "gate",
+                    enabled: true,
+                    parameters: [
+                        {
+                            name: "threshold",
+                            value: 30
+                        },
+                        {
+                            name: "decay",
+                            value: 50
+                        }
+                    ]
+                },
+                {
+                    type: "ir",
+                    model: "ir-1960",
+                    enabled: true,
+                    parameters: [
+                        {
+                            name: "level",
                             value: 50
                         }
                     ]
