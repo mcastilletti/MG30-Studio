@@ -45,7 +45,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncBlockParameters, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -81,7 +81,6 @@ export default function EditorPage() {
     updateModel(effectId, modelId);
     if (status === 'connected') {
       sendModelChange(type, modelId);
-      // Attendiamo che il modello sia caricato prima di inviare i parametri
       setTimeout(() => {
         const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
         if (updatedEffect) {
@@ -91,17 +90,15 @@ export default function EditorPage() {
     }
   };
 
-  // Funzione per la sola selezione del blocco (visualizzazione parametri)
   const handleSelectBlock = (effectId: string, type: string) => {
     setSelectedBlockId(effectId);
     if (status === 'connected') {
-      selectBlock(type);
+      enterBlockEditor(type);
     }
   };
 
-  // Funzione specifica per l'accensione/spegnimento (clic sul simbolo power)
   const handleToggleBlock = (e: React.MouseEvent, effectId: string, type: string, currentEnabled: boolean) => {
-    e.stopPropagation(); // Evita di triggerare handleSelectBlock se cliccato il simbolo
+    e.stopPropagation();
     toggleEffect(effectId);
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
