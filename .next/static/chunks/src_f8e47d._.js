@@ -2821,21 +2821,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$e
 ;
 ;
 ;
-// Tabella Bypass basata sullo standard NUX: Value = ModelID per ON, ModelID + 64 per OFF
-const BYPASS_CC = {
-    'wah': 0,
-    'compressor': 1,
-    'efx': 2,
-    'amp': 3,
-    'eq': 4,
-    'noise-gate': 5,
-    'modulation': 6,
-    'delay': 7,
-    'reverb': 8,
-    'ir': 9,
-    'sr': 10
-};
-// CC per la selezione del MODELLO basato sullo schema utente
+// Tabella CC per Modelli e Bypass (stesso controller su MG-30)
 const BLOCK_MODEL_CC = {
     'wah': 0,
     'compressor': 1,
@@ -2848,7 +2834,7 @@ const BLOCK_MODEL_CC = {
     'reverb': 8,
     'ir': 9
 };
-// Offset richiesti: 65 per WAH/COMP/MOD, 1 per gli altri
+// Offset base per lo stato ON forniti dall'utente
 const BLOCK_MODEL_OFFSET = {
     'wah': 65,
     'compressor': 65,
@@ -2939,7 +2925,7 @@ const BLOCK_PARAM_CCS = {
         74
     ]
 };
-// Mappatura per CC 75 (Select) e CC 78 (Enter Editor)
+// Mappatura esatta per CC 75 (Select) e CC 78 (Enter Editor) come richiesto
 const BLOCK_INDEX_MAP = {
     'wah': 0,
     'compressor': 1,
@@ -2950,9 +2936,7 @@ const BLOCK_INDEX_MAP = {
     'modulation': 6,
     'delay': 7,
     'reverb': 8,
-    'ir': 9,
-    'sr': 10,
-    'vol': 11
+    'ir': 9
 };
 const SELECT_BLOCK_CC = 75;
 const ENTER_EDITOR_CC = 78;
@@ -3198,23 +3182,12 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             set({
                 isEditorSyncing: true
             });
-            // Richiesta stato corrente hardware
             output.send([
                 0xF0,
                 0x00,
                 0x20,
                 0x6B,
                 0x01,
-                0x00,
-                0x01,
-                0xF7
-            ]);
-            output.send([
-                0xF0,
-                0x00,
-                0x20,
-                0x6B,
-                0x7F,
                 0x00,
                 0x01,
                 0xF7
@@ -3244,7 +3217,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         sendPresetName: (name)=>{
             const { output } = get();
             if (!output) return;
-            // NUX MG-30 SysEx per Nome Preset: F0 00 20 6B 01 01 07 [16 characters ASCII] F7
             const header = [
                 0xF0,
                 0x00,
@@ -3254,7 +3226,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 0x01,
                 0x07
             ];
-            const nameBytes = new Array(16).fill(0x20); // Pad con spazi
+            const nameBytes = new Array(16).fill(0x20);
             for(let i = 0; i < Math.min(name.length, 16); i++){
                 nameBytes[i] = name.charCodeAt(i) & 0x7F;
             }
@@ -3277,30 +3249,40 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         sendModelChange: (blockType, modelId)=>{
             const { sendControlChange, enterBlockEditor } = get();
             const cc = BLOCK_MODEL_CC[blockType];
-            const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
+            const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
             if (cc === undefined) return;
             const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
-            const modelIndex = models?.findIndex((m)=>m.id === modelId);
-            if (modelIndex !== undefined && modelIndex !== -1) {
-                const midiValue = modelIndex + offset;
-                // Focus rigoroso sul blocco
-                enterBlockEditor(blockType);
-                // Ritardo per permettere all'hardware di "spostarsi"
-                setTimeout(()=>{
-                    sendControlChange(cc, midiValue);
-                }, 300);
+            const modelIndex = models?.findIndex((m)=>m.id === modelId) ?? 0;
+            const safeIndex = modelIndex === -1 ? 0 : modelIndex;
+            const effect = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset.effects.find((e)=>e.type === blockType);
+            const isEnabled = effect?.enabled ?? true;
+            const onValue = safeIndex + baseOffset;
+            let midiValue;
+            if (baseOffset >= 64) {
+                midiValue = isEnabled ? onValue : onValue - 64;
+            } else {
+                midiValue = isEnabled ? onValue : onValue + 64;
             }
+            enterBlockEditor(blockType);
+            setTimeout(()=>sendControlChange(cc, midiValue), 400);
         },
         toggleBlock: (blockType, enabled)=>{
-            const cc = BYPASS_CC[blockType];
+            const cc = BLOCK_MODEL_CC[blockType];
             if (cc === undefined) return;
             const effect = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset.effects.find((e)=>e.type === blockType);
             if (!effect) return;
             const models = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MG30_MODELS"][blockType];
-            const modelIndex = models?.findIndex((m)=>m.id === effect.model);
-            const offset = BLOCK_MODEL_OFFSET[blockType] || 1;
-            const modelIdValue = (modelIndex !== -1 ? modelIndex : 0) + offset;
-            const midiValue = enabled ? modelIdValue : modelIdValue + 64;
+            const modelIndex = models?.findIndex((m)=>m.id === effect.model) ?? 0;
+            const safeIndex = modelIndex === -1 ? 0 : modelIndex;
+            const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
+            const onValue = safeIndex + baseOffset;
+            let midiValue;
+            // Correzione offset 64: Se ON è >= 64, OFF è -64. Altrimenti OFF è +64.
+            if (baseOffset >= 64) {
+                midiValue = enabled ? onValue : onValue - 64;
+            } else {
+                midiValue = enabled ? onValue : onValue + 64;
+            }
             get().sendControlChange(cc, midiValue);
         },
         selectBlock: (blockType)=>{
@@ -3311,8 +3293,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const index = BLOCK_INDEX_MAP[blockType];
             if (index !== undefined) {
                 get().sendControlChange(SELECT_BLOCK_CC, index);
-                // Forza l'hardware in modalità editor per quel blocco (CC 78)
-                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 200);
+                setTimeout(()=>get().sendControlChange(ENTER_EDITOR_CC, index), 250);
             }
         },
         exitBlockEditor: ()=>{
@@ -3328,8 +3309,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    // Invio dei parametri molto lento per massima precisione hardware
-                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 100);
+                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 150);
                 }
             });
         },
@@ -3338,9 +3318,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             set({
                 isEditorSyncing: true
             });
-            // 1. Nome Preset
             sendPresetName(preset.name);
-            // 2. Scansione catena lenta (1.5s per blocco)
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
                     get().enterBlockEditor(e.type);
@@ -3350,12 +3328,12 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                             toggleBlock(e.type, e.enabled);
                             setTimeout(()=>{
                                 syncBlockParameters(e.type, e.parameters);
-                            }, 400);
-                        }, 400);
-                    }, 400);
-                }, idx * 1500);
+                            }, 500);
+                        }, 500);
+                    }, 500);
+                }, idx * 2000);
             });
-            const totalTime = preset.effects.length * 1500 + 1000;
+            const totalTime = preset.effects.length * 2000 + 1000;
             setTimeout(()=>set({
                     isEditorSyncing: false
                 }), totalTime);
@@ -3370,7 +3348,7 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     syncProgress: Math.round(i / 128 * 100)
                 });
                 get().sendProgramChange(i - 1);
-                await new Promise((r)=>setTimeout(r, 800));
+                await new Promise((r)=>setTimeout(r, 1000));
             }
             set({
                 isSyncing: false
