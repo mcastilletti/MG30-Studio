@@ -170,16 +170,15 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/genkit.js [app-rsc] (ecmascript)");
-(()=>{
-    const e = new Error("Cannot find module '@genkit-ai/googleai'");
-    e.code = 'MODULE_NOT_FOUND';
-    throw e;
-})();
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/googleai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 ;
 ;
 const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["genkit"])({
     plugins: [
-        googleAI()
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$googleai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__["googleAI"])({
+            // Questa riga dice a Genkit di usare la chiave del tuo file .env
+            apiKey: process.env.GOOGLE_GENAI_API_KEY
+        })
     ]
 });
 }),
@@ -192,7 +191,8 @@ const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$g
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/server-reference.js [app-rsc] (ecmascript)");
 /**
- * @fileOverview AI Agent per il riassunto sonoro dei preset NUX MG-30.
+ * @fileOverview Analisi sonora AI per preset MG-30.
+ * Utilizza Gemini 2.0 Flash Lite per un'analisi dettagliata.
  */ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/ai/genkit.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/common.js [app-rsc] (ecmascript)");
@@ -204,40 +204,39 @@ const PresetSummaryInputSchema = __TURBOPACK__imported__module__$5b$project$5d2f
     preset: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].any().describe('I dati completi del preset da analizzare')
 });
 const PresetSummaryOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    summary: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Analisi breve del carattere sonoro')
+    summary: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe("L'analisi testuale divisa in 3 punti.")
 });
+const presetSummaryPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
+    name: 'presetSummaryPrompt',
+    // Usa il riferimento diretto al modello se disponibile nel tuo setup genkit
+    model: 'googleai/gemini-2.0-flash-lite',
+    input: {
+        schema: PresetSummaryInputSchema
+    },
+    output: {
+        schema: PresetSummaryOutputSchema
+    },
+    config: {
+        temperature: 0.7
+    },
+    system: `Sei un esperto di suoni per chitarra e hardware NUX MG-30. 
+    Analizza i dati tecnici e descrivi il suono in 3 punti secchi: 
+    1. Genere consigliato. 
+    2. Carattere del tono (es. caldo, tagliente). 
+    3. Un consiglio tecnico specifico per l'MG-30. 
+    Rispondi in modo conciso in italiano.`
+}, `Analizza questo preset:
+  Nome: {{preset.name}}
+  Amp: {{preset.ampModel}}
+  Effetti attivi: {{#each preset.effects}}{{#if this.enabled}}{{this.type}} ({{this.model}}), {{/if}}{{/each}}`);
 async function summarizePreset(input) {
-    console.log('🎸 Inizio analisi preset:', input.preset.name);
     try {
-        console.log('🤖 Chiamata a Gemini in corso...');
-        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].generate({
-            model: 'googleai/gemini-1.5-flash',
-            system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico.",
-            prompt: `Analizza questo preset:
-      Nome: ${input.preset.name}
-      Amplificatore: ${input.preset.ampModel}
-      Effetti attivi: ${input.preset.effects?.filter((e)=>e.enabled).map((e)=>e.type).join(', ') || 'Nessuno'}
-      
-      Fornisci una risposta breve e professionale in italiano.`,
-            output: {
-                schema: PresetSummaryOutputSchema
-            }
-        });
-        console.log('✅ Risposta ricevuta da Gemini');
-        const output = response.output;
-        if (!output) {
-            throw new Error('L\'AI non ha prodotto un risultato valido.');
-        }
-        console.log('📝 Output finale:', output);
+        const { output } = await presetSummaryPrompt(input);
+        if (!output) throw new Error('Analisi AI fallita.');
         return output;
     } catch (error) {
-        console.error('❌ Errore completo Gemini:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name,
-            cause: error.cause
-        });
-        throw new Error(error.message || 'Errore durante la generazione dell\'analisi AI');
+        console.error("Errore durante l'analisi del preset:", error);
+        throw new Error('Impossibile generare il riepilogo.');
     }
 }
 ;

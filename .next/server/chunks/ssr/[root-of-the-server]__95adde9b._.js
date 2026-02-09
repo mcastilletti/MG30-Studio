@@ -206,15 +206,14 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/genkit.js [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/googleai/index.js [app-rsc] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$vertexai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/vertexai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 ;
 ;
 const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["genkit"])({
     plugins: [
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["googleAI"])({
-            apiKey: process.env.GOOGLE_GENAI_API_KEY,
-            apiVersion: 'v1beta'
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$vertexai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__["vertexAI"])({
+            projectId: 'studio-3261187179-ec15d',
+            location: 'europe-west1'
         })
     ]
 });
@@ -222,121 +221,111 @@ const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$g
 "[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"403e87fbef9231fbf53d551f620667f8ead20b9084":"generateMG30Preset"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"7f3e87fbef9231fbf53d551f620667f8ead20b9084":"generateMG30Preset","7fb40791ed4432f1febbaaf58d51b22db5af8f529b":"analyzeSysEx"},"",""] */ __turbopack_context__.s([
+    "analyzeSysEx",
+    ()=>analyzeSysEx,
     "generateMG30Preset",
     ()=>generateMG30Preset
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/server-reference.js [app-rsc] (ecmascript)");
-/**
- * @fileOverview AI Mode Flow per NUX MG-30.
- * Converte istruzioni testuali in parametri tecnici per la pedaliera.
- * Utilizza Gemini 2.0 Flash Lite per un'estrazione precisa.
- */ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/ai/genkit.ts [app-rsc] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/ai/genkit.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/common.js [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/action-validate.js [app-rsc] (ecmascript)");
 ;
 ;
 ;
-const ParameterOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Nome del parametro (es. gain, tone, level)'),
-    value: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].number().describe('Valore del parametro (0-100)')
-});
-const EffectOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].enum([
-        'noise-gate',
-        'efx',
-        'delay',
-        'reverb',
-        'wah',
-        'compressor',
-        'ir',
-        'sr',
-        'modulation',
-        'vol',
-        'eq',
-        'amp'
-    ]).describe('Il tipo di blocco catena'),
-    model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Il nome tecnico del modello (es. gate, tscream, plexi100w, hall)'),
-    enabled: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].boolean().describe('Stato di attivazione del blocco'),
-    parameters: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(ParameterOutputSchema).describe('Lista dei parametri configurati per questo effetto')
+/**
+ * SCHEMI DI VALIDAZIONE
+ * Strutturati per mappare esattamente ciò che il tuo frontend page.tsx riga 260-262 richiede.
+ */ const MG30PresetInputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
+    description: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Descrizione del suono (es. Oasis, Metallica, ecc.)')
 });
 const MG30PresetOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Un nome creativo per il preset basato sulle impostazioni'),
-    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Breve riassunto dei parametri estratti dal testo'),
-    ampModel: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].enum([
-        'plexi100w',
-        'jcm800',
-        'dualrect',
-        'ac30',
-        'jazzclean',
-        'deluxervb',
-        'bassmate',
-        'tweedy',
-        'twinrvb',
-        'hiwire',
-        'calicrunch',
-        'classa15',
-        'classa30',
-        'plexi45',
-        'brit800',
-        '1987x50w',
-        'slo100',
-        'firemanhbe',
-        'dievh4',
-        'vibroking',
-        'budda',
-        'mrz38',
-        'superrvb',
-        'britblues',
-        'match',
-        'brit2000',
-        'uber',
-        'agl',
-        'bassguy',
-        'mld',
-        'optimair',
-        'stageman'
-    ]).describe('Il modello di amplificatore più adatto'),
-    effects: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(EffectOutputSchema).describe('Lista degli effetti configurati')
+    presetName: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
+    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
+    ampModel: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Il nome del modello di amplificatore'),
+    effects: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
+        type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Tipo di blocco (EFX, MOD, DLY, ecc.)'),
+        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Nome del pedale specifico')
+    })).describe('Lista degli effetti attivi')
 });
-const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
-    name: 'mg30PresetPrompt',
-    model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
-    input: {
-        schema: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-            instructions: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string()
-        })
-    },
-    output: {
-        schema: MG30PresetOutputSchema
-    },
-    system: `Sei un assistente tecnico esperto per NUX MG-30. 
-Il tuo compito è ESTRARRE i valori dei parametri dal testo fornito dall'utente e mapparli sulla struttura tecnica della pedaliera.
-
-REGOLE DI MAPPATURA:
-1. Se l'utente specifica un valore (es. "Gain a 40"), impostalo esattamente nei parametri.
-2. Mappa i modelli corretti:
-   - Delay: dly-analog, dly-digital, dly-tape, dly-mod
-   - Reverb: room, hall, plate, spring, shimmer
-   - EFX: tscream, distone, bluesdrv, morningdrv, eatdist, reddirt
-   - Gate: gate
-3. Se un parametro non è menzionato, usa valori di default bilanciati (es. 50).
-4. Restituisci SOLO l'oggetto JSON richiesto.`,
-    prompt: `Istruzioni utente: "{{instructions}}"`
+const AnalyzeSysExInputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
+    sysexData: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Dati Hex grezzi'),
+    controlDescription: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Azione eseguita hardware')
 });
-async function generateMG30Preset(input) {
-    const { output } = await mg30PresetPrompt({
-        instructions: input.description
-    });
-    if (!output) throw new Error('Impossibile interpretare le istruzioni del preset.');
-    return output;
-}
+const AnalyzeSysExOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
+    parameterMapping: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string()
+});
+const generateMG30Preset = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].defineFlow({
+    name: 'generateMG30Preset',
+    inputSchema: MG30PresetInputSchema,
+    outputSchema: MG30PresetOutputSchema
+}, async (input)=>{
+    try {
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].generate({
+            model: 'vertexai/gemini-2.0-flash-lite',
+            config: {
+                temperature: 0.7,
+                responseMimeType: 'application/json'
+            },
+            system: `Sei un esperto NUX MG-30. 
+        Analizza la richiesta dell'utente e suggerisci una catena di segnale realistica.
+        Usa i nomi dei modelli presenti nell'hardware MG-30.
+        
+        Rispondi SEMPRE in formato JSON con questa struttura:
+        {
+          "presetName": "Nome del preset",
+          "explanation": "Breve spiegazione del perché hai scelto questi modelli",
+          "ampModel": "Nome Ampli (es. Brit 800)",
+          "effects": [
+            {"type": "EFX", "model": "Rose Comp"},
+            {"type": "DLY", "model": "Analog Delay"}
+          ]
+        }`,
+            prompt: `Crea un preset per un suono: ${input.description}`
+        });
+        const output = response.output();
+        if (!output) throw new Error("L'AI ha restituito un formato non valido.");
+        return output;
+    } catch (error) {
+        console.error("ERRORE GENERAZIONE:", error);
+        // Fallback sicuro per evitare il crash "Cannot read properties of undefined (reading 'map')"
+        return {
+            presetName: "Default Tone",
+            explanation: "Si è verificato un errore durante la generazione. Verifica la connessione Vertex AI.",
+            ampModel: "Clean Machine",
+            effects: [] // Array vuoto così il .map() nel frontend non fallisce
+        };
+    }
+});
+const analyzeSysEx = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].defineFlow({
+    name: 'analyzeSysEx',
+    inputSchema: AnalyzeSysExInputSchema,
+    outputSchema: AnalyzeSysExOutputSchema
+}, async (input)=>{
+    try {
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].generate({
+            model: 'vertexai/gemini-2.0-flash-lite',
+            system: "Ingegnere MIDI esperto in reverse engineering NUX.",
+            prompt: `Analizza HEX: ${input.sysexData} per azione: ${input.controlDescription}`
+        });
+        return {
+            parameterMapping: response.text
+        };
+    } catch (error) {
+        return {
+            parameterMapping: "Errore durante l'analisi dei byte."
+        };
+    }
+});
 ;
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
-    generateMG30Preset
+    generateMG30Preset,
+    analyzeSysEx
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(generateMG30Preset, "403e87fbef9231fbf53d551f620667f8ead20b9084", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(generateMG30Preset, "7f3e87fbef9231fbf53d551f620667f8ead20b9084", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(analyzeSysEx, "7fb40791ed4432f1febbaaf58d51b22db5af8f529b", null);
 }),
 "[project]/.next-internal/server/app/editor/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript) <locals>", ((__turbopack_context__) => {
 "use strict";
@@ -349,7 +338,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$flows$2f$mg30$2
 "use strict";
 
 __turbopack_context__.s([
-    "403e87fbef9231fbf53d551f620667f8ead20b9084",
+    "7f3e87fbef9231fbf53d551f620667f8ead20b9084",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$flows$2f$mg30$2d$preset$2d$gen$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["generateMG30Preset"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$editor$2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$ai$2f$flows$2f$mg30$2d$preset$2d$gen$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/editor/page/actions.js { ACTIONS_MODULE0 => "[project]/src/ai/flows/mg30-preset-gen.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');

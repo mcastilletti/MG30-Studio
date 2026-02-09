@@ -206,32 +206,29 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/genkit.js [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/googleai/index.js [app-rsc] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$vertexai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/vertexai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 ;
 ;
 const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["genkit"])({
     plugins: [
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["googleAI"])()
-    ],
-    model: 'googleai/gemini-2.5-flash'
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$vertexai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__["vertexAI"])({
+            projectId: 'studio-3261187179-ec15d',
+            location: 'us-central1'
+        })
+    ]
 });
 }),
 "[project]/src/ai/flows/sysex-analysis.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-// src/ai/flows/sysex-analysis.ts
 /* __next_internal_action_entry_do_not_use__ [{"40b567608a81e77c8c29532aa33ced566a46bd98f5":"analyzeSysEx"},"",""] */ __turbopack_context__.s([
     "analyzeSysEx",
     ()=>analyzeSysEx
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/build/webpack/loaders/next-flight-loader/server-reference.js [app-rsc] (ecmascript)");
 /**
- * @fileOverview A SysEx analysis AI agent.
- *
- * - analyzeSysEx - A function that handles the SysEx analysis process.
- * - AnalyzeSysExInput - The input type for the analyzeSysEx function.
- * - AnalyzeSysExOutput - The return type for the analyzeSysEx function.
+ * @fileOverview SysEx analysis AI agent per NUX MG-30.
+ * Reverse engineering MIDI SysEx con Gemini 2.0 Flash Lite.
  */ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/ai/genkit.ts [app-rsc] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/common.js [app-rsc] (ecmascript)");
@@ -240,50 +237,33 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 ;
 const AnalyzeSysExInputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    sysexData: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('A sequence of SysEx messages captured when a control is changed on the physical hardware.'),
-    controlDescription: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('A description of the control that was changed.')
+    sysexData: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Sequenza di messaggi SysEx (hex).'),
+    controlDescription: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Descrizione dell\'azione eseguita hardware.')
 });
 const AnalyzeSysExOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    parameterMapping: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('A description of how the SysEx messages map to the control, including the parameter, value range, and any scaling or offset.')
+    parameterMapping: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Spiegazione tecnica del mapping.')
 });
-async function analyzeSysEx(input) {
-    return analyzeSysExFlow(input);
-}
-const prompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
+const analyzeSysExPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
     name: 'analyzeSysExPrompt',
+    model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
     input: {
         schema: AnalyzeSysExInputSchema
     },
     output: {
         schema: AnalyzeSysExOutputSchema
     },
-    prompt: `You are an expert MIDI engineer specializing in reverse engineering SysEx messages for the NUX MG-30 multi-effects pedal.
+    system: "Sei un ingegnere MIDI esperto nel reverse engineering dei protocolli NUX. Analizza i dati SysEx per identificare parametri, range di valori e offset.",
+    prompt: `Analizza questi dati:
+Dati SysEx: {{sysexData}}
+Azione: {{controlDescription}}
 
-You will be provided with a sequence of SysEx messages captured when a specific control is changed on the physical hardware. Your task is to analyze these messages and determine how they map to the control.
-
-Specifically, you should identify the following:
-
-*   The specific SysEx parameter that is being modified.
-*   The range of values that the parameter can take.
-*   Any scaling or offset that is applied to the parameter value.
-*   A human-readable description of the parameter mapping, including the parameter name, value range, and any scaling or offset.
-
-Here is the SysEx data:
-
-{{sysexData}}
-
-Here is a description of the control that was changed:
-
-{{controlDescription}}`
+Fornisci un mapping tecnico dettagliato.`
 });
-const analyzeSysExFlow = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].defineFlow({
-    name: 'analyzeSysExFlow',
-    inputSchema: AnalyzeSysExInputSchema,
-    outputSchema: AnalyzeSysExOutputSchema
-}, async (input)=>{
-    const { output } = await prompt(input);
+async function analyzeSysEx(input) {
+    const { output } = await analyzeSysExPrompt(input);
+    if (!output) throw new Error('Analisi SysEx fallita.');
     return output;
-});
+}
 ;
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([
     analyzeSysEx

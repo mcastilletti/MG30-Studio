@@ -1,66 +1,72 @@
 'use server';
 
-/**
- * @fileOverview AI Mode Flow per NUX MG-30.
- * Converte istruzioni testuali in parametri tecnici per la pedaliera.
- * Utilizza Gemini 2.0 Flash Lite per un'estrazione precisa.
- */
-
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const ParameterOutputSchema = z.object({
-  name: z.string().describe('Nome del parametro (es. gain, tone, level)'),
-  value: z.number().describe('Valore del parametro (0-100)'),
-});
-
-const EffectOutputSchema = z.object({
-  type: z.enum([
-    'noise-gate', 'efx', 'delay', 'reverb', 'wah', 
-    'compressor', 'ir', 'sr', 'modulation', 'vol', 'eq', 'amp'
-  ]).describe('Il tipo di blocco catena'),
-  model: z.string().describe('Il nome tecnico del modello (es. gate, tscream, plexi100w, hall)'),
-  enabled: z.boolean().describe('Stato di attivazione del blocco'),
-  parameters: z.array(ParameterOutputSchema).describe('Lista dei parametri configurati per questo effetto'),
+/**
+ * SCHEMI DI VALIDAZIONE
+ */
+const MG30PresetInputSchema = z.object({
+  description: z.string().describe('Descrizione del suono desiderato'),
 });
 
 const MG30PresetOutputSchema = z.object({
-  name: z.string().describe('Un nome creativo per il preset basato sulle impostazioni'),
-  explanation: z.string().describe('Breve riassunto dei parametri estratti dal testo'),
-  ampModel: z.enum([
-    'plexi100w', 'jcm800', 'dualrect', 'ac30', 'jazzclean', 'deluxervb', 
-    'bassmate', 'tweedy', 'twinrvb', 'hiwire', 'calicrunch', 'classa15', 
-    'classa30', 'plexi45', 'brit800', '1987x50w', 'slo100', 'firemanhbe', 
-    'dievh4', 'vibroking', 'budda', 'mrz38', 'superrvb', 'britblues', 
-    'match', 'brit2000', 'uber', 'agl', 'bassguy', 'mld', 'optimair', 'stageman'
-  ]).describe('Il modello di amplificatore più adatto'),
-  effects: z.array(EffectOutputSchema).describe('Lista degli effetti configurati'),
+  name: z.string().describe('Nome del preset'),
+  explanation: z.string().describe('Spiegazione delle scelte fatte'),
+  effects: z.array(z.object({
+    type: z.string().describe('Tipo di blocco (es. amp, efx, delay, ecc.)'),
+    model: z.string().describe('ID del modello specifico'),
+    enabled: z.boolean().describe('Se il blocco deve essere attivo'),
+    parameters: z.array(z.object({
+      name: z.string().describe('ID del parametro (es. gain, master, drive)'),
+      value: z.number().describe('Valore da 0 a 100')
+    })).describe('Lista dei parametri settati')
+  })).describe('Configurazione della catena degli effetti'),
 });
 
+export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-const mg30PresetPrompt = ai.definePrompt({
-  name: 'mg30PresetPrompt',
-  model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
-  input: { schema: z.object({ instructions: z.string() }) },
-  output: { schema: MG30PresetOutputSchema },
-  system: `Sei un assistente tecnico esperto per NUX MG-30. 
-Il tuo compito è ESTRARRE i valori dei parametri dal testo fornito dall'utente e mapparli sulla struttura tecnica della pedaliera.
+const mg30PresetPrompt = ai.definePrompt(
+  {
+    name: 'mg30PresetPrompt',
+    model: 'googleai/gemini-2.0-flash-lite-preview-02-05', 
+    input: { schema: MG30PresetInputSchema },
+    output: { schema: MG30PresetOutputSchema },
+    config: {
+      temperature: 0.7,
+      responseMimeType: 'application/json',
+    },
+    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta.
+    Usa ESCLUSIVAMENTE i nomi dei modelli dell'hardware MG-30 (es. brit800, tscream, plexi100w).
+    Per ogni effetto, definisci 'enabled' (true/false) e una lista di 'parameters' con valori da 0 a 100.
+    I tipi validi sono: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, eq, vol.`,
+  },
+  `Crea un preset dettagliato per questo suono: {{description}}`
+);
 
-REGOLE DI MAPPATURA:
-1. Se l'utente specifica un valore (es. "Gain a 40"), impostalo esattamente nei parametri.
-2. Mappa i modelli corretti:
-   - Delay: dly-analog, dly-digital, dly-tape, dly-mod
-   - Reverb: room, hall, plate, spring, shimmer
-   - EFX: tscream, distone, bluesdrv, morningdrv, eatdist, reddirt
-   - Gate: gate
-3. Se un parametro non è menzionato, usa valori di default bilanciati (es. 50).
-4. Restituisci SOLO l'oggetto JSON richiesto.`,
-  prompt: `Istruzioni utente: "{{instructions}}"`,
-});
-
-export async function generateMG30Preset(input: { description: string }): Promise<MG30PresetOutput> {
-  const { output } = await mg30PresetPrompt({ instructions: input.description });
-  if (!output) throw new Error('Impossibile interpretare le istruzioni del preset.');
-  return output;
+export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
+  try {
+    const { output } = await mg30PresetPrompt(input);
+    
+    if (!output) {
+       throw new Error('L\'AI ha risposto con un formato vuoto.');
+    }
+    
+    return output;
+  } catch (error) {
+    console.error("Errore generazione preset:", error);
+    return {
+      name: "Default Tone",
+      explanation: "Errore durante la generazione.",
+      effects: [
+        { 
+          type: "amp", 
+          model: "brit800", 
+          enabled: true, 
+          parameters: [{ name: "gain", value: 50 }, { name: "master", value: 50 }] 
+        }
+      ]
+    };
+  }
 }

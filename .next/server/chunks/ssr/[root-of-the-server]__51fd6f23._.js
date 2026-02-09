@@ -206,15 +206,14 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/index.mjs [app-rsc] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/genkit/lib/genkit.js [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/index.mjs [app-rsc] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$index$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/index.mjs [app-rsc] (ecmascript) <locals>"); // Verifica se hai questo o @genkit-ai/googleai
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@genkit-ai/google-genai/lib/googleai/index.js [app-rsc] (ecmascript)");
 ;
 ;
 const ai = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$genkit$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["genkit"])({
     plugins: [
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$genkit$2d$ai$2f$google$2d$genai$2f$lib$2f$googleai$2f$index$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["googleAI"])({
-            apiKey: process.env.GOOGLE_GENAI_API_KEY,
-            apiVersion: 'v1beta'
+            apiKey: process.env.GOOGLE_GENAI_API_KEY
         })
     ]
 });
@@ -241,27 +240,40 @@ const PresetSummaryInputSchema = __TURBOPACK__imported__module__$5b$project$5d2f
     preset: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].any().describe('I dati completi del preset da analizzare')
 });
 const PresetSummaryOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    summary: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('L\'analisi testuale divisa in 3 punti.')
+    summary: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe("L'analisi testuale divisa in 3 punti.")
 });
 const presetSummaryPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
     name: 'presetSummaryPrompt',
-    model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
+    // Usa il riferimento diretto al modello se disponibile nel tuo setup genkit
+    model: 'googleai/gemini-2.0-flash-lite',
     input: {
         schema: PresetSummaryInputSchema
     },
     output: {
         schema: PresetSummaryOutputSchema
     },
-    system: "Sei un esperto di suoni per chitarra. Analizza i dati tecnici di un preset NUX MG-30 e descrivi il suono in 3 punti: Genere consigliato, Carattere del tono (es. caldo, tagliente), e un piccolo consiglio tecnico. Rispondi in modo conciso.",
-    prompt: `Analizza questo preset:
-Nome: {{{preset.name}}}
-Amp: {{{preset.ampModel}}}
-Effetti attivi: {{#each preset.effects}}{{#if enabled}}{{type}} ({{model}}), {{/if}}{{/each}}`
-});
+    config: {
+        temperature: 0.7
+    },
+    system: `Sei un esperto di suoni per chitarra e hardware NUX MG-30. 
+    Analizza i dati tecnici e descrivi il suono in 3 punti secchi: 
+    1. Genere consigliato. 
+    2. Carattere del tono (es. caldo, tagliente). 
+    3. Un consiglio tecnico specifico per l'MG-30. 
+    Rispondi in modo conciso in italiano.`
+}, `Analizza questo preset:
+  Nome: {{preset.name}}
+  Amp: {{preset.ampModel}}
+  Effetti attivi: {{#each preset.effects}}{{#if this.enabled}}{{this.type}} ({{this.model}}), {{/if}}{{/each}}`);
 async function summarizePreset(input) {
-    const { output } = await presetSummaryPrompt(input);
-    if (!output) throw new Error('Analisi AI fallita.');
-    return output;
+    try {
+        const { output } = await presetSummaryPrompt(input);
+        if (!output) throw new Error('Analisi AI fallita.');
+        return output;
+    } catch (error) {
+        console.error("Errore durante l'analisi del preset:", error);
+        throw new Error('Impossibile generare il riepilogo.');
+    }
 }
 ;
 (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$action$2d$validate$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ensureServerEntryExports"])([

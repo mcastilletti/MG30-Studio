@@ -3137,18 +3137,55 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         enterBlockEditor: (blockType)=>{
             const index = BLOCK_INDEX_MAP[blockType];
             if (index !== undefined) {
-                // Per forzare l'ingresso dalla Home Screen, serve una sequenza precisa:
-                // 1. Seleziona il blocco (Highlight)
                 get().sendControlChange(SELECT_BLOCK_CC, index);
-                // 2. Entra nell'editor con un leggero delay per permettere alla pedaliera di processare il cambio stato
                 setTimeout(()=>{
                     get().sendControlChange(ENTER_EDITOR_CC, index);
                 }, 100);
             }
         },
         exitBlockEditor: ()=>{
-            // Valore 127 su CC 78 solitamente torna alla vista preset o chiude l'editor corrente
             get().sendControlChange(ENTER_EDITOR_CC, 127);
+        },
+        resetToPresetView: ()=>{
+            const { output } = get();
+            if (!output) return;
+            const activePreset = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset;
+            const pc = activePreset.slot - 1;
+            // Send Program Change for the current slot
+            output.send([
+                0xC0,
+                pc
+            ]);
+            // Send the SysEx sequence as requested to return to base preset view
+            const s1 = [
+                0xF0,
+                0x00,
+                0x20,
+                0x6B,
+                0x01,
+                0x00,
+                0x01,
+                0xF7
+            ];
+            const s2 = [
+                0xF0,
+                0x00,
+                0x20,
+                0x6B,
+                0x7F,
+                0x00,
+                0x01,
+                0xF7
+            ];
+            // Repeated sequence
+            setTimeout(()=>{
+                output.send(s1);
+                output.send(s2);
+                output.send(s1);
+                output.send(s2);
+                output.send(s1);
+                output.send(s2);
+            }, 150);
         },
         syncBlockParameters: (blockType, parameters)=>{
             const ccs = BLOCK_PARAM_CCS[blockType];

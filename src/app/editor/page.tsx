@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -45,7 +44,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, exitBlockEditor, resetToPresetView, isEditorSyncing, syncActivePreset, syncBlockParameters } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -84,10 +83,7 @@ export default function EditorPage() {
     if (status === 'connected') {
       toggleBlock(type, !currentEnabled);
       selectBlock(type);
-      // If parameters view is active in app, ensure hardware detail is also active
-      if (selectedBlockId) {
-        enterBlockEditor(type);
-      }
+      enterBlockEditor(type);
     }
   };
 
@@ -99,7 +95,6 @@ export default function EditorPage() {
 
   const handlePresetAreaClick = () => {
     if (status === 'connected') {
-      // Hardware goes to Home/Preset view, App stays the same
       resetToPresetView();
     }
   };
@@ -136,18 +131,23 @@ export default function EditorPage() {
   const applyProposedPreset = () => {
     if (!proposedPreset) return;
     
+    // Creiamo una mappa dei nuovi parametri per facilitare l'aggiornamento
     const updatedEffects = activePreset.effects.map(effect => {
       const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
+      
       if (propEffect) {
+        // Estraiamo i parametri dall'array dell'AI in un record chiave-valore
         const paramRecord: Record<string, number> = {};
-        propEffect.parameters.forEach(p => {
-          paramRecord[p.name] = p.value;
-        });
+        if (propEffect.parameters) {
+          propEffect.parameters.forEach(p => {
+            paramRecord[p.name] = p.value;
+          });
+        }
 
         return {
           ...effect,
-          model: propEffect.model,
-          enabled: propEffect.enabled,
+          model: propEffect.model || effect.model,
+          enabled: propEffect.enabled ?? effect.enabled,
           parameters: { ...effect.parameters, ...paramRecord }
         };
       }
@@ -161,15 +161,21 @@ export default function EditorPage() {
       lastModified: new Date()
     };
 
+    // 1. Aggiorna lo stato locale dell'app
     setActivePreset(newPreset);
     
+    // 2. Sincronizza l'hardware se connesso
     if (status === 'connected') {
       updatedEffects.forEach(e => {
+        // Toggle del blocco
         toggleBlock(e.type, e.enabled);
+        
+        // Sincronizza tutti i parametri di questo blocco
+        syncBlockParameters(e.type, e.parameters);
       });
     }
 
-    toast({ title: "AI Mode Applicato", description: `Parametri estratti e applicati con successo.` });
+    toast({ title: "AI Mode Applicato", description: `Configurazione '${proposedPreset.name}' applicata con successo.` });
     setProposedPreset(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
@@ -251,19 +257,27 @@ export default function EditorPage() {
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs leading-relaxed italic">
                         "{proposedPreset.explanation}"
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
                          <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Mappatura Blocchi</h4>
-                         <div className="grid grid-cols-2 gap-2">
-                           <div className="flex items-center gap-2 p-2 rounded border bg-card/50 text-[10px]">
-                             <div className="w-2 h-2 rounded-full bg-red-500" />
-                             <span className="font-bold uppercase">AMP:</span>
-                             <span className="truncate opacity-70">{proposedPreset.ampModel}</span>
-                           </div>
+                         <div className="grid grid-cols-1 gap-2">
                            {proposedPreset.effects.map(e => (
-                             <div key={e.type} className="flex items-center gap-2 p-2 rounded border bg-card/50 text-[10px]">
-                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `hsl(${getBlockColorVar(e.type)})` }} />
-                               <span className="font-bold uppercase">{e.type}:</span>
-                               <span className="truncate opacity-70">{e.model}</span>
+                             <div key={e.type} className="flex flex-col gap-1 p-2 rounded border bg-card/50 text-[10px]">
+                               <div className="flex items-center justify-between">
+                                 <div className="flex items-center gap-2">
+                                   <div className={cn("w-2 h-2 rounded-full", !e.enabled && "opacity-30")} style={{ backgroundColor: `hsl(${getBlockColorVar(e.type)})` }} />
+                                   <span className="font-bold uppercase">{e.type}:</span>
+                                   <span className="truncate opacity-70">{e.model}</span>
+                                 </div>
+                                 <Badge variant={e.enabled ? "default" : "outline"} className="text-[8px] h-4">{e.enabled ? "ON" : "OFF"}</Badge>
+                               </div>
+                               <div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-1 opacity-60">
+                                 {e.parameters?.map(p => (
+                                   <div key={p.name} className="flex justify-between border-b border-border/20">
+                                      <span>{p.name}</span>
+                                      <span className="font-mono">{p.value}</span>
+                                   </div>
+                                 ))}
+                               </div>
                              </div>
                            ))}
                          </div>
