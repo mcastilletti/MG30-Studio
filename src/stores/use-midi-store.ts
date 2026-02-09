@@ -50,7 +50,7 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'vol': 73
 };
 
-// CC per i parametri dei blocchi (Knobs) - Evitiamo collisioni con i Model CC
+// CC per i parametri dei blocchi (Knobs)
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12],
   'compressor': [14, 15, 16],
@@ -306,7 +306,7 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendModelChange: (blockType, modelId) => {
-    const { sendControlChange, selectBlock } = get();
+    const { sendControlChange, selectBlock, enterBlockEditor } = get();
     const cc = BLOCK_MODEL_CC[blockType];
     if (cc === undefined) return;
 
@@ -315,13 +315,23 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
     const modelIndex = models.findIndex(m => m.id === modelId);
     if (modelIndex !== -1) {
-      // 1. Forza la selezione (Focus) del blocco hardware
+      // 1. Forza la selezione e l'entrata in modalità editor per il blocco
+      // Questo è cruciale: l'MG-30 spesso ignora i cambi modello se non è in "edit mode" per quel blocco
       selectBlock(blockType);
       
-      // 2. Invia il cambio modello dopo un breve ritardo per stabilità
       setTimeout(() => {
-        sendControlChange(cc, modelIndex);
-      }, 80);
+        enterBlockEditor(blockType);
+        
+        setTimeout(() => {
+          // 2. Invia il cambio modello
+          sendControlChange(cc, modelIndex);
+          
+          // 3. Piccola ri-notifica per consolidare il cambio nell'hardware
+          setTimeout(() => {
+            sendControlChange(cc, modelIndex);
+          }, 100);
+        }, 150);
+      }, 100);
     }
   },
 
@@ -383,17 +393,18 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       if (ccs[index] !== undefined) {
         setTimeout(() => {
           get().sendControlChange(ccs[index], Math.round(val));
-        }, index * 30);
+        }, index * 40); // Leggermente più lento per non saturare il buffer
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { toggleBlock, syncBlockParameters, sendModelChange } = get();
+    const { toggleBlock, syncBlockParameters, sendModelChange, selectBlock } = get();
     
+    // Sincronizzazione sequenziale di tutta la catena con timing rilassato
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
-        // 1. Modello (include già selectBlock)
+        // 1. Modello
         sendModelChange(e.type, e.model);
         
         setTimeout(() => {
@@ -403,9 +414,9 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
           setTimeout(() => {
             // 3. Parametri
             syncBlockParameters(e.type, e.parameters);
-          }, 60);
-        }, 60);
-      }, idx * 350); 
+          }, 150);
+        }, 150);
+      }, idx * 600); // Intervallo ampio tra blocchi per stabilità totale
     });
   },
 
