@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, XCircle, Layout } from 'lucide-react';
+import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, XCircle, Layout, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -131,12 +131,10 @@ export default function EditorPage() {
   const applyProposedPreset = () => {
     if (!proposedPreset) return;
     
-    // Creiamo una mappa dei nuovi parametri per facilitare l'aggiornamento
     const updatedEffects = activePreset.effects.map(effect => {
       const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
       
       if (propEffect) {
-        // Estraiamo i parametri dall'array dell'AI in un record chiave-valore
         const paramRecord: Record<string, number> = {};
         if (propEffect.parameters) {
           propEffect.parameters.forEach(p => {
@@ -161,21 +159,16 @@ export default function EditorPage() {
       lastModified: new Date()
     };
 
-    // 1. Aggiorna lo stato locale dell'app
     setActivePreset(newPreset);
     
-    // 2. Sincronizza l'hardware se connesso
     if (status === 'connected') {
       updatedEffects.forEach(e => {
-        // Toggle del blocco
         toggleBlock(e.type, e.enabled);
-        
-        // Sincronizza tutti i parametri di questo blocco
         syncBlockParameters(e.type, e.parameters);
       });
     }
 
-    toast({ title: "AI Mode Applicato", description: `Configurazione '${proposedPreset.name}' applicata con successo.` });
+    toast({ title: "AI Mode Applicato", description: `Il preset '${proposedPreset.name}' è ora attivo sull'app e sulla pedaliera.` });
     setProposedPreset(null);
     setIsAiModalOpen(false);
     setAiPrompt('');
@@ -203,7 +196,7 @@ export default function EditorPage() {
           <div 
             className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group"
             onClick={handlePresetAreaClick}
-            title="Sincronizza Hardware su Vista Preset"
+            title="Torna alla vista Home sulla pedaliera"
           >
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
@@ -215,7 +208,7 @@ export default function EditorPage() {
                 <h3 className="text-xl font-bold">{activePreset.name}</h3>
                 <Layout className="w-4 h-4 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
               </div>
-              <Badge variant="outline" className="text-[10px] mt-1">MIDI {status.toUpperCase()}</Badge>
+              <Badge variant="outline" className="text-[10px] mt-1">MODALITÀ PRESET ATTIVA</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -229,12 +222,12 @@ export default function EditorPage() {
                 {!proposedPreset ? (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Parameter Extractor</DialogTitle>
-                      <DialogDescription>Incolla le istruzioni testuali dei parametri e l'AI le mapperà sulla pedaliera.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Tone Designer</DialogTitle>
+                      <DialogDescription>Descrivi il suono che desideri. L'AI sceglierà ampli, pedali e regolerà tutti i pomelli per te.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <Textarea 
-                        placeholder="Esempio: Imposta il JCM800 con Gain 60, Master 50. Aggiungi un Tube Screamer con Drive 30. Metti un Hall Reverb con Decay 40..." 
+                        placeholder="Esempio: Crea un suono lead alla David Gilmour, con un ampli pulito tipo Hiwire, un po' di delay analogico e riverbero Hall..." 
                         value={aiPrompt} 
                         onChange={(e) => setAiPrompt(e.target.value)} 
                         className="min-h-[120px] bg-secondary/20"
@@ -243,22 +236,22 @@ export default function EditorPage() {
                     <DialogFooter>
                       <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        Analizza Istruzioni
+                        Genera Preset
                       </Button>
                     </DialogFooter>
                   </>
                 ) : (
                   <>
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Parametri Rilevati: {proposedPreset.name}</DialogTitle>
-                      <DialogDescription>L'AI ha interpretato le tue indicazioni. Controlla il riassunto prima di applicare.</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
+                      <DialogDescription>L'AI ha configurato la catena e tutti i parametri. Ecco cosa ha fatto:</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                       <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs leading-relaxed italic">
                         "{proposedPreset.explanation}"
                       </div>
                       <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
-                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Mappatura Blocchi</h4>
+                         <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Anteprima Parametri</h4>
                          <div className="grid grid-cols-1 gap-2">
                            {proposedPreset.effects.map(e => (
                              <div key={e.type} className="flex flex-col gap-1 p-2 rounded border bg-card/50 text-[10px]">
@@ -274,7 +267,7 @@ export default function EditorPage() {
                                  {e.parameters?.map(p => (
                                    <div key={p.name} className="flex justify-between border-b border-border/20">
                                       <span>{p.name}</span>
-                                      <span className="font-mono">{p.value}</span>
+                                      <span className="font-bold text-primary">{p.value}</span>
                                    </div>
                                  ))}
                                </div>
@@ -302,7 +295,7 @@ export default function EditorPage() {
         <Card className="border-border bg-background/50 overflow-hidden shadow-lg">
           <CardHeader className="py-3 border-b border-border bg-secondary/20 flex flex-row items-center justify-between">
              <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><LayoutGrid className="w-3 h-3" /> Signal Chain</CardTitle>
-             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold" onClick={handleExitEditor}>Chiudi Parametri</Button>
+             <Button variant="ghost" size="sm" className="h-6 text-[9px] uppercase font-bold gap-2 text-destructive" onClick={handleExitEditor}><X className="w-3 h-3" /> Chiudi Parametri</Button>
           </CardHeader>
           <CardContent className="py-8">
             <div className="flex items-center justify-between max-w-6xl mx-auto overflow-x-auto gap-4 pb-2 px-4">

@@ -37,10 +37,24 @@ const mg30PresetPrompt = ai.definePrompt(
       temperature: 0.7,
       responseMimeType: 'application/json',
     },
-    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta.
-    Usa ESCLUSIVAMENTE i nomi dei modelli dell'hardware MG-30 (es. brit800, tscream, plexi100w).
-    Per ogni effetto, definisci 'enabled' (true/false) e una lista di 'parameters' con valori da 0 a 100.
-    I tipi validi sono: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, eq, vol.`,
+    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta dell'utente.
+    
+    MAPPA I MODELLI USANDO QUESTI ID:
+    - AMP: jazzclean (Roland JC120), deluxervb (Fender Deluxe), plexi100w (Marshall Plexi), brit800 (JCM800), hiwire (Hiwatt), dualrect (Mesa Rectifier), dievh4 (Diezel).
+    - EFX: tscream (Tube Screamer), bluesdrv (Blues Driver), morningdrv (Morning Glory), reddirt (Red Dirt), eatdist (Rat), mufffuzz (Big Muff).
+    - MOD: mod-ce1 (Chorus CE-1), mod-ce2 (Chorus CE-2), mod-ph90 (Phase 90).
+    - DLY: dly-analog (Analog Delay), dly-digital (Digital Delay), dly-tape (Tape Echo).
+    - RVB: room, hall, plate, spring, shimmer.
+    - IR: ir-jz120, ir-dr112, ir-1960, ir-v412.
+
+    PARAMETRI:
+    - Valori sempre tra 0 e 100.
+    - Per AMP usa: gain, master, bass, mid, treble, presence.
+    - Per EFX usa: drive (o gain/distortion), tone, level.
+    - Per DLY usa: time, repeat, mix (o level).
+    - Per RVB usa: decay, level.
+
+    Rispondi sempre in JSON includendo TUTTI i blocchi della catena, settando 'enabled' a true solo per quelli necessari.`,
   },
   `Crea un preset dettagliato per questo suono: {{description}}`
 );

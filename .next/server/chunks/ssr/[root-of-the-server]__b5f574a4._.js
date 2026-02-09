@@ -203,18 +203,21 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
     description: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Descrizione del suono desiderato')
 });
 const MG30PresetOutputSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-    presetName: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
-    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
-    ampModel: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
+    name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Nome del preset'),
+    explanation: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Spiegazione delle scelte fatte'),
     effects: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
-        type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string(),
-        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string()
-    }))
+        type: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('Tipo di blocco (es. amp, efx, delay, ecc.)'),
+        model: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del modello specifico'),
+        enabled: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].boolean().describe('Se il blocco deve essere attivo'),
+        parameters: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].object({
+            name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].string().describe('ID del parametro (es. gain, master, drive)'),
+            value: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$genkit$2f$lib$2f$common$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["z"].number().describe('Valore da 0 a 100')
+        })).describe('Lista dei parametri settati')
+    })).describe('Configurazione della catena degli effetti')
 });
-// Definiamo il Prompt come nel tuo file funzionante
 const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$ai$2f$genkit$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["ai"].definePrompt({
     name: 'mg30PresetPrompt',
-    model: 'googleai/gemini-2.0-flash-lite',
+    model: 'googleai/gemini-2.0-flash-lite-preview-02-05',
     input: {
         schema: MG30PresetInputSchema
     },
@@ -223,13 +226,13 @@ const mg30PresetPrompt = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$
     },
     config: {
         temperature: 0.7,
-        // Forziamo il formato JSON per evitare errori di parsing
         responseMimeType: 'application/json'
     },
-    system: `Sei un esperto NUX MG-30. Genera un preset basandoti sulla richiesta.
-    Usa ESCLUSIVAMENTE i nomi dei modelli dell'hardware MG-30.
-    Rispondi SEMPRE in formato JSON con: presetName, explanation, ampModel, effects.`
-}, `Crea un preset per questo suono: {{description}}`);
+    system: `Sei un esperto NUX MG-30. Genera un preset completo basandoti sulla richiesta.
+    Usa ESCLUSIVAMENTE i nomi dei modelli dell'hardware MG-30 (es. brit800, tscream, plexi100w).
+    Per ogni effetto, definisci 'enabled' (true/false) e una lista di 'parameters' con valori da 0 a 100.
+    I tipi validi sono: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, eq, vol.`
+}, `Crea un preset dettagliato per questo suono: {{description}}`);
 async function generateMG30Preset(input) {
     try {
         const { output } = await mg30PresetPrompt(input);
@@ -239,12 +242,26 @@ async function generateMG30Preset(input) {
         return output;
     } catch (error) {
         console.error("Errore generazione preset:", error);
-        // Fallback sicuro per non rompere il frontend
         return {
-            presetName: "Default Tone",
-            explanation: "Errore durante la generazione. Verifica i log del server.",
-            ampModel: "Brit 800",
-            effects: []
+            name: "Default Tone",
+            explanation: "Errore durante la generazione.",
+            effects: [
+                {
+                    type: "amp",
+                    model: "brit800",
+                    enabled: true,
+                    parameters: [
+                        {
+                            name: "gain",
+                            value: 50
+                        },
+                        {
+                            name: "master",
+                            value: 50
+                        }
+                    ]
+                }
+            ]
         };
     }
 }
