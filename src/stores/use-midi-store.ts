@@ -49,7 +49,7 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'vol': [74]
 };
 
-// Mappatura indici CC 75 per visualizzazione su display MG-30
+// Mappatura indici per CC 75 (Highlight) e CC 78 (Enter Editor)
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -61,10 +61,12 @@ const BLOCK_INDEX_MAP: Record<string, number> = {
   'delay': 7,
   'reverb': 8,
   'ir': 9,
-  'sr': 10
+  'sr': 10,
+  'vol': 11
 };
 
 const SELECT_BLOCK_CC = 75; // CURRENT BLOCK
+const ENTER_EDITOR_CC = 78; // ENTER PEDAL EDITOR
 const PEDAL_CC = 76; // PEDAL POSITION
 
 const formatSlotLabel = (slot: number) => {
@@ -117,6 +119,7 @@ interface MidiStore {
   sendKnobParameter: (blockType: string, knobIndex: number, value: number) => void;
   toggleBlock: (blockType: string, enabled: boolean) => void;
   selectBlock: (blockType: string) => void;
+  enterBlockEditor: (blockType: string) => void;
   syncBlockParameters: (blockType: string, parameters: Record<string, any>) => void;
   refreshDevices: () => void;
   syncPresets: (force?: boolean) => Promise<void>;
@@ -321,6 +324,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const index = BLOCK_INDEX_MAP[blockType];
     if (index !== undefined) {
       get().sendControlChange(SELECT_BLOCK_CC, index);
+    }
+  },
+
+  enterBlockEditor: (blockType) => {
+    const index = BLOCK_INDEX_MAP[blockType];
+    if (index !== undefined) {
+      get().sendControlChange(ENTER_EDITOR_CC, index);
     }
   },
 

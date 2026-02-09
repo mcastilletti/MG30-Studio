@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useMidiStore } from '@/stores/use-midi-store';
@@ -44,7 +44,7 @@ const formatSlotLabel = (slot: number) => {
 
 export default function EditorPage() {
   const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, syncBlockParameters, isEditorSyncing, syncActivePreset } = useMidiStore();
+  const { status, sendProgramChange, sendKnobParameter, toggleBlock, selectBlock, enterBlockEditor, syncBlockParameters, isEditorSyncing, syncActivePreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -52,6 +52,8 @@ export default function EditorPage() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposedPreset, setProposedPreset] = useState<MG30PresetOutput | null>(null);
+
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   const selectedEffect = useMemo(() => 
     activePreset.effects.find(e => e.id === selectedBlockId),
@@ -93,6 +95,26 @@ export default function EditorPage() {
     }
   };
 
+  const handleDoubleClickBlock = (type: string) => {
+    if (status === 'connected') {
+      enterBlockEditor(type);
+      toast({ title: "Hardware Sync", description: `Entrato nell'editor di ${type.toUpperCase()} sulla pedaliera.` });
+    }
+  };
+
+  const startLongPress = (type: string) => {
+    longPressTimer.current = setTimeout(() => {
+      handleDoubleClickBlock(type);
+    }, 700);
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   const handleSlotChange = (direction: 'next' | 'prev') => {
     let nextSlot = activePreset.slot + (direction === 'next' ? 1 : -1);
     if (nextSlot < 1) nextSlot = 128;
@@ -118,11 +140,9 @@ export default function EditorPage() {
   const applyProposedPreset = () => {
     if (!proposedPreset) return;
     
-    // Mappatura della proposta sui blocchi esistenti dello store
     const updatedEffects = activePreset.effects.map(effect => {
       const propEffect = proposedPreset.effects.find(pe => pe.type === effect.type);
       if (propEffect) {
-        // Convertiamo l'array di parametri in un record per lo store
         const paramRecord: Record<string, number> = {};
         propEffect.parameters.forEach(p => {
           paramRecord[p.name] = p.value;
@@ -147,7 +167,6 @@ export default function EditorPage() {
 
     setActivePreset(newPreset);
     
-    // Sincronizzazione hardware se connesso
     if (status === 'connected') {
       updatedEffects.forEach(e => {
         toggleBlock(e.type, e.enabled);
@@ -203,7 +222,7 @@ export default function EditorPage() {
                   <>
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Mode: Parameter Extractor</DialogTitle>
-                      <DialogDescription>Incolla le istruzioni testuali dei parametri (es. "Metti Gain a 70 e Bassi a 30") e l'AI le mapperà sulla pedaliera.</DialogDescription>
+                      <DialogDescription>Incolla le istruzioni testuali dei parametri e l'AI le mapperà sulla pedaliera.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <Textarea 
@@ -276,10 +295,14 @@ export default function EditorPage() {
                   <React.Fragment key={effect.id}>
                     <div 
                       onClick={() => handleSelectBlock(effect.id, effect.type)}
+                      onDoubleClick={() => handleDoubleClickBlock(effect.type)}
+                      onTouchStart={() => startLongPress(effect.type)}
+                      onTouchEnd={clearLongPress}
+                      onContextMenu={(e) => e.preventDefault()}
                       className={cn(
-                        "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0",
+                        "relative cursor-pointer w-24 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-shrink-0 select-none",
                         "bg-secondary/40",
-                        isSelected ? "border-primary/50 shadow-md" : "border-border/40",
+                        isSelected ? "border-primary/50 shadow-md scale-105" : "border-border/40",
                         !effect.enabled && "opacity-60"
                       )}
                       style={{ borderColor: isSelected ? `hsl(${getBlockColorVar(effect.type)})` : '' }}
