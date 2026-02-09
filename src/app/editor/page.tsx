@@ -83,16 +83,17 @@ export default function EditorPage() {
     
     // 2. Sincronizza l'hardware se connesso
     if (status === 'connected') {
-      // Invia comando Cambio Modello (include già la selezione del blocco nello store)
+      // Invia comando Cambio Modello (più aggressivo con focus e SysEx)
       sendModelChange(type, modelId);
       
-      // Risincronizza i parametri per il nuovo modello con un leggero ritardo
+      // Risincronizza i parametri per il nuovo modello con un ritardo maggiore
+      // per permettere all'hardware di caricare il nuovo modello
       setTimeout(() => {
         const updatedEffect = usePresetStore.getState().activePreset.effects.find(e => e.id === effectId);
         if (updatedEffect) {
           syncBlockParameters(type, updatedEffect.parameters);
         }
-      }, 150);
+      }, 450);
     }
   };
 
@@ -239,7 +240,7 @@ export default function EditorPage() {
                 <h3 className="text-xl font-bold">{activePreset.name}</h3>
                 <Layout className="w-4 h-4 opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
               </div>
-              <Badge variant="outline" className="text-[10px] mt-1">TORNA ALLA VISTA COMPLESSIVA</Badge>
+              <Badge variant="outline" className="text-[10px] mt-1">SINC SCHERMO PEDALIERA</Badge>
             </div>
           </div>
           <div className="flex items-center gap-2">

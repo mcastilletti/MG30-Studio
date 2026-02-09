@@ -306,32 +306,32 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendModelChange: (blockType, modelId) => {
-    const { sendControlChange, selectBlock, enterBlockEditor } = get();
+    const { output, sendControlChange, selectBlock } = get();
+    if (!output) return;
+
     const cc = BLOCK_MODEL_CC[blockType];
-    if (cc === undefined) return;
+    const index = BLOCK_INDEX_MAP[blockType];
+    if (cc === undefined || index === undefined) return;
 
     const models = MG30_MODELS[blockType as any];
-    if (!models) return;
+    const modelIndex = models?.findIndex(m => m.id === modelId);
 
-    const modelIndex = models.findIndex(m => m.id === modelId);
-    if (modelIndex !== -1) {
-      // 1. Forza la selezione e l'entrata in modalità editor per il blocco
-      // Questo è cruciale: l'MG-30 spesso ignora i cambi modello se non è in "edit mode" per quel blocco
-      selectBlock(blockType);
+    if (modelIndex !== undefined && modelIndex !== -1) {
+      // 1. Forza il focus del blocco (CC 75)
+      sendControlChange(SELECT_BLOCK_CC, index);
       
+      // 2. Invia SysEx di "Edit Mode" per sbloccare la pedaliera
+      output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
+
       setTimeout(() => {
-        enterBlockEditor(blockType);
+        // 3. Invia il cambio modello effettivo
+        sendControlChange(cc, modelIndex);
         
+        // 4. Forza il refresh del display hardware
         setTimeout(() => {
-          // 2. Invia il cambio modello
-          sendControlChange(cc, modelIndex);
-          
-          // 3. Piccola ri-notifica per consolidare il cambio nell'hardware
-          setTimeout(() => {
-            sendControlChange(cc, modelIndex);
-          }, 100);
+          output.send([0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x00, 0x01, 0xF7]);
         }, 150);
-      }, 100);
+      }, 150);
     }
   },
 
@@ -393,30 +393,26 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       if (ccs[index] !== undefined) {
         setTimeout(() => {
           get().sendControlChange(ccs[index], Math.round(val));
-        }, index * 40); // Leggermente più lento per non saturare il buffer
+        }, index * 40);
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { toggleBlock, syncBlockParameters, sendModelChange, selectBlock } = get();
+    const { toggleBlock, syncBlockParameters, sendModelChange } = get();
     
-    // Sincronizzazione sequenziale di tutta la catena con timing rilassato
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
-        // 1. Modello
         sendModelChange(e.type, e.model);
         
         setTimeout(() => {
-          // 2. Bypass
           toggleBlock(e.type, e.enabled);
           
           setTimeout(() => {
-            // 3. Parametri
             syncBlockParameters(e.type, e.parameters);
           }, 150);
-        }, 150);
-      }, idx * 600); // Intervallo ampio tra blocchi per stabilità totale
+        }, 200);
+      }, idx * 700);
     });
   },
 
