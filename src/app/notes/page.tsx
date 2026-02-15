@@ -272,7 +272,7 @@ export default function NotesPage() {
         {/* Main Editor */}
         <main className="flex-1 space-y-4 max-w-xl mx-auto md:mx-0 w-full pb-20">
           <header className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
-            <div className="flex items-center gap-3 overflow-hidden">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                 <SheetTrigger asChild>
                   <button className="p-2 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors md:hidden">
@@ -288,9 +288,13 @@ export default function NotesPage() {
                   <NoteList />
                 </SheetContent>
               </Sheet>
-              <h2 className="text-sm md:text-xl font-bold tracking-tight truncate text-muted-foreground">
-                {title || 'Nuova Nota'}
-              </h2>
+              
+              <Input 
+                placeholder="Titolo Brano..." 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-sm md:text-lg font-bold h-9 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 placeholder:opacity-30"
+              />
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="h-9 w-9 text-muted-foreground">
@@ -304,15 +308,7 @@ export default function NotesPage() {
 
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex-1">
-                <Input 
-                  placeholder="Titolo Brano..." 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="text-lg font-bold h-11 bg-background/50 border-border/50 w-full placeholder:opacity-30"
-                />
-              </div>
-              <div className="w-full sm:w-[150px]">
+              <div className="w-full sm:w-[150px] ml-auto">
                 <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
                   <SelectTrigger className="w-full h-11 bg-primary/5 border-primary/20 font-mono font-bold text-xs">
                     <SelectValue placeholder="Preset" />

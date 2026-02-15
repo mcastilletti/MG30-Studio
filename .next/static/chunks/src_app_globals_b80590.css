@@ -3390,6 +3390,11 @@ body {
     line-height: 1.75rem;
   }
 
+  .md\:text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+
   .md\:opacity-0 {
     opacity: 0;
   }
