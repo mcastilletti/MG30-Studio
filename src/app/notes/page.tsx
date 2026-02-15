@@ -65,6 +65,11 @@ export default function NotesPage() {
   const [targetBand, setTargetBand] = useState('');
   const [targetSetlist, setTargetSetlist] = useState('');
 
+  // Rename Dialog State
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<{ type: 'band' | 'setlist', bandName: string, setName?: string } | null>(null);
+  const [newName, setNewName] = useState('');
+
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     if (stored) {
@@ -214,6 +219,42 @@ export default function NotesPage() {
     setActionNote(null);
   };
 
+  const handleRenameGroup = () => {
+    if (!renameTarget || !newName.trim()) return;
+
+    const updatedNotes = savedNotes.map(n => {
+      if (renameTarget.type === 'band' && n.band === renameTarget.bandName) {
+        return { ...n, band: newName };
+      }
+      if (renameTarget.type === 'setlist' && n.band === renameTarget.bandName && n.setlist === renameTarget.setName) {
+        return { ...n, setlist: newName };
+      }
+      return n;
+    });
+
+    setSavedNotes(updatedNotes);
+    setIsRenameDialogOpen(false);
+    setRenameTarget(null);
+    setNewName('');
+    toast({ title: "Aggiornamento completato" });
+  };
+
+  const handleDeleteBand = (bandName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Sei sicuro di voler eliminare TUTTE le note della band "${bandName}"?`)) {
+      setSavedNotes(savedNotes.filter(n => n.band !== bandName));
+      toast({ title: "Band eliminata" });
+    }
+  };
+
+  const handleDeleteSetlist = (bandName: string, setName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Sei sicuro di voler eliminare TUTTE le note della scaletta "${setName}" per la band "${bandName}"?`)) {
+      setSavedNotes(savedNotes.filter(n => !(n.band === bandName && n.setlist === setName)));
+      toast({ title: "Scaletta eliminata" });
+    }
+  };
+
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
 
   const NoteList = () => (
@@ -222,8 +263,8 @@ export default function NotesPage() {
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Layers className="w-3 h-3" /> Archivio
         </h3>
-        <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase gap-1" onClick={handleNewNote}>
-          <Plus className="w-3 h-3" /> Nuovo
+        <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}>
+          <Plus className="w-3 h-3" />
         </Button>
       </div>
       <ScrollArea className="flex-1">
@@ -231,20 +272,42 @@ export default function NotesPage() {
           <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
-                <AccordionTrigger className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
-                    <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
+                <div className="flex items-center group/band">
+                  <AccordionTrigger className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
+                      <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <div className="flex items-center gap-1 opacity-0 group-hover/band:opacity-100 transition-opacity px-2">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => {
+                      e.stopPropagation();
+                      setRenameTarget({ type: 'band', bandName });
+                      setNewName(bandName);
+                      setIsRenameDialogOpen(true);
+                    }}><Pencil className="w-3 h-3" /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => handleDeleteBand(bandName, e)}><Trash2 className="w-3 h-3" /></Button>
                   </div>
-                </AccordionTrigger>
+                </div>
                 <AccordionContent className="pt-2">
                   <Accordion type="multiple" className="w-full ml-3 border-l border-primary/20 pl-3">
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
-                        <AccordionTrigger className="hover:no-underline py-1.5">
-                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                            <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
+                        <div className="flex items-center group/set">
+                          <AccordionTrigger className="hover:no-underline py-1.5 flex-1">
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                              <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
+                            </div>
+                          </AccordionTrigger>
+                          <div className="flex items-center gap-1 opacity-0 group-hover/set:opacity-100 transition-opacity px-2">
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => {
+                              e.stopPropagation();
+                              setRenameTarget({ type: 'setlist', bandName, setName });
+                              setNewName(setName);
+                              setIsRenameDialogOpen(true);
+                            }}><Pencil className="w-3 h-3" /></Button>
+                            <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={(e) => handleDeleteSetlist(bandName, setName, e)}><Trash2 className="w-3 h-3" /></Button>
                           </div>
-                        </AccordionTrigger>
+                        </div>
                         <AccordionContent className="pt-1">
                           <div className="space-y-1 ml-2">
                             {notes.map((note) => (
@@ -260,33 +323,9 @@ export default function NotesPage() {
                               >
                                 <span className="text-[11px] font-semibold truncate mb-1">{note.title}</span>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 text-muted-foreground hover:text-primary"
-                                    onClick={(e) => openActionDialog(note, 'move', e)}
-                                    title="Sposta"
-                                  >
-                                    <ArrowRightLeft className="w-3 h-3" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 text-muted-foreground hover:text-primary"
-                                    onClick={(e) => openActionDialog(note, 'duplicate', e)}
-                                    title="Duplica"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                    onClick={(e) => deleteNote(note.id, e)}
-                                    title="Elimina"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => openActionDialog(note, 'move', e)}><ArrowRightLeft className="w-3 h-3" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => openActionDialog(note, 'duplicate', e)}><Copy className="w-3 h-3" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3 h-3" /></Button>
                                 </div>
                               </div>
                             ))}
@@ -299,12 +338,6 @@ export default function NotesPage() {
               </AccordionItem>
             ))}
           </Accordion>
-          {savedNotes.length === 0 && (
-            <div className="text-center py-10 flex flex-col items-center gap-2 opacity-50">
-              <NotebookPen className="w-8 h-8 text-muted-foreground" />
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Vuoto</p>
-            </div>
-          )}
         </div>
       </ScrollArea>
     </div>
@@ -437,6 +470,27 @@ export default function NotesPage() {
         </main>
       </div>
 
+      {/* Rename Dialog */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Rinomina {renameTarget?.type === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              value={newName} 
+              onChange={(e) => setNewName(e.target.value)} 
+              placeholder="Nuovo nome..."
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsRenameDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleRenameGroup}>Salva</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Move/Duplicate Dialog */}
       <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
@@ -445,38 +499,24 @@ export default function NotesPage() {
               {actionType === 'move' ? <ArrowRightLeft className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               {actionType === 'move' ? 'Sposta Nota' : 'Duplica Nota'}
             </DialogTitle>
-            <DialogDescription>
-              {actionType === 'move' 
-                ? `Sposta "${actionNote?.title}" in una nuova posizione.` 
-                : `Crea una copia di "${actionNote?.title}" in una nuova posizione.`}
-            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label className="text-xs font-bold uppercase text-muted-foreground">Destinazione Band</label>
-              <Input 
-                value={targetBand} 
-                onChange={(e) => setTargetBand(e.target.value)} 
-                placeholder="Nome Band..."
-              />
+              <Input value={targetBand} onChange={(e) => setTargetBand(e.target.value)} placeholder="Nome Band..." />
             </div>
             <div className="grid gap-2">
               <label className="text-xs font-bold uppercase text-muted-foreground">Destinazione Scaletta</label>
-              <Input 
-                value={targetSetlist} 
-                onChange={(e) => setTargetSetlist(e.target.value)} 
-                placeholder="Nome Scaletta..."
-              />
+              <Input value={targetSetlist} onChange={(e) => setTargetSetlist(e.target.value)} placeholder="Nome Scaletta..." />
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsActionDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleConfirmAction}>
-              {actionType === 'move' ? 'Sposta ora' : 'Duplica ora'}
-            </Button>
+            <Button onClick={handleConfirmAction}>{actionType === 'move' ? 'Sposta ora' : 'Duplica ora'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </AppShell>
   );
 }
+

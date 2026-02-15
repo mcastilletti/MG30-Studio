@@ -2692,6 +2692,14 @@ body {
   opacity: 1;
 }
 
+.group\/band:hover .group-hover\/band\:opacity-100 {
+  opacity: 1;
+}
+
+.group\/set:hover .group-hover\/set\:opacity-100 {
+  opacity: 1;
+}
+
 .group.destructive .group-\[\.destructive\]\:border-muted\/40 {
   border-color: hsl(var(--muted) / .4);
 }
