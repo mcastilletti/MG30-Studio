@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
@@ -27,6 +28,8 @@ interface NoteSection {
 interface SavedNote {
   id: string;
   title: string;
+  band: string;
+  setlist: string;
   presetSlot: string;
   generalNotes: string;
   sections: NoteSection[];
@@ -41,6 +44,8 @@ export default function NotesPage() {
     {
       id: '1',
       title: 'Comfortably Numb',
+      band: 'Pink Floyd Tribute',
+      setlist: 'Tour 2024',
       presetSlot: '1',
       generalNotes: 'Impostazioni Big Muff e Delay per il primo assolo.',
       sections: [{ id: 's1', type: 'Solo', text: 'Slow bend al 12esimo tasto' }],
@@ -53,6 +58,8 @@ export default function NotesPage() {
   
   // Current editor state
   const [title, setTitle] = useState('');
+  const [band, setBand] = useState('');
+  const [setlist, setSetlist] = useState('');
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true);
@@ -60,9 +67,25 @@ export default function NotesPage() {
     { id: '1', type: 'Intro', text: '' }
   ]);
 
+  // Group notes by Band then by Setlist
+  const groupedNotes = useMemo(() => {
+    const groups: Record<string, Record<string, SavedNote[]>> = {};
+    
+    savedNotes.forEach(note => {
+      const b = note.band || 'Senza Band';
+      const s = note.setlist || 'Senza Scaletta';
+      
+      if (!groups[b]) groups[b] = {};
+      if (!groups[b][s]) groups[b][s] = [];
+      groups[b][s].push(note);
+    });
+    
+    return groups;
+  }, [savedNotes]);
+
   const handlePresetChange = (slot: string) => {
     setSelectedPresetSlot(slot);
-    if (status === 'connected') {
+    if (status === 'connected' && slot) {
       sendProgramChange(parseInt(slot) - 1);
     }
   };
@@ -87,6 +110,8 @@ export default function NotesPage() {
     const newNote: SavedNote = {
       id: selectedNoteId || Math.random().toString(),
       title: title || 'Nuovo Brano',
+      band: band || 'Senza Band',
+      setlist: setlist || 'Senza Scaletta',
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
@@ -104,6 +129,8 @@ export default function NotesPage() {
   const handleNewNote = () => {
     setSelectedNoteId(null);
     setTitle('');
+    setBand('');
+    setSetlist('');
     setSelectedPresetSlot('');
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
@@ -113,6 +140,8 @@ export default function NotesPage() {
   const loadNote = (note: SavedNote) => {
     setSelectedNoteId(note.id);
     setTitle(note.title);
+    setBand(note.band);
+    setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot);
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
@@ -130,45 +159,71 @@ export default function NotesPage() {
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
 
   const NoteList = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <FileText className="w-3 h-3" /> Note Salvate
+          <Layers className="w-3 h-3" /> Archivio Note
         </h3>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewNote}>
           <Plus className="w-4 h-4" />
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 max-h-[70vh] md:max-h-none">
-        <div className="space-y-2 pr-4">
-          {savedNotes.map((note) => (
-            <div 
-              key={note.id}
-              onClick={() => loadNote(note)}
-              className={cn(
-                "group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border",
-                selectedNoteId === note.id 
-                  ? "bg-primary/10 border-primary/40 text-primary shadow-sm" 
-                  : "bg-card/40 border-border hover:border-primary/20"
-              )}
-            >
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-xs font-bold truncate uppercase tracking-tight">{note.title || 'Senza titolo'}</span>
-                <span className="text-[10px] text-muted-foreground">
-                  Preset {note.presetSlot ? note.presetSlot : '--'}
-                </span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                onClick={(e) => deleteNote(note.id, e)}
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
+      <ScrollArea className="flex-1">
+        <div className="pr-4 pb-8">
+          <Accordion type="multiple" className="w-full">
+            {Object.entries(groupedNotes).map(([bandName, setlists]) => (
+              <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none">
+                <AccordionTrigger className="hover:no-underline py-2">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary">
+                    <Users className="w-3 h-3" /> {bandName}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Accordion type="multiple" className="w-full ml-2 border-l border-primary/20 pl-2">
+                    {Object.entries(setlists).map(([setName, notes]) => (
+                      <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
+                        <AccordionTrigger className="hover:no-underline py-1.5">
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            <Music2 className="w-3 h-3" /> {setName}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-1 mt-1 ml-2">
+                            {notes.map((note) => (
+                              <div 
+                                key={note.id}
+                                onClick={() => loadNote(note)}
+                                className={cn(
+                                  "group flex items-center justify-between p-2 rounded-md cursor-pointer transition-all border",
+                                  selectedNoteId === note.id 
+                                    ? "bg-primary/10 border-primary/40 text-primary shadow-sm" 
+                                    : "bg-card/40 border-border hover:border-primary/20"
+                                )}
+                              >
+                                <div className="flex flex-col overflow-hidden">
+                                  <span className="text-[11px] font-semibold truncate">{note.title || 'Senza titolo'}</span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                                  onClick={(e) => deleteNote(note.id, e)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          
           {savedNotes.length === 0 && (
             <div className="text-center py-10 text-[10px] uppercase tracking-widest text-muted-foreground opacity-50">
               Nessuna sessione
@@ -183,7 +238,7 @@ export default function NotesPage() {
     <AppShell>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
         {/* Sidebar Desktop */}
-        <aside className="hidden md:flex w-64 flex-col gap-4 border-r border-border pr-6 shrink-0">
+        <aside className="hidden md:flex w-72 flex-col gap-4 border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
           <NoteList />
         </aside>
 
@@ -203,13 +258,13 @@ export default function NotesPage() {
                         Note
                         <List className="w-4 h-4 md:hidden text-muted-foreground" />
                       </h2>
-                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground md:hidden">Tocca per elenco</span>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground md:hidden">Tocca per archivio</span>
                     </div>
                   </button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px] bg-background border-r border-border">
+                <SheetContent side="left" className="w-[300px] bg-background border-r border-border p-4">
                   <SheetHeader className="mb-6">
-                    <SheetTitle className="text-left text-xs uppercase tracking-widest text-muted-foreground">Libreria Sessioni</SheetTitle>
+                    <SheetTitle className="text-left text-xs uppercase tracking-widest text-muted-foreground">Archivio Gerarchico</SheetTitle>
                   </SheetHeader>
                   <NoteList />
                 </SheetContent>
@@ -222,25 +277,50 @@ export default function NotesPage() {
 
           <Card className="border-border shadow-md bg-card/50">
             <CardContent className="p-4 space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="space-y-3">
                 <Input 
                   placeholder="Titolo Brano..." 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="text-lg font-bold h-12 bg-background/50 border-border/50 flex-1"
+                  className="text-lg font-bold h-12 bg-background/50 border-border/50 w-full"
                 />
-                <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
-                  <SelectTrigger className="w-full sm:w-[130px] h-12 bg-background/50">
-                    <SelectValue placeholder="Preset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {devicePresets.map((p) => (
-                      <SelectItem key={p.slot} value={p.slot.toString()}>
-                        {p.slot}: {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Band</label>
+                    <Input 
+                      placeholder="Nome Band..." 
+                      value={band}
+                      onChange={(e) => setBand(e.target.value)}
+                      className="h-9 bg-background/30 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
+                    <Input 
+                      placeholder="Nome Scaletta..." 
+                      value={setlist}
+                      onChange={(e) => setSetlist(e.target.value)}
+                      className="h-9 bg-background/30 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Preset MG-30</label>
+                  <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
+                    <SelectTrigger className="w-full h-10 bg-background/50">
+                      <SelectValue placeholder="Seleziona Preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devicePresets.map((p) => (
+                        <SelectItem key={p.slot} value={p.slot.toString()}>
+                          {p.slot}: {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
