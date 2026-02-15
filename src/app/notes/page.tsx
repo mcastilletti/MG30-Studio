@@ -53,7 +53,7 @@ export default function NotesPage() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = false;
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '' }
@@ -168,6 +168,7 @@ export default function NotesPage() {
     setSections([{ id: '1', type: 'Intro', text: '' }]);
     setIsMobileSheetOpen(false);
     setEditMode(true);
+    setIsDetailsOpen(true);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -181,6 +182,7 @@ export default function NotesPage() {
     setIsMobileSheetOpen(false);
     setEditMode(false);
     setIsNotesOpen(true);
+    setIsDetailsOpen(false);
 
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
@@ -376,7 +378,7 @@ export default function NotesPage() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[85%] sm:max-w-[340px]">
                   <SheetHeader className="text-left mb-4">
-                    <SheetTitle>Note Salvate</SheetTitle>
+                    <SheetTitle>Archivio Note</SheetTitle>
                   </SheetHeader>
                   <NoteList />
                 </SheetContent>
@@ -411,19 +413,28 @@ export default function NotesPage() {
             </Select>
 
             {(selectedNoteId === null || editMode) && (
-              <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-3">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Organizzazione</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
-                    <Input placeholder="Es: Pink Floyd Tribute" value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50" />
+              <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-1">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] font-bold bg-secondary/30">
+                    <span>ORGANIZZAZIONE (BAND / SCALETTA)</span>
+                    {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
+                        <Input placeholder="Es: Pink Floyd Tribute" value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
+                        <Input placeholder="Es: Tour 2024" value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
-                    <Input placeholder="Es: Tour 2024" value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50" />
-                  </div>
-                </div>
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
             )}
 
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-1">
