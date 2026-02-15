@@ -739,6 +739,10 @@ body {
   max-height: 100vh;
 }
 
+.max-h-\[200px\] {
+  max-height: 200px;
+}
+
 .min-h-0 {
   min-height: 0;
 }
@@ -761,6 +765,10 @@ body {
 
 .min-h-\[100px\] {
   min-height: 100px;
+}
+
+.min-h-\[calc\(100vh-140px\)\] {
+  min-height: calc(100vh - 140px);
 }
 
 .w-0 {
@@ -871,6 +879,10 @@ body {
   width: 120px;
 }
 
+.w-\[100px\] {
+  width: 100px;
+}
+
 .min-w-0 {
   min-width: 0;
 }
@@ -913,6 +925,10 @@ body {
 
 .max-w-md {
   max-width: 28rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
 }
 
 .flex-1 {
@@ -1709,6 +1725,18 @@ body {
   padding-bottom: 2.5rem;
 }
 
+.pb-20 {
+  padding-bottom: 5rem;
+}
+
+.pb-6 {
+  padding-bottom: 1.5rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
+}
+
 .text-left {
   text-align: left;
 }
@@ -2226,6 +2254,10 @@ body {
   color: hsl(var(--muted-foreground));
 }
 
+.placeholder\:opacity-20::placeholder {
+  opacity: .2;
+}
+
 .after\:absolute:after {
   content: var(--tw-content);
   position: absolute;
@@ -2274,6 +2306,10 @@ body {
 
 .hover\:border-yellow-500\/50:hover {
   border-color: #eab30880;
+}
+
+.hover\:border-primary\/20:hover {
+  border-color: hsl(var(--primary) / .2);
 }
 
 .hover\:bg-accent:hover {
@@ -2344,6 +2380,10 @@ body {
 
 .hover\:bg-transparent:hover {
   background-color: #0000;
+}
+
+.hover\:bg-primary\/10:hover {
+  background-color: hsl(var(--primary) / .1);
 }
 
 .hover\:text-accent-foreground:hover {
@@ -3036,6 +3076,10 @@ body {
     display: flex;
   }
 
+  .sm\:w-\[130px\] {
+    width: 130px;
+  }
+
   .sm\:max-w-\[450px\] {
     max-width: 450px;
   }
@@ -3108,6 +3152,11 @@ body {
     grid-column: span 2 / span 2;
   }
 
+  .md\:mx-0 {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .md\:block {
     display: block;
   }
@@ -3116,8 +3165,16 @@ body {
     display: flex;
   }
 
+  .md\:max-h-none {
+    max-height: none;
+  }
+
   .md\:w-96 {
     width: 24rem;
+  }
+
+  .md\:w-64 {
+    width: 16rem;
   }
 
   .md\:max-w-\[420px\] {
@@ -3144,8 +3201,24 @@ body {
     align-items: center;
   }
 
+  .md\:border-b-0 {
+    border-bottom-width: 0;
+  }
+
+  .md\:border-r {
+    border-right-width: 1px;
+  }
+
   .md\:p-6 {
     padding: 1.5rem;
+  }
+
+  .md\:pb-0 {
+    padding-bottom: 0;
+  }
+
+  .md\:pr-6 {
+    padding-right: 1.5rem;
   }
 
   .md\:text-sm {
