@@ -53,8 +53,8 @@ export default function NotesPage() {
   const [setlist, setSetlist] = useState('');
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
-  const [isNotesOpen, setIsNotesOpen] = useState(true); // Default open to show more space
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(true); 
+  const [isDetailsOpen, setIsDetailsOpen] = useState(true); // Default open for new notes
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '' }
   ]);
@@ -140,6 +140,7 @@ export default function NotesPage() {
       setSelectedNoteId(newNote.id);
     }
 
+    setIsDetailsOpen(false); // Close details after save
     toast({ title: "Nota Salvata", description: `'${title}' salvato correttamente.` });
   };
 
@@ -152,7 +153,7 @@ export default function NotesPage() {
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(true);
+    setIsDetailsOpen(true); // Open details for new creation
   };
 
   const loadNote = (note: SavedNote) => {
@@ -164,7 +165,7 @@ export default function NotesPage() {
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(false);
+    setIsDetailsOpen(false); // Hide details in view mode
     setIsNotesOpen(true);
 
     if (note.presetSlot && status === 'connected') {
@@ -292,7 +293,7 @@ export default function NotesPage() {
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={handleNewNote} className="h-9 w-9 text-muted-foreground">
+              <Button variant="ghost" size="icon" onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="h-9 w-9 text-muted-foreground">
                 <Pencil className="w-5 h-5" />
               </Button>
               <Button onClick={handleSaveNote} size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 shadow-lg">
@@ -327,34 +328,36 @@ export default function NotesPage() {
               </div>
             </div>
             
-            <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
-                  <span className="flex items-center gap-2"><Info className="w-3 h-3" /> Dettagli Organizzazione</span>
-                  {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="space-y-1">
-                    <Input 
-                      placeholder="Band..." 
-                      value={band}
-                      onChange={(e) => setBand(e.target.value)}
-                      className="h-9 bg-background/30 text-xs border-border/40"
-                    />
+            {(selectedNoteId === null || isDetailsOpen) && (
+              <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
+                    <span className="flex items-center gap-2"><Info className="w-3 h-3" /> Dettagli Organizzazione</span>
+                    {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1">
+                      <Input 
+                        placeholder="Band..." 
+                        value={band}
+                        onChange={(e) => setBand(e.target.value)}
+                        className="h-9 bg-background/30 text-xs border-border/40"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Input 
+                        placeholder="Scaletta..." 
+                        value={setlist}
+                        onChange={(e) => setSetlist(e.target.value)}
+                        className="h-9 bg-background/30 text-xs border-border/40"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Input 
-                      placeholder="Scaletta..." 
-                      value={setlist}
-                      onChange={(e) => setSetlist(e.target.value)}
-                      className="h-9 bg-background/30 text-xs border-border/40"
-                    />
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-1">
               <CollapsibleTrigger asChild>
