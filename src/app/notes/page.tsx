@@ -64,6 +64,8 @@ export default function NotesPage() {
   const [actionType, setActionType] = useState<'move' | 'duplicate'>('move');
   const [targetBand, setTargetBand] = useState('');
   const [targetSetlist, setTargetSetlist] = useState('');
+  const [isNewBand, setIsNewBand] = useState(false);
+  const [isNewSetlist, setIsNewSetlist] = useState(false);
 
   // Rename Dialog State
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
@@ -97,6 +99,13 @@ export default function NotesPage() {
     });
     return groups;
   }, [savedNotes]);
+
+  const existingBands = useMemo(() => Object.keys(groupedNotes).filter(b => b !== 'Senza Band'), [groupedNotes]);
+  
+  const existingSetlistsForTargetBand = useMemo(() => {
+    if (!targetBand || targetBand === 'Senza Band') return [];
+    return Object.keys(groupedNotes[targetBand] || {}).filter(s => s !== 'Senza Scaletta');
+  }, [groupedNotes, targetBand]);
 
   const handlePresetChange = (slot: string) => {
     setSelectedPresetSlot(slot);
@@ -190,15 +199,20 @@ export default function NotesPage() {
     setActionType(type);
     setTargetBand(note.band);
     setTargetSetlist(note.setlist);
+    setIsNewBand(false);
+    setIsNewSetlist(false);
     setIsActionDialogOpen(true);
   };
 
   const handleConfirmAction = () => {
     if (!actionNote) return;
 
+    const finalBand = targetBand || 'Senza Band';
+    const finalSetlist = targetSetlist || 'Senza Scaletta';
+
     if (actionType === 'move') {
       const updatedNotes = savedNotes.map(n => 
-        n.id === actionNote.id ? { ...n, band: targetBand, setlist: targetSetlist } : n
+        n.id === actionNote.id ? { ...n, band: finalBand, setlist: finalSetlist } : n
       );
       setSavedNotes(updatedNotes);
       toast({ title: "Nota Spostata" });
@@ -207,8 +221,8 @@ export default function NotesPage() {
         ...actionNote,
         id: Math.random().toString(),
         title: `${actionNote.title} (Copia)`,
-        band: targetBand,
-        setlist: targetSetlist,
+        band: finalBand,
+        setlist: finalSetlist,
         date: new Date()
       };
       setSavedNotes([duplicatedNote, ...savedNotes]);
@@ -500,14 +514,66 @@ export default function NotesPage() {
               {actionType === 'move' ? 'Sposta Nota' : 'Duplica Nota'}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
+            {/* Band Section */}
             <div className="grid gap-2">
-              <label className="text-xs font-bold uppercase text-muted-foreground">Destinazione Band</label>
-              <Input value={targetBand} onChange={(e) => setTargetBand(e.target.value)} placeholder="Nome Band..." />
+              <label className="text-[10px] font-bold uppercase text-muted-foreground flex justify-between">
+                Band 
+                <button 
+                  onClick={() => setIsNewBand(!isNewBand)} 
+                  className="text-primary hover:underline lowercase"
+                >
+                  {isNewBand ? "scegli esistente" : "crea nuova"}
+                </button>
+              </label>
+              {isNewBand ? (
+                <Input 
+                  value={targetBand} 
+                  onChange={(e) => setTargetBand(e.target.value)} 
+                  placeholder="Inserisci nome Band..." 
+                  autoFocus
+                />
+              ) : (
+                <Select value={targetBand} onValueChange={setTargetBand}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona Band..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Senza Band">Senza Band</SelectItem>
+                    {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+
+            {/* Setlist Section */}
             <div className="grid gap-2">
-              <label className="text-xs font-bold uppercase text-muted-foreground">Destinazione Scaletta</label>
-              <Input value={targetSetlist} onChange={(e) => setTargetSetlist(e.target.value)} placeholder="Nome Scaletta..." />
+              <label className="text-[10px] font-bold uppercase text-muted-foreground flex justify-between">
+                Scaletta
+                <button 
+                  onClick={() => setIsNewSetlist(!isNewSetlist)} 
+                  className="text-primary hover:underline lowercase"
+                >
+                  {isNewSetlist ? "scegli esistente" : "crea nuova"}
+                </button>
+              </label>
+              {isNewSetlist ? (
+                <Input 
+                  value={targetSetlist} 
+                  onChange={(e) => setTargetSetlist(e.target.value)} 
+                  placeholder="Inserisci nome Scaletta..." 
+                />
+              ) : (
+                <Select value={targetSetlist} onValueChange={setTargetSetlist}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona Scaletta..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Senza Scaletta">Senza Scaletta</SelectItem>
+                    {existingSetlistsForTargetBand.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -519,4 +585,3 @@ export default function NotesPage() {
     </AppShell>
   );
 }
-
