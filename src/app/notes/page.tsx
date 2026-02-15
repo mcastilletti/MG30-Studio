@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -290,7 +289,10 @@ export default function NotesPage() {
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
                 <div className="flex items-center group/band">
-                  <AccordionTrigger className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1">
+                  <AccordionTrigger 
+                    hideIcon 
+                    className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1"
+                  >
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
                       <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
                     </div>
@@ -310,7 +312,10 @@ export default function NotesPage() {
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
                         <div className="flex items-center group/set">
-                          <AccordionTrigger className="hover:no-underline py-1.5 flex-1">
+                          <AccordionTrigger 
+                            hideIcon 
+                            className="hover:no-underline py-1.5 flex-1"
+                          >
                             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
                               <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
                             </div>
