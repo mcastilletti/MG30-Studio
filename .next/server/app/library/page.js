@@ -1,34 +1,36 @@
-var R=require("../../chunks/ssr/[turbopack]_runtime.js")("server/app/library/page.js")
-R.c("server/chunks/ssr/node_modules_bb681d96._.js")
-R.c("server/chunks/ssr/[root-of-the-server]__f0336b73._.js")
-R.c("server/chunks/ssr/src_app_ca777385._.js")
-R.c("server/chunks/ssr/_ce9a95c8._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_9774470f._.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_forbidden_45780354.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_15817684.js")
-R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_ece394eb.js")
-R.c("server/chunks/ssr/node_modules_node-fetch_src_index_1f6c0c62.js")
-R.c("server/chunks/ssr/node_modules_next_dist_eaf82c26._.js")
-R.c("server/chunks/ssr/node_modules_zod_ce9ff9ad._.js")
-R.c("server/chunks/ssr/node_modules_@genkit-ai_core_lib_91793727._.js")
-R.c("server/chunks/ssr/node_modules_ajv_dist_7f0a026b._.js")
-R.c("server/chunks/ssr/node_modules_zod-to-json-schema_dist_3b5c0de2._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_28b1336a._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_05992674._.js")
-R.c("server/chunks/ssr/node_modules_@genkit-ai_ai_lib_ad490aa8._.js")
-R.c("server/chunks/ssr/node_modules_handlebars_dist_cjs_670ea975._.js")
-R.c("server/chunks/ssr/node_modules_yaml_dist_c70cf5b3._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_resources_build_esm_5f5d2121._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_sdk-metrics_build_esm_1ea28c64._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_sdk-trace-base_build_esm_4b613864._.js")
-R.c("server/chunks/ssr/node_modules_protobufjs_24557efc._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_otlp-transformer_build_esm_6522dc85._.js")
-R.c("server/chunks/ssr/node_modules_@grpc_grpc-js_dee9e152._.js")
-R.c("server/chunks/ssr/node_modules_thriftrw_d9865ef6._.js")
-R.c("server/chunks/ssr/node_modules_@opentelemetry_4a05c3bf._.js")
-R.c("server/chunks/ssr/node_modules_@genkit-ai_googleai_dfc2ab8a._.js")
-R.c("server/chunks/ssr/node_modules_a71ba3a3._.js")
-R.c("server/chunks/ssr/[root-of-the-server]__515bf320._.js")
-R.m("[project]/.next-internal/server/app/library/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/preset-summary-flow.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)")
-R.m("[project]/node_modules/next/dist/esm/build/templates/app-page.js?page=/library/page { GLOBAL_ERROR_MODULE => \"[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)\", METADATA_0 => \"[project]/src/app/favicon.ico.mjs { IMAGE => \\\"[project]/src/app/favicon.ico (static in ecmascript)\\\" } [app-rsc] (structured image object, ecmascript, Next.js Server Component)\", MODULE_1 => \"[project]/src/app/layout.tsx [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_2 => \"[project]/node_modules/next/dist/client/components/builtin/not-found.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_3 => \"[project]/node_modules/next/dist/client/components/builtin/forbidden.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_4 => \"[project]/node_modules/next/dist/client/components/builtin/unauthorized.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_5 => \"[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_6 => \"[project]/src/app/library/page.tsx [app-rsc] (ecmascript, Next.js Server Component)\" } [app-rsc] (ecmascript)")
-module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-page.js?page=/library/page { GLOBAL_ERROR_MODULE => \"[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)\", METADATA_0 => \"[project]/src/app/favicon.ico.mjs { IMAGE => \\\"[project]/src/app/favicon.ico (static in ecmascript)\\\" } [app-rsc] (structured image object, ecmascript, Next.js Server Component)\", MODULE_1 => \"[project]/src/app/layout.tsx [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_2 => \"[project]/node_modules/next/dist/client/components/builtin/not-found.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_3 => \"[project]/node_modules/next/dist/client/components/builtin/forbidden.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_4 => \"[project]/node_modules/next/dist/client/components/builtin/unauthorized.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_5 => \"[project]/node_modules/next/dist/client/components/builtin/global-error.js [app-rsc] (ecmascript, Next.js Server Component)\", MODULE_6 => \"[project]/src/app/library/page.tsx [app-rsc] (ecmascript, Next.js Server Component)\" } [app-rsc] (ecmascript)").exports
+const CHUNK_PUBLIC_PATH = "server/app/library/page.js";
+const runtime = require("../../chunks/ssr/[turbopack]_runtime.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_next_dist_97f32f._.js");
+runtime.loadChunk("server/chunks/ssr/[root of the server]__d750c5._.js");
+runtime.loadChunk("server/chunks/ssr/src_app_896cde._.js");
+runtime.loadChunk("server/chunks/ssr/_e874e3._.js");
+runtime.loadChunk("server/chunks/ssr/src_app_globals_b80590.css");
+runtime.loadChunk("server/chunks/ssr/node_modules_ce97a5._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_next_dist_client_components_forbidden-error_b4e556.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_next_dist_client_components_unauthorized-error_d758e6.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_next_dist_a40e38._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_zod_cb885d._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@genkit-ai_core_lib_be6719._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_ajv_dist_e6327f._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_zod-to-json-schema_dist_cfb469._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_561fde._.js");
+runtime.loadChunk("server/chunks/ssr/bf1d5_@opentelemetry_semantic-conventions_build_esm_f50c7e._.js");
+runtime.loadChunk("server/chunks/ssr/4292a_@opentelemetry_semantic-conventions_build_esm_c6330d._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_b33ca5._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@genkit-ai_ai_lib_db9eb2._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_handlebars_dist_cjs_4c4387._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_yaml_dist_5cbea4._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_resources_build_esm_0bcac0._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_sdk-metrics_build_esm_f6913b._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_sdk-trace-base_build_esm_70d023._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_protobufjs_837b92._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_otlp-transformer_build_esm_501940._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@grpc_grpc-js_c81782._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_thriftrw_872e91._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@opentelemetry_5d8ac1._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_@genkit-ai_googleai_9035c2._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_e70990._.js");
+runtime.loadChunk("server/chunks/ssr/[root of the server]__129856._.js");
+runtime.loadChunk("server/chunks/ssr/node_modules_node-fetch_src_index_2ac10b.js");
+runtime.getOrInstantiateRuntimeModule("[project]/.next-internal/server/app/library/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/preset-summary-flow.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)", CHUNK_PUBLIC_PATH);
+module.exports = runtime.getOrInstantiateRuntimeModule("[project]/node_modules/next/dist/esm/build/templates/app-page.js?page=/library/page { METADATA_0 => \"[project]/src/app/favicon.ico.mjs { IMAGE => \\\"[project]/src/app/favicon.ico [app-rsc] (static)\\\" } [app-rsc] (structured image object, ecmascript, Next.js server component)\", MODULE_1 => \"[project]/src/app/layout.tsx [app-rsc] (ecmascript, Next.js server component)\", MODULE_2 => \"[project]/node_modules/next/dist/client/components/not-found-error.js [app-rsc] (ecmascript, Next.js server component)\", MODULE_3 => \"[project]/node_modules/next/dist/client/components/forbidden-error.js [app-rsc] (ecmascript, Next.js server component)\", MODULE_4 => \"[project]/node_modules/next/dist/client/components/unauthorized-error.js [app-rsc] (ecmascript, Next.js server component)\", MODULE_5 => \"[project]/src/app/library/page.tsx [app-rsc] (ecmascript, Next.js server component)\" } [app-rsc] (ecmascript)", CHUNK_PUBLIC_PATH).exports;

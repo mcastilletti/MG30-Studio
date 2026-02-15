@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Activity, Zap, Info, Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Activity, Zap, Info, Wifi, WifiOff, NotebookPen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     initialize();
   }, [initialize]);
 
-  // All'apertura, se connesso, sincronizza solo lo slot attivo
   useEffect(() => {
     if (status === 'connected') {
       syncActivePreset();
@@ -28,6 +27,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
     { label: 'Library', href: '/library', icon: Library },
     { label: 'Editor', href: '/editor', icon: Sliders },
+    { label: 'Note', href: '/notes', icon: NotebookPen },
     { label: 'SysEx Analyzer', href: '/tools/sysex-analyzer', icon: Zap },
   ];
 
@@ -75,11 +75,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                     </div>
                     {status === 'connected' ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
                   </div>
-                  {status === 'connected' && (
-                    <p className="text-[10px] text-muted-foreground px-1">
-                      NUX MG-30 ready for communication.
-                    </p>
-                  )}
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -116,14 +111,13 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               </div>
             </div>
             <div className="flex items-center gap-3">
-               <button className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1">Help</button>
                <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center">
                  <Info className="w-4 h-4 text-muted-foreground" />
                </div>
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-4 md:p-6">
             {children}
           </div>
         </main>
