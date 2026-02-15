@@ -10,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers, Check, ChevronRight, Info, Pencil, ArrowRightLeft, Copy, X } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -53,7 +53,8 @@ export default function NotesPage() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = false;
+  const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '' }
   ]);
@@ -153,7 +154,7 @@ export default function NotesPage() {
       setSavedNotes([newNote, ...savedNotes]);
       setSelectedNoteId(newNote.id);
     }
-    setIsDetailsOpen(false);
+    setEditMode(false);
     toast({ title: "Nota Salvata" });
   };
 
@@ -166,7 +167,7 @@ export default function NotesPage() {
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(true);
+    setEditMode(true);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -178,7 +179,7 @@ export default function NotesPage() {
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(false);
+    setEditMode(false);
     setIsNotesOpen(true);
 
     if (note.presetSlot && status === 'connected') {
@@ -374,18 +375,21 @@ export default function NotesPage() {
                   </button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[85%] sm:max-w-[340px]">
+                  <SheetHeader className="text-left mb-4">
+                    <SheetTitle>Note Salvate</SheetTitle>
+                  </SheetHeader>
                   <NoteList />
                 </SheetContent>
               </Sheet>
               <Input 
-                placeholder="Titolo..." 
+                placeholder="Titolo Brano..." 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-sm font-bold h-8 bg-transparent border-none shadow-none focus-visible:ring-0 p-0"
               />
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="h-8 w-8 text-muted-foreground">
+              <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)} className={cn("h-8 w-8", editMode ? "text-primary bg-primary/10" : "text-muted-foreground")}>
                 <Pencil className="w-4 h-4" />
               </Button>
               <Button onClick={handleSaveNote} size="icon" className="h-8 w-8 bg-primary shadow-md">
@@ -397,7 +401,7 @@ export default function NotesPage() {
           <div className="space-y-3">
             <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
               <SelectTrigger className="w-full h-10 bg-primary/5 border-primary/20 font-mono text-xs">
-                <SelectValue placeholder="Preset" />
+                <SelectValue placeholder="Seleziona Preset Hardware" />
               </SelectTrigger>
               <SelectContent>
                 {devicePresets.map((p) => (
@@ -406,21 +410,20 @@ export default function NotesPage() {
               </SelectContent>
             </Select>
 
-            {(selectedNoteId === null || isDetailsOpen) && (
-              <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] font-bold bg-secondary/30">
-                    <span>ORGANIZZAZIONE</span>
-                    {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <Input placeholder="Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs" />
-                    <Input placeholder="Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs" />
+            {(selectedNoteId === null || editMode) && (
+              <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Organizzazione</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
+                    <Input placeholder="Es: Pink Floyd Tribute" value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50" />
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <div className="space-y-1">
+                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
+                    <Input placeholder="Es: Tour 2024" value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50" />
+                  </div>
+                </div>
+              </div>
             )}
 
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-1">
@@ -432,7 +435,7 @@ export default function NotesPage() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <Textarea 
-                  placeholder="Appunti..." 
+                  placeholder="Annotazioni libere, accordature, effetti esterni..." 
                   className="min-h-[120px] text-sm bg-background/50 resize-none"
                   value={generalNotes}
                   onChange={(e) => setGeneralNotes(e.target.value)}
@@ -442,7 +445,7 @@ export default function NotesPage() {
 
             <Card className="border-border shadow-md bg-card/50">
               <CardHeader className="py-2 bg-secondary/40 flex flex-row items-center justify-between px-3">
-                <CardTitle className="text-[9px] uppercase tracking-widest font-black">Struttura</CardTitle>
+                <CardTitle className="text-[9px] uppercase tracking-widest font-black">Struttura Brano</CardTitle>
                 <Button variant="outline" size="sm" onClick={addSection} className="h-6 text-[8px] font-bold uppercase">
                   <Plus className="w-2 h-2 mr-1" /> Sezione
                 </Button>
@@ -452,7 +455,7 @@ export default function NotesPage() {
                   <TableBody>
                     {sections.map((section) => (
                       <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
-                        <TableCell className="p-1.5 w-[80px]">
+                        <TableCell className="p-1.5 w-[90px]">
                           <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
                             <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
                               <SelectValue />
@@ -466,7 +469,8 @@ export default function NotesPage() {
                           <Input 
                             value={section.text}
                             onChange={(e) => updateSectionText(section.id, e.target.value)}
-                            className="h-8 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0"
+                            placeholder="Note per questa sezione..."
+                            className="h-10 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0"
                           />
                         </TableCell>
                         <TableCell className="p-1 w-8">
@@ -517,27 +521,17 @@ export default function NotesPage() {
           <div className="grid gap-6 py-4">
             {/* Band Section */}
             <div className="grid gap-2">
-              <label className="text-[10px] font-bold uppercase text-muted-foreground flex justify-between">
-                Band 
-                <button 
-                  onClick={() => setIsNewBand(!isNewBand)} 
-                  className="text-primary hover:underline lowercase"
-                >
-                  {isNewBand ? "scegli esistente" : "crea nuova"}
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Band</label>
+                <button onClick={() => setIsNewBand(!isNewBand)} className="text-[10px] text-primary hover:underline">
+                  {isNewBand ? "Scegli Esistente" : "Crea Nuova"}
                 </button>
-              </label>
+              </div>
               {isNewBand ? (
-                <Input 
-                  value={targetBand} 
-                  onChange={(e) => setTargetBand(e.target.value)} 
-                  placeholder="Inserisci nome Band..." 
-                  autoFocus
-                />
+                <Input value={targetBand} onChange={(e) => setTargetBand(e.target.value)} placeholder="Nome Band..." autoFocus />
               ) : (
                 <Select value={targetBand} onValueChange={setTargetBand}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona Band..." />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Senza Band">Senza Band</SelectItem>
                     {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
@@ -548,26 +542,17 @@ export default function NotesPage() {
 
             {/* Setlist Section */}
             <div className="grid gap-2">
-              <label className="text-[10px] font-bold uppercase text-muted-foreground flex justify-between">
-                Scaletta
-                <button 
-                  onClick={() => setIsNewSetlist(!isNewSetlist)} 
-                  className="text-primary hover:underline lowercase"
-                >
-                  {isNewSetlist ? "scegli esistente" : "crea nuova"}
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Scaletta</label>
+                <button onClick={() => setIsNewSetlist(!isNewSetlist)} className="text-[10px] text-primary hover:underline">
+                  {isNewSetlist ? "Scegli Esistente" : "Crea Nuova"}
                 </button>
-              </label>
+              </div>
               {isNewSetlist ? (
-                <Input 
-                  value={targetSetlist} 
-                  onChange={(e) => setTargetSetlist(e.target.value)} 
-                  placeholder="Inserisci nome Scaletta..." 
-                />
+                <Input value={targetSetlist} onChange={(e) => setTargetSetlist(e.target.value)} placeholder="Nome Scaletta..." />
               ) : (
                 <Select value={targetSetlist} onValueChange={setTargetSetlist}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona Scaletta..." />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Senza Scaletta">Senza Scaletta</SelectItem>
                     {existingSetlistsForTargetBand.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -578,7 +563,7 @@ export default function NotesPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsActionDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleConfirmAction}>{actionType === 'move' ? 'Sposta ora' : 'Duplica ora'}</Button>
+            <Button onClick={handleConfirmAction}>{actionType === 'move' ? 'Sposta' : 'Duplica'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
