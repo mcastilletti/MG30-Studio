@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers, Check, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers, Check, ChevronRight, Info } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -53,7 +53,8 @@ export default function NotesPage() {
   const [setlist, setSetlist] = useState('');
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
-  const [isNotesOpen, setIsNotesOpen] = useState(true);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '' }
   ]);
@@ -151,6 +152,7 @@ export default function NotesPage() {
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
     setIsMobileSheetOpen(false);
+    setIsDetailsOpen(true); // Open details for new notes
   };
 
   const loadNote = (note: SavedNote) => {
@@ -162,6 +164,8 @@ export default function NotesPage() {
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
     setIsMobileSheetOpen(false);
+    setIsDetailsOpen(false); // Keep compact on load
+    setIsNotesOpen(false);
 
     // If preset slot exists, try to send it to hardware
     if (note.presetSlot && status === 'connected') {
@@ -197,8 +201,8 @@ export default function NotesPage() {
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
                 <AccordionTrigger className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary">
-                    <Users className="w-3 h-3" /> {bandName}
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
+                    <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
@@ -206,8 +210,8 @@ export default function NotesPage() {
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
                         <AccordionTrigger className="hover:no-underline py-1.5">
-                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                            <Music2 className="w-3 h-3" /> {setName}
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                            <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-1">
@@ -334,33 +338,43 @@ export default function NotesPage() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
-                      <Users className="w-2.5 h-2.5" /> Band
-                    </label>
-                    <Input 
-                      placeholder="Nome Band..." 
-                      value={band}
-                      onChange={(e) => setBand(e.target.value)}
-                      className="h-10 bg-background/30 text-xs border-border/40"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
-                      <Music2 className="w-2.5 h-2.5" /> Scaletta
-                    </label>
-                    <Input 
-                      placeholder="Nome Scaletta..." 
-                      value={setlist}
-                      onChange={(e) => setSetlist(e.target.value)}
-                      className="h-10 bg-background/30 text-xs border-border/40"
-                    />
-                  </div>
-                </div>
+                <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
+                      <span className="flex items-center gap-2"><Info className="w-3 h-3" /> Dettagli Band / Scaletta</span>
+                      {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
+                          <Users className="w-2.5 h-2.5" /> Band
+                        </label>
+                        <Input 
+                          placeholder="Nome Band..." 
+                          value={band}
+                          onChange={(e) => setBand(e.target.value)}
+                          className="h-10 bg-background/30 text-xs border-border/40"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
+                          <Music2 className="w-2.5 h-2.5" /> Scaletta
+                        </label>
+                        <Input 
+                          placeholder="Nome Scaletta..." 
+                          value={setlist}
+                          onChange={(e) => setSetlist(e.target.value)}
+                          className="h-10 bg-background/30 text-xs border-border/40"
+                        />
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
 
-              <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2 pt-2">
+              <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
                     <span className="flex items-center gap-2"><FileText className="w-3 h-3" /> Note Generali</span>
