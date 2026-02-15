@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -126,7 +127,7 @@ export default function NotesPage() {
                         value={section.type} 
                         onValueChange={(val: SectionType) => updateSectionType(section.id, val)}
                       >
-                        <SelectTrigger className="h-9 text-xs border-none bg-primary/5 font-bold uppercase focus:ring-0">
+                        <SelectTrigger className="h-10 text-xs border-none bg-primary/5 font-bold uppercase focus:ring-0">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -141,7 +142,7 @@ export default function NotesPage() {
                         value={section.text}
                         onChange={(e) => updateSectionText(section.id, e.target.value)}
                         placeholder="..."
-                        className="h-9 text-sm border-none bg-transparent shadow-none focus-visible:ring-0"
+                        className="h-10 text-lg border-none bg-transparent shadow-none focus-visible:ring-0"
                       />
                     </TableCell>
                     <TableCell className="p-2 w-10">
