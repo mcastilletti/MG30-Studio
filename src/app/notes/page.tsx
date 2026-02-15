@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers, Check, ChevronRight, Info } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List, Music2, Users, Layers, Check, ChevronRight, Info, Pencil } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -53,7 +53,7 @@ export default function NotesPage() {
   const [setlist, setSetlist] = useState('');
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
-  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(true); // Default open to show more space
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '' }
@@ -140,7 +140,7 @@ export default function NotesPage() {
       setSelectedNoteId(newNote.id);
     }
 
-    toast({ title: "Nota Salvata", description: `'${title}' è stato salvato in '${newNote.band} > ${newNote.setlist}'` });
+    toast({ title: "Nota Salvata", description: `'${title}' salvato correttamente.` });
   };
 
   const handleNewNote = () => {
@@ -152,7 +152,7 @@ export default function NotesPage() {
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(true); // Open details for new notes
+    setIsDetailsOpen(true);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -164,10 +164,9 @@ export default function NotesPage() {
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
     setIsMobileSheetOpen(false);
-    setIsDetailsOpen(false); // Keep compact on load
-    setIsNotesOpen(false);
+    setIsDetailsOpen(false);
+    setIsNotesOpen(true);
 
-    // If preset slot exists, try to send it to hardware
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
     }
@@ -188,7 +187,7 @@ export default function NotesPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-3 h-3" /> Archivio Note
+          <Layers className="w-3 h-3" /> Archivio
         </h3>
         <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase gap-1" onClick={handleNewNote}>
           <Plus className="w-3 h-3" /> Nuovo
@@ -196,7 +195,7 @@ export default function NotesPage() {
       </div>
       
       <ScrollArea className="flex-1">
-        <div className="pr-4 pb-8">
+        <div className="pr-2 pb-8">
           <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
@@ -253,8 +252,7 @@ export default function NotesPage() {
           {savedNotes.length === 0 && (
             <div className="text-center py-10 flex flex-col items-center gap-2 opacity-50">
               <NotebookPen className="w-8 h-8 text-muted-foreground" />
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Nessuna nota salvata</p>
-              <Button variant="ghost" size="sm" className="text-[9px]" onClick={handleNewNote}>Inizia ora</Button>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground text-center px-4">Inizia scrivendo un brano nell'editor</p>
             </div>
           )}
         </div>
@@ -266,193 +264,176 @@ export default function NotesPage() {
     <AppShell>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
         {/* Sidebar Desktop */}
-        <aside className="hidden md:flex w-72 flex-col gap-4 border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
+        <aside className="hidden md:flex w-64 flex-col gap-4 border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
           <NoteList />
         </aside>
 
         {/* Main Editor */}
         <main className="flex-1 space-y-4 max-w-xl mx-auto md:mx-0 w-full pb-20">
-          <header className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {/* Trigger Mobile per Elenco Note */}
+          <header className="flex items-center justify-between gap-4 py-2 border-b border-border/30">
+            <div className="flex items-center gap-3 overflow-hidden">
               <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                 <SheetTrigger asChild>
-                  <button className="flex items-center gap-3 group focus:outline-none md:cursor-default">
-                    <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
-                      <NotebookPen className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex flex-col items-start">
-                      <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                        Note
-                        <ChevronRight className="w-4 h-4 md:hidden text-muted-foreground animate-pulse" />
-                      </h2>
-                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground md:hidden font-bold">Apri Archivio</span>
-                    </div>
+                  <button className="p-2 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors md:hidden">
+                    <NotebookPen className="w-5 h-5 text-primary" />
                   </button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[85%] sm:max-w-[340px] bg-background border-r border-border p-5">
                   <SheetHeader className="mb-6">
                     <SheetTitle className="text-left text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      <Layers className="w-4 h-4" /> Navigazione Gerarchica
+                      <Layers className="w-4 h-4" /> Archivio Note
                     </SheetTitle>
                   </SheetHeader>
                   <NoteList />
                 </SheetContent>
               </Sheet>
+              <h2 className="text-sm md:text-xl font-bold tracking-tight truncate text-muted-foreground">
+                {title || 'Nuova Nota'}
+              </h2>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={handleNewNote} className="h-9 px-3 gap-2 text-xs">
-                <Plus className="w-4 h-4" /> Nuovo
+              <Button variant="ghost" size="icon" onClick={handleNewNote} className="h-9 w-9 text-muted-foreground">
+                <Pencil className="w-5 h-5" />
               </Button>
-              <Button onClick={handleSaveNote} size="sm" className="h-9 px-4 gap-2 bg-primary hover:bg-primary/90 font-bold">
-                <Save className="w-4 h-4" /> SALVA
+              <Button onClick={handleSaveNote} size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 shadow-lg">
+                <Save className="w-5 h-5" />
               </Button>
             </div>
           </header>
 
-          <Card className="border-border shadow-md bg-card/50 overflow-hidden">
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1">
+                <Input 
+                  placeholder="Titolo Brano..." 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="text-lg font-bold h-11 bg-background/50 border-border/50 w-full placeholder:opacity-30"
+                />
+              </div>
+              <div className="w-full sm:w-[150px]">
+                <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
+                  <SelectTrigger className="w-full h-11 bg-primary/5 border-primary/20 font-mono font-bold text-xs">
+                    <SelectValue placeholder="Preset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {devicePresets.map((p) => (
+                      <SelectItem key={p.slot} value={p.slot.toString()}>
+                        {p.slot}: {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
+                  <span className="flex items-center gap-2"><Info className="w-3 h-3" /> Dettagli Organizzazione</span>
+                  {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="space-y-1">
                     <Input 
-                      placeholder="Titolo Brano..." 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="text-lg font-bold h-12 bg-background/50 border-border/50 w-full placeholder:opacity-30"
+                      placeholder="Band..." 
+                      value={band}
+                      onChange={(e) => setBand(e.target.value)}
+                      className="h-9 bg-background/30 text-xs border-border/40"
                     />
                   </div>
-                  <div className="w-full sm:w-[180px]">
-                    <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
-                      <SelectTrigger className="w-full h-12 bg-primary/5 border-primary/20 font-mono font-bold">
-                        <SelectValue placeholder="Preset" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {devicePresets.map((p) => (
-                          <SelectItem key={p.slot} value={p.slot.toString()}>
-                            {p.slot}: {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-1">
+                    <Input 
+                      placeholder="Scaletta..." 
+                      value={setlist}
+                      onChange={(e) => setSetlist(e.target.value)}
+                      className="h-9 bg-background/30 text-xs border-border/40"
+                    />
                   </div>
                 </div>
-                
-                <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-2">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
-                      <span className="flex items-center gap-2"><Info className="w-3 h-3" /> Dettagli Band / Scaletta</span>
-                      {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
-                          <Users className="w-2.5 h-2.5" /> Band
-                        </label>
-                        <Input 
-                          placeholder="Nome Band..." 
-                          value={band}
-                          onChange={(e) => setBand(e.target.value)}
-                          className="h-10 bg-background/30 text-xs border-border/40"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1 flex items-center gap-1">
-                          <Music2 className="w-2.5 h-2.5" /> Scaletta
-                        </label>
-                        <Input 
-                          placeholder="Nome Scaletta..." 
-                          value={setlist}
-                          onChange={(e) => setSetlist(e.target.value)}
-                          className="h-10 bg-background/30 text-xs border-border/40"
-                        />
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
+              </CollapsibleContent>
+            </Collapsible>
 
-              <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between h-8 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
-                    <span className="flex items-center gap-2"><FileText className="w-3 h-3" /> Note Generali</span>
-                    {isNotesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <Textarea 
-                    placeholder="Annotazioni libere, accordi, settaggi particolari..." 
-                    className="min-h-[120px] text-sm bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
-                    value={generalNotes}
-                    onChange={(e) => setGeneralNotes(e.target.value)}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
-            </CardContent>
-          </Card>
+            <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-1">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] uppercase tracking-widest font-bold bg-secondary/30 hover:bg-secondary/50">
+                  <span className="flex items-center gap-2"><FileText className="w-3 h-3" /> Note Generali</span>
+                  {isNotesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <Textarea 
+                  placeholder="Annotazioni libere..." 
+                  className="min-h-[140px] text-sm bg-background/50 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                  value={generalNotes}
+                  onChange={(e) => setGeneralNotes(e.target.value)}
+                />
+              </CollapsibleContent>
+            </Collapsible>
 
-          <Card className="border-border shadow-md overflow-hidden bg-card/50">
-            <CardHeader className="py-2.5 bg-secondary/40 border-b border-border flex flex-row items-center justify-between px-4">
-              <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground font-black flex items-center gap-2">
-                <List className="w-3 h-3" /> Struttura Brano
-              </CardTitle>
-              <Button variant="outline" size="sm" onClick={addSection} className="h-7 text-[9px] font-bold gap-1 uppercase bg-background">
-                <Plus className="w-3 h-3" /> Aggiungi Sezione
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableBody>
-                  {sections.map((section) => (
-                    <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
-                      <TableCell className="p-2 w-[110px]">
-                        <Select 
-                          value={section.type} 
-                          onValueChange={(val: SectionType) => updateSectionType(section.id, val)}
-                        >
-                          <SelectTrigger className="h-10 text-[10px] border-none bg-primary/10 font-black uppercase focus:ring-0">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {sectionTypes.map(type => (
-                              <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="p-2">
-                        <Input 
-                          value={section.text}
-                          onChange={(e) => updateSectionText(section.id, e.target.value)}
-                          placeholder="Appunti o cambi patch..."
-                          className="h-10 text-lg font-medium border-none bg-transparent shadow-none focus-visible:ring-0 placeholder:opacity-20 placeholder:italic"
-                        />
-                      </TableCell>
-                      <TableCell className="p-2 w-10 text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-9 w-9 text-muted-foreground hover:text-destructive transition-colors"
-                          onClick={() => removeSection(section.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {sections.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3} className="p-8 text-center text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 italic">
-                        Nessuna sezione definita
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            <Card className="border-border shadow-md overflow-hidden bg-card/50">
+              <CardHeader className="py-2 bg-secondary/40 border-b border-border flex flex-row items-center justify-between px-3">
+                <CardTitle className="text-[9px] uppercase tracking-widest text-muted-foreground font-black flex items-center gap-2">
+                  <List className="w-3 h-3" /> Struttura Brano
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={addSection} className="h-6 text-[8px] font-bold gap-1 uppercase bg-background">
+                  <Plus className="w-3 h-3" /> Sezione
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableBody>
+                    {sections.map((section) => (
+                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
+                        <TableCell className="p-1.5 w-[90px]">
+                          <Select 
+                            value={section.type} 
+                            onValueChange={(val: SectionType) => updateSectionType(section.id, val)}
+                          >
+                            <SelectTrigger className="h-9 text-[9px] border-none bg-primary/10 font-black uppercase focus:ring-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sectionTypes.map(type => (
+                                <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="p-1.5">
+                          <Input 
+                            value={section.text}
+                            onChange={(e) => updateSectionText(section.id, e.target.value)}
+                            placeholder="..."
+                            className="h-9 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0 placeholder:opacity-20"
+                          />
+                        </TableCell>
+                        <TableCell className="p-1 w-8 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground/40 hover:text-destructive transition-colors"
+                            onClick={() => removeSection(section.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {sections.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="p-4 text-center text-[10px] uppercase tracking-widest text-muted-foreground opacity-30 italic">
+                          Vuoto
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </AppShell>

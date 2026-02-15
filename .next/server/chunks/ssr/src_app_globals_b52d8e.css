@@ -795,6 +795,10 @@ body {
   min-height: 120px;
 }
 
+.min-h-\[140px\] {
+  min-height: 140px;
+}
+
 .w-0 {
   width: 0;
 }
@@ -917,6 +921,10 @@ body {
 
 .w-\[85\%\] {
   width: 85%;
+}
+
+.w-\[90px\] {
+  width: 90px;
 }
 
 .min-w-0 {
@@ -1082,6 +1090,10 @@ body {
 
 .select-none {
   user-select: none;
+}
+
+.resize-none {
+  resize: none;
 }
 
 .grid-cols-1 {
@@ -1642,6 +1654,10 @@ body {
   padding: 1.25rem;
 }
 
+.p-1\.5 {
+  padding: .375rem;
+}
+
 .px-1 {
   padding-left: .25rem;
   padding-right: .25rem;
@@ -1891,6 +1907,10 @@ body {
   line-height: 1rem;
 }
 
+.text-\[8px\] {
+  font-size: 8px;
+}
+
 .font-bold {
   font-weight: 700;
 }
@@ -2040,6 +2060,10 @@ body {
   color: rgb(234 179 8 / var(--tw-text-opacity, 1));
 }
 
+.text-muted-foreground\/40 {
+  color: hsl(var(--muted-foreground) / .4);
+}
+
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -2071,6 +2095,10 @@ body {
 
 .opacity-90 {
   opacity: .9;
+}
+
+.opacity-30 {
+  opacity: .3;
 }
 
 .shadow-2xl {
@@ -2479,6 +2507,10 @@ body {
 
 .hover\:bg-secondary\/50:hover {
   background-color: hsl(var(--secondary) / .5);
+}
+
+.hover\:bg-primary\/20:hover {
+  background-color: hsl(var(--primary) / .2);
 }
 
 .hover\:text-accent-foreground:hover {
@@ -3191,6 +3223,10 @@ body {
     width: 180px;
   }
 
+  .sm\:w-\[150px\] {
+    width: 150px;
+  }
+
   .sm\:max-w-\[450px\] {
     max-width: 450px;
   }
@@ -3347,6 +3383,11 @@ body {
   .md\:text-sm {
     font-size: .875rem;
     line-height: 1.25rem;
+  }
+
+  .md\:text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
   }
 
   .md\:opacity-0 {
