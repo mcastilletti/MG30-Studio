@@ -610,6 +610,10 @@ body {
   margin-left: .25rem;
 }
 
+.ml-3 {
+  margin-left: .75rem;
+}
+
 .block {
   display: block;
 }
@@ -787,6 +791,10 @@ body {
   min-height: calc(100vh - 140px);
 }
 
+.min-h-\[120px\] {
+  min-height: 120px;
+}
+
 .w-0 {
   width: 0;
 }
@@ -905,6 +913,10 @@ body {
 
 .w-\[300px\] {
   width: 300px;
+}
+
+.w-\[85\%\] {
+  width: 85%;
 }
 
 .min-w-0 {
@@ -1398,6 +1410,10 @@ body {
   border-color: #eab30833;
 }
 
+.border-border\/20 {
+  border-color: hsl(var(--border) / .2);
+}
+
 .border-l-transparent {
   border-left-color: #0000;
 }
@@ -1618,6 +1634,14 @@ body {
   padding: 1px;
 }
 
+.p-2\.5 {
+  padding: .625rem;
+}
+
+.p-5 {
+  padding: 1.25rem;
+}
+
 .px-1 {
   padding-left: .25rem;
   padding-right: .25rem;
@@ -1703,6 +1727,11 @@ body {
   padding-bottom: 2rem;
 }
 
+.py-2\.5 {
+  padding-top: .625rem;
+  padding-bottom: .625rem;
+}
+
 .pb-2 {
   padding-bottom: .5rem;
 }
@@ -1781,6 +1810,10 @@ body {
 
 .pl-2 {
   padding-left: .5rem;
+}
+
+.pl-3 {
+  padding-left: .75rem;
 }
 
 .text-left {
@@ -1872,6 +1905,10 @@ body {
 
 .font-semibold {
   font-weight: 600;
+}
+
+.font-black {
+  font-weight: 900;
 }
 
 .uppercase {
@@ -2296,12 +2333,20 @@ body {
   color: hsl(var(--foreground));
 }
 
+.placeholder\:italic::placeholder {
+  font-style: italic;
+}
+
 .placeholder\:text-muted-foreground::placeholder {
   color: hsl(var(--muted-foreground));
 }
 
 .placeholder\:opacity-20::placeholder {
   opacity: .2;
+}
+
+.placeholder\:opacity-30::placeholder {
+  opacity: .3;
 }
 
 .after\:absolute:after {
@@ -2432,6 +2477,10 @@ body {
   background-color: hsl(var(--primary) / .1);
 }
 
+.hover\:bg-secondary\/50:hover {
+  background-color: hsl(var(--secondary) / .5);
+}
+
 .hover\:text-accent-foreground:hover {
   color: hsl(var(--accent-foreground));
 }
@@ -2477,6 +2526,10 @@ body {
 .hover\:after\:bg-sidebar-border:hover:after {
   content: var(--tw-content);
   background-color: hsl(var(--sidebar-border));
+}
+
+.focus\:border-primary\/50:focus {
+  border-color: hsl(var(--primary) / .5);
 }
 
 .focus\:bg-accent:focus {
@@ -3134,6 +3187,10 @@ body {
     width: 130px;
   }
 
+  .sm\:w-\[180px\] {
+    width: 180px;
+  }
+
   .sm\:max-w-\[450px\] {
     max-width: 450px;
   }
@@ -3144,6 +3201,10 @@ body {
 
   .sm\:max-w-sm {
     max-width: 24rem;
+  }
+
+  .sm\:max-w-\[340px\] {
+    max-width: 340px;
   }
 
   .sm\:grid-cols-2 {
