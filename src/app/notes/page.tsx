@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, FileText, Save, List } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
@@ -35,7 +36,7 @@ interface SavedNote {
 export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   
-  // State for the list of saved notes (Mocking some data initially)
+  // State for the list of saved notes
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([
     {
       id: '1',
@@ -48,6 +49,7 @@ export default function NotesPage() {
   ]);
   
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   
   // Current editor state
   const [title, setTitle] = useState('');
@@ -105,6 +107,7 @@ export default function NotesPage() {
     setSelectedPresetSlot('');
     setGeneralNotes('');
     setSections([{ id: '1', type: 'Intro', text: '' }]);
+    setIsMobileSheetOpen(false);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -113,6 +116,7 @@ export default function NotesPage() {
     setSelectedPresetSlot(note.presetSlot);
     setGeneralNotes(note.generalNotes);
     setSections(note.sections);
+    setIsMobileSheetOpen(false);
   };
 
   const deleteNote = (id: string, e: React.MouseEvent) => {
@@ -125,66 +129,91 @@ export default function NotesPage() {
 
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
 
+  const NoteList = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <FileText className="w-3 h-3" /> Note Salvate
+        </h3>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewNote}>
+          <Plus className="w-4 h-4" />
+        </Button>
+      </div>
+      
+      <ScrollArea className="flex-1 max-h-[70vh] md:max-h-none">
+        <div className="space-y-2 pr-4">
+          {savedNotes.map((note) => (
+            <div 
+              key={note.id}
+              onClick={() => loadNote(note)}
+              className={cn(
+                "group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border",
+                selectedNoteId === note.id 
+                  ? "bg-primary/10 border-primary/40 text-primary shadow-sm" 
+                  : "bg-card/40 border-border hover:border-primary/20"
+              )}
+            >
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-xs font-bold truncate uppercase tracking-tight">{note.title || 'Senza titolo'}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  Preset {note.presetSlot ? note.presetSlot : '--'}
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                onClick={(e) => deleteNote(note.id, e)}
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          ))}
+          {savedNotes.length === 0 && (
+            <div className="text-center py-10 text-[10px] uppercase tracking-widest text-muted-foreground opacity-50">
+              Nessuna sessione
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+
   return (
     <AppShell>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
-        {/* Sidebar Note Elenco - Left Column */}
-        <aside className="w-full md:w-64 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-border pb-6 md:pb-0 md:pr-6 shrink-0">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <FileText className="w-3 h-3" /> Note Salvate
-            </h3>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewNote}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          <ScrollArea className="flex-1 max-h-[200px] md:max-h-none">
-            <div className="space-y-2 pr-4">
-              {savedNotes.map((note) => (
-                <div 
-                  key={note.id}
-                  onClick={() => loadNote(note)}
-                  className={cn(
-                    "group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border",
-                    selectedNoteId === note.id 
-                      ? "bg-primary/10 border-primary/40 text-primary shadow-sm" 
-                      : "bg-card/40 border-border hover:border-primary/20"
-                  )}
-                >
-                  <div className="flex flex-col overflow-hidden">
-                    <span className="text-xs font-bold truncate uppercase tracking-tight">{note.title || 'Senza titolo'}</span>
-                    <span className="text-[10px] text-muted-foreground">
-                      Preset {note.presetSlot ? note.presetSlot : '--'}
-                    </span>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                    onClick={(e) => deleteNote(note.id, e)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-              {savedNotes.length === 0 && (
-                <div className="text-center py-10 text-[10px] uppercase tracking-widest text-muted-foreground opacity-50">
-                  Nessuna sessione
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+        {/* Sidebar Desktop */}
+        <aside className="hidden md:flex w-64 flex-col gap-4 border-r border-border pr-6 shrink-0">
+          <NoteList />
         </aside>
 
-        {/* Main Editor - Right Column */}
+        {/* Main Editor */}
         <main className="flex-1 space-y-4 max-w-xl mx-auto md:mx-0 w-full pb-20">
           <header className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-                <NotebookPen className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold tracking-tight">Editor Sessione</h2>
+              {/* Trigger Mobile per Elenco Note */}
+              <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+                <SheetTrigger asChild>
+                  <button className="flex items-center gap-3 group focus:outline-none md:cursor-default">
+                    <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
+                      <NotebookPen className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                        Note
+                        <List className="w-4 h-4 md:hidden text-muted-foreground" />
+                      </h2>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground md:hidden">Tocca per elenco</span>
+                    </div>
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] bg-background border-r border-border">
+                  <SheetHeader className="mb-6">
+                    <SheetTitle className="text-left text-xs uppercase tracking-widest text-muted-foreground">Libreria Sessioni</SheetTitle>
+                  </SheetHeader>
+                  <NoteList />
+                </SheetContent>
+              </Sheet>
             </div>
             <Button onClick={handleSaveNote} size="sm" className="gap-2 bg-primary hover:bg-primary/90">
               <Save className="w-4 h-4" /> Salva
