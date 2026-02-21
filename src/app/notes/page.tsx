@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -88,6 +88,10 @@ export default function NotesPage() {
     { id: '1', type: 'Intro', text: '', chords: [] }
   ]);
 
+  // States for dynamic band/setlist selection
+  const [isAddingNewBand, setIsAddingNewBand] = useState(false);
+  const [isAddingNewSetlist, setIsAddingNewSetlist] = useState(false);
+
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
   const [jsonToPaste, setJsonToPaste] = useState('');
 
@@ -144,6 +148,13 @@ export default function NotesPage() {
     });
     return groups;
   }, [savedNotes]);
+
+  const existingBands = useMemo(() => Object.keys(groupedNotes).filter(b => b !== 'Senza Band'), [groupedNotes]);
+  
+  const existingSetlists = useMemo(() => {
+    if (!band || !groupedNotes[band]) return [];
+    return Object.keys(groupedNotes[band]).filter(s => s !== 'Senza Scaletta');
+  }, [band, groupedNotes]);
 
   const handlePresetChange = (slot: string) => {
     setSelectedPresetSlot(slot);
@@ -221,6 +232,8 @@ export default function NotesPage() {
         }
       }
       setEditMode(false);
+      setIsAddingNewBand(false);
+      setIsAddingNewSetlist(false);
       toast({ title: "Nota Salvata" });
     } catch (err) {
       toast({ title: "Errore durante il salvataggio", variant: "destructive" });
@@ -238,6 +251,8 @@ export default function NotesPage() {
     setIsMobileSheetOpen(false);
     setEditMode(true);
     setIsDetailsOpen(true);
+    setIsAddingNewBand(false);
+    setIsAddingNewSetlist(false);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -252,6 +267,8 @@ export default function NotesPage() {
     setEditMode(false);
     setIsNotesOpen(true);
     setIsDetailsOpen(false);
+    setIsAddingNewBand(false);
+    setIsAddingNewSetlist(false);
 
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
@@ -536,11 +553,83 @@ export default function NotesPage() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
-                        <Input placeholder="Es: Pink Floyd Tribute" value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50" />
+                        {isAddingNewBand ? (
+                          <div className="flex gap-1">
+                            <Input 
+                              placeholder="Nome Band..." 
+                              value={band} 
+                              onChange={(e) => setBand(e.target.value)} 
+                              className="h-8 text-xs bg-background/50 flex-1"
+                              autoFocus
+                            />
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewBand(false)}>
+                              <RotateCcw className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Select 
+                            value={band} 
+                            onValueChange={(val) => {
+                              if (val === 'NEW_BAND') {
+                                setBand('');
+                                setIsAddingNewBand(true);
+                              } else {
+                                setBand(val);
+                                setSetlist(''); // Reset setlist when band changes
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-background/50">
+                              <SelectValue placeholder="Scegli Band" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {existingBands.map(b => (
+                                <SelectItem key={b} value={b}>{b}</SelectItem>
+                              ))}
+                              <SelectItem value="NEW_BAND" className="font-bold text-primary italic">+ Nuova Band...</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
-                        <Input placeholder="Es: Tour 2024" value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50" />
+                        {isAddingNewSetlist ? (
+                          <div className="flex gap-1">
+                            <Input 
+                              placeholder="Nome Scaletta..." 
+                              value={setlist} 
+                              onChange={(e) => setSetlist(e.target.value)} 
+                              className="h-8 text-xs bg-background/50 flex-1"
+                              autoFocus
+                            />
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewSetlist(false)}>
+                              <RotateCcw className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Select 
+                            value={setlist} 
+                            disabled={!band && !isAddingNewBand}
+                            onValueChange={(val) => {
+                              if (val === 'NEW_SETLIST') {
+                                setSetlist('');
+                                setIsAddingNewSetlist(true);
+                              } else {
+                                setSetlist(val);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs bg-background/50">
+                              <SelectValue placeholder={!band && !isAddingNewBand ? "Scegli prima Band" : "Scegli Scaletta"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {existingSetlists.map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                              <SelectItem value="NEW_SETLIST" className="font-bold text-primary italic">+ Nuova Scaletta...</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
                   </div>
