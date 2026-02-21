@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -94,6 +94,13 @@ export default function NotesPage() {
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
+
+  // States for renaming groups
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameType, setRenameType] = useState<'band' | 'setlist'>('band');
+  const [renameOldValue, setRenameOldValue] = useState('');
+  const [renameNewValue, setRenameNewValue] = useState('');
+  const [renameParentBand, setRenameParentBand] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -196,9 +203,9 @@ export default function NotesPage() {
     try {
       if (user) {
         if (selectedNoteId) {
-          updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
+          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
         } else {
-          addDoc(collection(firestore, "notes"), noteData);
+          await addDoc(collection(firestore, "notes"), noteData);
         }
       } else {
         const newNote: SavedNote = {
@@ -255,7 +262,7 @@ export default function NotesPage() {
     e.stopPropagation();
     try {
       if (user) {
-        deleteDoc(doc(firestore, "notes", id));
+        await deleteDoc(doc(firestore, "notes", id));
       } else {
         setSavedNotes(savedNotes.filter(n => n.id !== id));
       }
@@ -264,6 +271,59 @@ export default function NotesPage() {
     } catch (err) {
       toast({ title: "Errore eliminazione", variant: "destructive" });
     }
+  };
+
+  const handleRenameGroup = async () => {
+    if (!renameNewValue.trim()) return;
+
+    try {
+      const batch = user ? writeBatch(firestore) : null;
+      const updatedNotes = [...savedNotes];
+
+      savedNotes.forEach((note, index) => {
+        let shouldUpdate = false;
+        if (renameType === 'band' && note.band === renameOldValue) {
+          updatedNotes[index] = { ...note, band: renameNewValue };
+          shouldUpdate = true;
+        } else if (renameType === 'setlist' && note.band === renameParentBand && note.setlist === renameOldValue) {
+          updatedNotes[index] = { ...note, setlist: renameNewValue };
+          shouldUpdate = true;
+        }
+
+        if (shouldUpdate && batch && user) {
+          batch.update(doc(firestore, "notes", note.id), {
+            [renameType === 'band' ? 'band' : 'setlist']: renameNewValue,
+            updatedAt: serverTimestamp()
+          });
+        }
+      });
+
+      if (batch && user) {
+        await batch.commit();
+      } else {
+        setSavedNotes(updatedNotes);
+      }
+
+      // Update current form if needed
+      if (renameType === 'band' && band === renameOldValue) setBand(renameNewValue);
+      if (renameType === 'setlist' && band === renameParentBand && setlist === renameOldValue) setSetlist(renameNewValue);
+
+      setRenameDialogOpen(false);
+      setRenameNewValue('');
+      toast({ title: "Ridenominazione completata" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Errore ridenominazione", variant: "destructive" });
+    }
+  };
+
+  const openRenameDialog = (e: React.MouseEvent, type: 'band' | 'setlist', oldValue: string, parentBand?: string) => {
+    e.stopPropagation();
+    setRenameType(type);
+    setRenameOldValue(oldValue);
+    setRenameNewValue(oldValue);
+    setRenameParentBand(parentBand || '');
+    setRenameDialogOpen(true);
   };
 
   const handleApplyPasteJson = () => {
@@ -363,23 +423,39 @@ export default function NotesPage() {
           <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
-                <div className="flex items-center group/band">
+                <div className="flex items-center group/band pr-2">
                   <AccordionTrigger hideIcon className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
                       <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
                     </div>
                   </AccordionTrigger>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 opacity-0 group-hover/band:opacity-100 transition-opacity ml-1"
+                    onClick={(e) => openRenameDialog(e, 'band', bandName)}
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </Button>
                 </div>
                 <AccordionContent className="pt-2">
                   <Accordion type="multiple" className="w-full ml-3 border-l border-primary/20 pl-3">
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
-                        <div className="flex items-center group/set">
+                        <div className="flex items-center group/set pr-2">
                           <AccordionTrigger hideIcon className="hover:no-underline py-1.5 flex-1">
                             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
                               <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
                             </div>
                           </AccordionTrigger>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-5 w-5 opacity-0 group-hover/set:opacity-100 transition-opacity ml-1"
+                            onClick={(e) => openRenameDialog(e, 'setlist', setName, bandName)}
+                          >
+                            <Pencil className="w-2.5 h-2.5" />
+                          </Button>
                         </div>
                         <AccordionContent className="pt-1">
                           <div className="space-y-1 ml-2">
@@ -526,6 +602,37 @@ export default function NotesPage() {
           </div>
         </main>
       </div>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Rinomina {renameType === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
+            <DialogDescription>
+              Stai rinominando "{renameOldValue}". Tutte le note associate verranno aggiornate.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="name" className="text-xs font-bold uppercase text-muted-foreground">Nuovo Nome</label>
+              <Input
+                id="name"
+                value={renameNewValue}
+                onChange={(e) => setRenameNewValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup()}
+                className="bg-secondary/20"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleRenameGroup} className="gap-2">
+              <Check className="w-4 h-4" /> Conferma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
