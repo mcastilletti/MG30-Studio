@@ -1,10 +1,11 @@
+
 "use client"
 
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, Database, RotateCw, Usb, Sparkles } from 'lucide-react';
+import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,7 +14,7 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8 pb-20">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
@@ -24,8 +25,8 @@ export default function HomePage() {
           </Badge>
         </header>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="md:col-span-2 border-primary/20 bg-primary/5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 border-primary/20 bg-primary/5">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -42,7 +43,7 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6 p-4 rounded-lg bg-card border border-border">
+              <div className="flex items-center gap-6 p-4 rounded-lg bg-card border border-border shadow-sm">
                 <div className={`p-4 rounded-full ${status === 'connected' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                    <Usb className="w-8 h-8" />
                 </div>
@@ -78,34 +79,47 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="border-accent/20 bg-accent/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                AI Smart Studio
-              </CardTitle>
-              <CardDescription>Sempre disponibile, anche offline</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Puoi usare l'**AI Mode** e l'**Analisi Preset** anche senza pedaliera. Progetta i tuoi suoni ovunque e sincronizzali quando torni in studio.
-              </p>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-accent/10">
-                <span className="text-xs">AI Mode</span>
-                <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-500 bg-green-500/5">ONLINE</Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-accent/10">
-                <span className="text-xs">Preset Analysis</span>
-                <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-500 bg-green-500/5">ONLINE</Badge>
-              </div>
-              <Button asChild className="w-full mt-2 bg-accent hover:bg-accent/90">
-                <Link href="/editor">Apri Editor AI</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card className="border-[#FFD500]/30 bg-[#FFD500]/5 overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Smartphone className="w-4 h-4" /> Icon Preview (PWA)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="w-24 h-24 rounded-[22%] bg-[#FFD500] shadow-2xl flex items-center justify-center mb-4 border-4 border-white/10 overflow-hidden group hover:scale-105 transition-transform">
+                  <img src="/icon.png" alt="App Icon" className="w-full h-full object-cover" onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-2xl italic">NUX</div>';
+                  }} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-bold uppercase text-[#FFD500]">Mobile Ready</p>
+                  <p className="text-[10px] text-muted-foreground">Sfondo giallo #FFD500 applicato</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-accent/20 bg-accent/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-accent" />
+                  AI Smart Studio
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Usa l'**AI Mode** e l'**Analisi Preset** anche senza pedaliera. Progetta i tuoi suoni ovunque.
+                </p>
+                <Button asChild className="w-full mt-2 bg-accent hover:bg-accent/90">
+                  <Link href="/editor">Apri Editor AI</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           <Link href="/library" className="group">
             <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
               <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
@@ -128,7 +142,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-center">
                   <h4 className="font-bold">Visual Editor</h4>
-                  <p className="text-xs text-muted-foreground">Regola i parametri dei pedali</p>
+                  <p className="text-xs text-muted-foreground">Regola i parametri</p>
                 </div>
               </CardContent>
             </Card>
@@ -142,7 +156,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-center">
                   <h4 className="font-bold">AI Analyzer</h4>
-                  <p className="text-xs text-muted-foreground">Reverse engineering SysEx</p>
+                  <p className="text-xs text-muted-foreground">Reverse engineering</p>
                 </div>
               </CardContent>
             </Card>
