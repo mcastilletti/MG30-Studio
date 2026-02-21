@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -73,8 +73,10 @@ export default function NotesPage() {
   const { user } = useUser();
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const [localNotes, setLocalNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [isMigrationDialogOpen, setIsMigrationDialogOpen] = useState(false);
   
   const [title, setTitle] = useState('');
   const [band, setBand] = useState('');
@@ -88,7 +90,6 @@ export default function NotesPage() {
     { id: '1', type: 'Intro', text: '', chords: [] }
   ]);
 
-  // States for dynamic band/setlist selection
   const [isAddingNewBand, setIsAddingNewBand] = useState(false);
   const [isAddingNewSetlist, setIsAddingNewSetlist] = useState(false);
 
@@ -99,31 +100,36 @@ export default function NotesPage() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
-  // States for renaming groups
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameType, setRenameType] = useState<'band' | 'setlist'>('band');
   const [renameOldValue, setRenameOldValue] = useState('');
   const [renameNewValue, setRenameNewValue] = useState('');
   const [renameParentBand, setRenameParentBand] = useState('');
 
+  // Caricamento Note (Cloud o Locali)
   useEffect(() => {
+    // Carica sempre le locali per controllo migrazione
+    const stored = localStorage.getItem('mg30_studio_notes');
+    let localParsed: SavedNote[] = [];
+    if (stored) {
+      try { localParsed = JSON.parse(stored); setLocalNotes(localParsed); } catch(e) { console.error(e); }
+    }
+
     if (!user) {
-      const stored = localStorage.getItem('mg30_studio_notes');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setSavedNotes(parsed);
-        } catch (e) {
-          console.error("Failed to parse notes", e);
-        }
-      }
+      setSavedNotes(localParsed);
       return;
     }
 
+    // Se loggato, attiva listener Firestore
     const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
+      
+      // Se ci sono note locali e sono loggato, proponi migrazione una volta
+      if (localParsed.length > 0) {
+        setIsMigrationDialogOpen(true);
+      }
     }, (err) => {
       console.error("Firestore sync error:", err);
     });
@@ -131,11 +137,24 @@ export default function NotesPage() {
     return () => unsubscribe();
   }, [user, firestore]);
 
-  useEffect(() => {
-    if (!user) {
-      localStorage.setItem('mg30_studio_notes', JSON.stringify(savedNotes));
+  const handleMigrateNotes = async () => {
+    if (!user) return;
+    try {
+      const batch = writeBatch(firestore);
+      localNotes.forEach(note => {
+        const newDocRef = doc(collection(firestore, "notes"));
+        const { id, ...noteData } = note;
+        batch.set(newDocRef, { ...noteData, userId: user.uid, updatedAt: serverTimestamp() });
+      });
+      await batch.commit();
+      localStorage.removeItem('mg30_studio_notes');
+      setLocalNotes([]);
+      setIsMigrationDialogOpen(false);
+      toast({ title: "Migrazione completata", description: `${localNotes.length} note caricate nel cloud.` });
+    } catch (err) {
+      toast({ title: "Errore migrazione", variant: "destructive" });
     }
-  }, [savedNotes, user]);
+  };
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
@@ -213,28 +232,31 @@ export default function NotesPage() {
 
     try {
       if (user) {
-        if (selectedNoteId) {
-          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
+        // Se l'ID selezionato non è un ID Firestore (es. è un numero casuale locale), creiamo un nuovo documento
+        const isFirestoreId = selectedNoteId && selectedNoteId.length > 10;
+        if (isFirestoreId) {
+          await updateDoc(doc(firestore, "notes", selectedNoteId!), noteData);
         } else {
-          await addDoc(collection(firestore, "notes"), noteData);
+          const docRef = await addDoc(collection(firestore, "notes"), noteData);
+          setSelectedNoteId(docRef.id);
         }
       } else {
-        const newNote: SavedNote = {
-          ...noteData,
-          id: selectedNoteId || Math.random().toString(),
-          date: new Date().toISOString()
-        };
+        const newId = selectedNoteId || Math.random().toString();
+        const newNote: SavedNote = { ...noteData, id: newId, date: new Date().toISOString() };
+        let updatedList: SavedNote[];
         if (selectedNoteId) {
-          setSavedNotes(savedNotes.map(n => n.id === selectedNoteId ? newNote : n));
+          updatedList = savedNotes.map(n => n.id === selectedNoteId ? newNote : n);
         } else {
-          setSavedNotes([newNote, ...savedNotes]);
-          setSelectedNoteId(newNote.id);
+          updatedList = [newNote, ...savedNotes];
+          setSelectedNoteId(newId);
         }
+        setSavedNotes(updatedList);
+        localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedList));
       }
       setEditMode(false);
       setIsAddingNewBand(false);
       setIsAddingNewSetlist(false);
-      toast({ title: "Nota Salvata" });
+      toast({ title: "Nota Salvata", description: user ? "Sincronizzata nel cloud." : "Salvata localmente." });
     } catch (err) {
       toast({ title: "Errore durante il salvataggio", variant: "destructive" });
     }
@@ -251,8 +273,6 @@ export default function NotesPage() {
     setIsMobileSheetOpen(false);
     setEditMode(true);
     setIsDetailsOpen(true);
-    setIsAddingNewBand(false);
-    setIsAddingNewSetlist(false);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -267,8 +287,6 @@ export default function NotesPage() {
     setEditMode(false);
     setIsNotesOpen(true);
     setIsDetailsOpen(false);
-    setIsAddingNewBand(false);
-    setIsAddingNewSetlist(false);
 
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
@@ -278,10 +296,12 @@ export default function NotesPage() {
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      if (user) {
+      if (user && id.length > 10) {
         await deleteDoc(doc(firestore, "notes", id));
       } else {
-        setSavedNotes(savedNotes.filter(n => n.id !== id));
+        const newList = savedNotes.filter(n => n.id !== id);
+        setSavedNotes(newList);
+        if (!user) localStorage.setItem('mg30_studio_notes', JSON.stringify(newList));
       }
       if (selectedNoteId === id) handleNewNote();
       toast({ title: "Nota eliminata" });
@@ -319,9 +339,9 @@ export default function NotesPage() {
         await batch.commit();
       } else {
         setSavedNotes(updatedNotes);
+        if (!user) localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedNotes));
       }
 
-      // Update current form if needed
       if (renameType === 'band' && band === renameOldValue) setBand(renameNewValue);
       if (renameType === 'setlist' && band === renameParentBand && setlist === renameOldValue) setSetlist(renameNewValue);
 
@@ -343,50 +363,13 @@ export default function NotesPage() {
     setRenameDialogOpen(true);
   };
 
-  const handleApplyPasteJson = () => {
-    try {
-      const json = JSON.parse(jsonToPaste);
-      if (!json.sections || !Array.isArray(json.sections)) throw new Error("Manca 'sections'");
-      setTitle(json.title || title);
-      setBand(json.band || band);
-      setSetlist(json.setlist || setlist);
-      setSelectedPresetSlot(json.presetSlot || selectedPresetSlot);
-      setGeneralNotes(json.generalNotes || generalNotes);
-      setSections(json.sections.map((s: any) => ({
-        id: s.id || Math.random().toString(),
-        type: s.type || 'Verse',
-        text: s.text || '',
-        chords: Array.isArray(s.chords) ? s.chords : []
-      })));
-      setEditMode(true);
-      setIsPasteJsonDialogOpen(false);
-      setJsonToPaste('');
-      toast({ title: "JSON Applicato" });
-    } catch (err: any) {
-      toast({ title: "Errore JSON", description: err.message, variant: "destructive" });
-    }
-  };
-
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
 
   const ChordPicker = ({ sectionId }: { sectionId: string }) => {
-    const handleLetterSelect = (letter: string) => {
-      setSelectedLetter(letter);
-      setChordPickerStep('accidental');
-    };
-    const handleAccidentalSelect = (root: string) => {
-      setSelectedRoot(root);
-      setChordPickerStep('quality');
-    };
-    const handleQualitySelect = (chord: string) => {
-      addChordToSection(sectionId, chord);
-      resetPicker();
-    };
-    const resetPicker = () => {
-      setChordPickerStep('letter');
-      setSelectedLetter(null);
-      setSelectedRoot(null);
-    };
+    const handleLetterSelect = (letter: string) => { setSelectedLetter(letter); setChordPickerStep('accidental'); };
+    const handleAccidentalSelect = (root: string) => { setSelectedRoot(root); setChordPickerStep('quality'); };
+    const handleQualitySelect = (chord: string) => { addChordToSection(sectionId, chord); resetPicker(); };
+    const resetPicker = () => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); };
 
     const availableAccidentals = selectedLetter ? CHORD_ROOTS.filter(r => r.startsWith(selectedLetter)) : [];
 
@@ -446,12 +429,7 @@ export default function NotesPage() {
                       <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
                     </div>
                   </AccordionTrigger>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 opacity-0 group-hover/band:opacity-100 transition-opacity ml-1"
-                    onClick={(e) => openRenameDialog(e, 'band', bandName)}
-                  >
+                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/band:opacity-100 transition-opacity ml-1" onClick={(e) => openRenameDialog(e, 'band', bandName)}>
                     <Pencil className="w-3 h-3" />
                   </Button>
                 </div>
@@ -465,12 +443,7 @@ export default function NotesPage() {
                               <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
                             </div>
                           </AccordionTrigger>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-5 w-5 opacity-0 group-hover/set:opacity-100 transition-opacity ml-1"
-                            onClick={(e) => openRenameDialog(e, 'setlist', setName, bandName)}
-                          >
+                          <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover/set:opacity-100 transition-opacity ml-1" onClick={(e) => openRenameDialog(e, 'setlist', setName, bandName)}>
                             <Pencil className="w-2.5 h-2.5" />
                           </Button>
                         </div>
@@ -555,37 +528,14 @@ export default function NotesPage() {
                         <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
                         {isAddingNewBand ? (
                           <div className="flex gap-1">
-                            <Input 
-                              placeholder="Nome Band..." 
-                              value={band} 
-                              onChange={(e) => setBand(e.target.value)} 
-                              className="h-8 text-xs bg-background/50 flex-1"
-                              autoFocus
-                            />
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewBand(false)}>
-                              <RotateCcw className="w-3 h-3" />
-                            </Button>
+                            <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50 flex-1" autoFocus />
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewBand(false)}><RotateCcw className="w-3 h-3" /></Button>
                           </div>
                         ) : (
-                          <Select 
-                            value={band} 
-                            onValueChange={(val) => {
-                              if (val === 'NEW_BAND') {
-                                setBand('');
-                                setIsAddingNewBand(true);
-                              } else {
-                                setBand(val);
-                                setSetlist(''); // Reset setlist when band changes
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs bg-background/50">
-                              <SelectValue placeholder="Scegli Band" />
-                            </SelectTrigger>
+                          <Select value={band} onValueChange={(val) => { if (val === 'NEW_BAND') { setBand(''); setIsAddingNewBand(true); } else { setBand(val); setSetlist(''); } }}>
+                            <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
                             <SelectContent>
-                              {existingBands.map(b => (
-                                <SelectItem key={b} value={b}>{b}</SelectItem>
-                              ))}
+                              {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                               <SelectItem value="NEW_BAND" className="font-bold text-primary italic">+ Nuova Band...</SelectItem>
                             </SelectContent>
                           </Select>
@@ -595,37 +545,14 @@ export default function NotesPage() {
                         <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
                         {isAddingNewSetlist ? (
                           <div className="flex gap-1">
-                            <Input 
-                              placeholder="Nome Scaletta..." 
-                              value={setlist} 
-                              onChange={(e) => setSetlist(e.target.value)} 
-                              className="h-8 text-xs bg-background/50 flex-1"
-                              autoFocus
-                            />
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewSetlist(false)}>
-                              <RotateCcw className="w-3 h-3" />
-                            </Button>
+                            <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50 flex-1" autoFocus />
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewSetlist(false)}><RotateCcw className="w-3 h-3" /></Button>
                           </div>
                         ) : (
-                          <Select 
-                            value={setlist} 
-                            disabled={!band && !isAddingNewBand}
-                            onValueChange={(val) => {
-                              if (val === 'NEW_SETLIST') {
-                                setSetlist('');
-                                setIsAddingNewSetlist(true);
-                              } else {
-                                setSetlist(val);
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs bg-background/50">
-                              <SelectValue placeholder={!band && !isAddingNewBand ? "Scegli prima Band" : "Scegli Scaletta"} />
-                            </SelectTrigger>
+                          <Select value={setlist} disabled={!band && !isAddingNewBand} onValueChange={(val) => { if (val === 'NEW_SETLIST') { setSetlist(''); setIsAddingNewSetlist(true); } else { setSetlist(val); } }}>
+                            <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue placeholder={!band && !isAddingNewBand ? "Scegli prima Band" : "Scegli Scaletta"} /></SelectTrigger>
                             <SelectContent>
-                              {existingSetlists.map(s => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
+                              {existingSetlists.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               <SelectItem value="NEW_SETLIST" className="font-bold text-primary italic">+ Nuova Scaletta...</SelectItem>
                             </SelectContent>
                           </Select>
@@ -692,33 +619,37 @@ export default function NotesPage() {
         </main>
       </div>
 
-      {/* Rename Dialog */}
+      {/* Migration Dialog */}
+      <Dialog open={isMigrationDialogOpen} onOpenChange={setIsMigrationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><CloudUpload className="w-5 h-5 text-primary" /> Sincronizzazione Cloud</DialogTitle>
+            <DialogDescription>
+              Abbiamo trovato delle note salvate localmente su questo dispositivo. Vuoi caricarle nel tuo account cloud per trovarle su tutti i tuoi dispositivi?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setIsMigrationDialogOpen(false)}>Mantieni Locali</Button>
+            <Button onClick={handleMigrateNotes} className="gap-2"><Check className="w-4 h-4" /> Carica nel Cloud</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Rinomina {renameType === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
-            <DialogDescription>
-              Stai rinominando "{renameOldValue}". Tutte le note associate verranno aggiornate.
-            </DialogDescription>
+            <DialogDescription>Stai rinominando "{renameOldValue}". Tutte le note associate verranno aggiornate.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label htmlFor="name" className="text-xs font-bold uppercase text-muted-foreground">Nuovo Nome</label>
-              <Input
-                id="name"
-                value={renameNewValue}
-                onChange={(e) => setRenameNewValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup()}
-                className="bg-secondary/20"
-                autoFocus
-              />
+              <Input id="name" value={renameNewValue} onChange={(e) => setRenameNewValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup()} className="bg-secondary/20" autoFocus />
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleRenameGroup} className="gap-2">
-              <Check className="w-4 h-4" /> Conferma
-            </Button>
+            <Button onClick={handleRenameGroup} className="gap-2"><Check className="w-4 h-4" /> Conferma</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
