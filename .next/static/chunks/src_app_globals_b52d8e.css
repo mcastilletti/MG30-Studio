@@ -935,6 +935,10 @@ body {
   width: 1%;
 }
 
+.w-1\.5 {
+  width: .375rem;
+}
+
 .min-w-0 {
   min-width: 0;
 }
@@ -1102,6 +1106,10 @@ body {
 
 .select-none {
   user-select: none;
+}
+
+.select-all {
+  user-select: all;
 }
 
 .resize-none {
@@ -1661,6 +1669,11 @@ body {
 
 .bg-amber-500\/5 {
   background-color: #f59e0b0d;
+}
+
+.bg-amber-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(245 158 11 / var(--tw-bg-opacity, 1));
 }
 
 .fill-current {

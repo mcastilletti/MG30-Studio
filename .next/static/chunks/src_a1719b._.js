@@ -10,12 +10,12 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
 const firebaseConfig = {
-    apiKey: ("TURBOPACK compile-time value", "AIzaSyAs-Placeholder") || "",
-    authDomain: ("TURBOPACK compile-time value", "tuo-progetto.firebaseapp.com") || "",
-    projectId: ("TURBOPACK compile-time value", "tuo-progetto") || "",
-    storageBucket: ("TURBOPACK compile-time value", "tuo-progetto.appspot.com") || "",
-    messagingSenderId: ("TURBOPACK compile-time value", "123456789") || "",
-    appId: ("TURBOPACK compile-time value", "1:123456789:web:abcdef123456") || ""
+    apiKey: ("TURBOPACK compile-time value", "AIzaSyADXTcdHepnXW6MwguhvzSfQD1FT98xD-A") || "",
+    authDomain: ("TURBOPACK compile-time value", "studio-3261187179-ec15d.firebaseapp.com") || "",
+    projectId: ("TURBOPACK compile-time value", "studio-3261187179-ec15d") || "",
+    storageBucket: ("TURBOPACK compile-time value", "studio-3261187179-ec15d.firebasestorage.app") || "",
+    messagingSenderId: ("TURBOPACK compile-time value", "2836259228") || "",
+    appId: ("TURBOPACK compile-time value", "1:2836259228:web:8d12ca6cb3479ebc56e859") || ""
 };
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_refresh__.registerExports(module, globalThis.$RefreshHelpers$);

@@ -137,12 +137,12 @@ __turbopack_esm__({
     "firebaseConfig": (()=>firebaseConfig)
 });
 const firebaseConfig = {
-    apiKey: ("TURBOPACK compile-time value", "AIzaSyAs-Placeholder") || "",
-    authDomain: ("TURBOPACK compile-time value", "tuo-progetto.firebaseapp.com") || "",
-    projectId: ("TURBOPACK compile-time value", "tuo-progetto") || "",
-    storageBucket: ("TURBOPACK compile-time value", "tuo-progetto.appspot.com") || "",
-    messagingSenderId: ("TURBOPACK compile-time value", "123456789") || "",
-    appId: ("TURBOPACK compile-time value", "1:123456789:web:abcdef123456") || ""
+    apiKey: ("TURBOPACK compile-time value", "AIzaSyADXTcdHepnXW6MwguhvzSfQD1FT98xD-A") || "",
+    authDomain: ("TURBOPACK compile-time value", "studio-3261187179-ec15d.firebaseapp.com") || "",
+    projectId: ("TURBOPACK compile-time value", "studio-3261187179-ec15d") || "",
+    storageBucket: ("TURBOPACK compile-time value", "studio-3261187179-ec15d.firebasestorage.app") || "",
+    messagingSenderId: ("TURBOPACK compile-time value", "2836259228") || "",
+    appId: ("TURBOPACK compile-time value", "1:2836259228:web:8d12ca6cb3479ebc56e859") || ""
 };
 }}),
 "[project]/src/firebase/provider.tsx [app-ssr] (ecmascript)": ((__turbopack_context__) => {

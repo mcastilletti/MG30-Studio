@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -13,12 +13,14 @@ import { useFirebase, useUser } from '@/firebase';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
   const pathname = usePathname();
   const { auth, googleProvider } = useFirebase();
   const { user } = useUser();
+  const { toast } = useToast();
 
   useEffect(() => {
     initialize();
@@ -33,13 +35,40 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+      toast({
+        title: "Login effettuato",
+        description: "Bentornato! I tuoi dati sono ora sincronizzati nel cloud.",
+      });
+    } catch (error: any) {
       console.error("Login failed", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          variant: "destructive",
+          title: "Login Interrotto",
+          description: "La finestra di login è stata chiusa prima del completamento. Riprova o controlla le impostazioni dei popup del browser.",
+        });
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          variant: "destructive",
+          title: "Dominio non autorizzato",
+          description: "Questo indirizzo non è autorizzato in Firebase. Vai in Settings per le istruzioni.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Errore Login",
+          description: error.message || "Si è verificato un errore durante l'autenticazione.",
+        });
+      }
     }
   };
 
   const handleLogout = async () => {
     await signOut(auth);
+    toast({
+      title: "Logout effettuato",
+      description: "Dati cloud disconnessi. L'app continuerà a funzionare in locale.",
+    });
   };
 
   const navItems = [
@@ -99,7 +128,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-bold truncate">{user.displayName}</p>
-                        <p className="text-[8px] text-muted-foreground truncate">Sincronizzato</p>
+                        <p className="text-[8px] text-muted-foreground truncate">Cloud Active</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold gap-2 w-full" onClick={handleLogout}>
