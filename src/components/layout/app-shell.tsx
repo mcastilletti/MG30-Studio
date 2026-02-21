@@ -37,8 +37,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <Sidebar className="border-r border-border">
           <SidebarHeader className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Sliders className="text-primary-foreground w-5 h-5" />
+              <div className="w-9 h-9 rounded-lg bg-[#FFD500] flex items-center justify-center overflow-hidden border border-white/10 shadow-sm">
+                <img 
+                  src="/icon.png" 
+                  alt="MG30 Studio Logo" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-xs italic">NUX</div>';
+                  }}
+                />
               </div>
               <div>
                 <h1 className="text-sm font-bold tracking-tight">MG30 STUDIO</h1>
