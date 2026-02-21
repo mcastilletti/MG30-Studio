@@ -1,4 +1,3 @@
-
 "use client"
 
 import { AppShell } from '@/components/layout/app-shell';
@@ -88,10 +87,15 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="flex flex-col items-center justify-center py-6 text-center">
                 <div className="w-24 h-24 rounded-[22%] bg-[#FFD500] shadow-2xl flex items-center justify-center mb-4 border-4 border-white/10 overflow-hidden group hover:scale-105 transition-transform">
-                  <img src="/icon.png" alt="App Icon" className="w-full h-full object-cover" onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-2xl italic">NUX</div>';
-                  }} />
+                  <img 
+                    src="/icon.png" 
+                    alt="App Icon" 
+                    className="w-[90%] h-[90%] object-contain" 
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-2xl italic">NUX</div>';
+                    }} 
+                  />
                 </div>
                 <div className="space-y-1">
                   <p className="text-[11px] font-bold uppercase text-[#FFD500]">Mobile Ready</p>

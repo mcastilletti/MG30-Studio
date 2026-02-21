@@ -41,7 +41,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <img 
                   src="/icon.png" 
                   alt="MG30 Studio Logo" 
-                  className="w-full h-full object-cover"
+                  className="w-[90%] h-[90%] object-contain"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-xs italic">NUX</div>';
