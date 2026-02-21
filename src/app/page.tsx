@@ -4,7 +4,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles, Smartphone } from 'lucide-react';
+import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
@@ -79,31 +79,6 @@ export default function HomePage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="border-[#FFD500]/30 bg-[#FFD500]/5 overflow-hidden">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Smartphone className="w-4 h-4" /> Icon Preview (PWA)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center py-6 text-center">
-                <div className="w-24 h-24 rounded-[22%] bg-[#FFD500] shadow-2xl flex items-center justify-center mb-4 border-4 border-white/10 overflow-hidden group hover:scale-105 transition-transform">
-                  <img 
-                    src="/icon.png" 
-                    alt="App Icon" 
-                    className="w-[90%] h-[90%] object-contain" 
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-2xl italic">NUX</div>';
-                    }} 
-                  />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[11px] font-bold uppercase text-[#FFD500]">Mobile Ready</p>
-                  <p className="text-[10px] text-muted-foreground">Sfondo giallo #FFD500 applicato</p>
-                </div>
-              </CardContent>
-            </Card>
-
             <Card className="border-accent/20 bg-accent/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
