@@ -14,8 +14,8 @@ const firebaseConfig = {
     authDomain: ("TURBOPACK compile-time value", "tuo-progetto.firebaseapp.com") || "",
     projectId: ("TURBOPACK compile-time value", "tuo-progetto") || "",
     storageBucket: ("TURBOPACK compile-time value", "tuo-progetto.appspot.com") || "",
-    messagingSenderId: ("TURBOPACK compile-time value", "000000000000") || "",
-    appId: ("TURBOPACK compile-time value", "1:000000000000:web:000000000000") || ""
+    messagingSenderId: ("TURBOPACK compile-time value", "123456789") || "",
+    appId: ("TURBOPACK compile-time value", "1:123456789:web:abcdef123456") || ""
 };
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_refresh__.registerExports(module, globalThis.$RefreshHelpers$);

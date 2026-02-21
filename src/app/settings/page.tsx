@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
-import { Database, ShieldCheck, HardDrive, Info, ExternalLink } from 'lucide-react';
+import { Database, ShieldCheck, Info, ExternalLink, AlertCircle, Globe } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -19,6 +20,16 @@ export default function SettingsPage() {
           <h2 className="text-3xl font-bold tracking-tight">Impostazioni</h2>
           <p className="text-muted-foreground">Gestione account, cloud storage e preferenze hardware.</p>
         </header>
+
+        {!user && (
+          <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/5">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-amber-500 font-bold">Autenticazione Richiesta</AlertTitle>
+            <AlertDescription className="text-xs">
+              Effettua il login con Google dalla barra laterale per attivare il backup cloud dei tuoi preset e delle tue note.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-primary/20 bg-primary/5">
@@ -34,17 +45,16 @@ export default function SettingsPage() {
                 <Badge variant="outline" className="text-green-500 border-green-500/30">ATTIVO (GRATUITO)</Badge>
               </div>
               <div className="p-3 rounded-lg bg-background border border-border">
-                <div className="flex justify-between text-[10px] mb-1 font-bold">
-                  <span>UTILIZZO PRESET</span>
-                  <span>1.2 MB / 1024 MB</span>
+                <div className="flex justify-between text-[10px] mb-1 font-bold text-muted-foreground uppercase">
+                  <span>Utilizzo Spazio</span>
+                  <span>1 GB Limite Gratuito</span>
                 </div>
                 <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
                   <div className="h-full bg-primary w-[1%]" />
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Il piano **Spark** di Firebase è gratuito al 100% per i tuoi preset e note. 
-                Include 1GB di spazio database, sufficiente per migliaia di preset MG-30.
+              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                Il piano **Spark** di Firebase è gratuito. Include 1GB di database e 5GB di storage per i file.
               </p>
             </CardContent>
           </Card>
@@ -60,17 +70,45 @@ export default function SettingsPage() {
               {user ? (
                 <div className="space-y-2">
                   <p className="text-xs">Accesso effettuato come:</p>
-                  <Badge className="bg-secondary text-secondary-foreground font-mono">{user.email}</Badge>
+                  <div className="flex items-center gap-2 bg-secondary/50 p-2 rounded border border-border">
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="font-mono text-xs truncate">{user.email}</span>
+                  </div>
                   <p className="text-[10px] text-muted-foreground">
                     I tuoi dati sono cifrati e accessibili solo tramite il tuo account Google.
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground italic">Effettua il login per vedere i dettagli dell'account.</p>
+                <div className="text-center py-4">
+                  <p className="text-xs text-muted-foreground italic">Effettua il login per sincronizzare i dati.</p>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2 text-amber-500 uppercase tracking-widest font-bold">
+              <Globe className="w-4 h-4" /> Risoluzione Problemi Login
+            </CardTitle>
+            <CardDescription>Se ricevi l'errore "unauthorized-domain"</CardDescription>
+          </CardHeader>
+          <CardContent className="text-xs space-y-3">
+            <p>Se il login fallisce, devi autorizzare l'URL di questo ambiente nella Console di Firebase:</p>
+            <ol className="list-decimal ml-4 space-y-2 text-muted-foreground">
+              <li>Vai in <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized domains</strong>.</li>
+              <li>Aggiungi il dominio attuale: <code className="bg-secondary px-1 rounded text-primary">{typeof window !== 'undefined' ? window.location.hostname : '...'}</code></li>
+            </ol>
+            <div className="pt-2">
+              <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold" asChild>
+                <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer">
+                  APRI CONSOLE FIREBASE <ExternalLink className="w-3 h-3 ml-2" />
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border-border bg-secondary/10">
           <CardHeader>
@@ -82,7 +120,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-[10px] uppercase font-bold text-muted-foreground">App Version</p>
-                <p className="font-mono">1.2.0-stable</p>
+                <p className="font-mono">1.2.5-stable (Firebase Active)</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Hardware Target</p>
