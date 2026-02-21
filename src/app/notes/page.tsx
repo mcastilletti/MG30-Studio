@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -113,6 +113,8 @@ export default function NotesPage() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
+    }, (err) => {
+      console.error("Firestore sync error:", err);
     });
 
     return () => unsubscribe();
@@ -187,22 +189,22 @@ export default function NotesPage() {
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
-      date: new Date().toISOString(),
+      updatedAt: serverTimestamp(),
       userId: user?.uid || null
     };
 
     try {
       if (user) {
         if (selectedNoteId) {
-          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
+          updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
         } else {
-          const docRef = await addDoc(collection(firestore, "notes"), noteData);
-          setSelectedNoteId(docRef.id);
+          addDoc(collection(firestore, "notes"), noteData);
         }
       } else {
         const newNote: SavedNote = {
           ...noteData,
-          id: selectedNoteId || Math.random().toString()
+          id: selectedNoteId || Math.random().toString(),
+          date: new Date().toISOString()
         };
         if (selectedNoteId) {
           setSavedNotes(savedNotes.map(n => n.id === selectedNoteId ? newNote : n));
@@ -253,7 +255,7 @@ export default function NotesPage() {
     e.stopPropagation();
     try {
       if (user) {
-        await deleteDoc(doc(firestore, "notes", id));
+        deleteDoc(doc(firestore, "notes", id));
       } else {
         setSavedNotes(savedNotes.filter(n => n.id !== id));
       }
@@ -352,7 +354,9 @@ export default function NotesPage() {
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Layers className="w-3 h-3" /> Archivio {!user && <Badge variant="outline" className="text-[8px]">Locale</Badge>}
         </h3>
-        <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}><Plus className="w-3 h-3" /></Button>
+        <div className="flex gap-1">
+          <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}><Plus className="w-3 h-3" /></Button>
+        </div>
       </div>
       <ScrollArea className="flex-1">
         <div className="pr-2 pb-8">

@@ -1,7 +1,7 @@
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 export function initializeFirebase() {
@@ -14,6 +14,7 @@ export function initializeFirebase() {
   return { app, auth, firestore, googleProvider };
 }
 
+export { signInWithPopup, signOut };
 export * from './provider';
 export * from './auth/use-user';
 export * from './firestore/use-collection';

@@ -755,6 +755,14 @@ body {
   height: 90%;
 }
 
+.h-1\.5 {
+  height: .375rem;
+}
+
+.h-auto {
+  height: auto;
+}
+
 .max-h-96 {
   max-height: 24rem;
 }
@@ -917,6 +925,10 @@ body {
 
 .w-\[90\%\] {
   width: 90%;
+}
+
+.w-\[1\%\] {
+  width: 1%;
 }
 
 .min-w-0 {

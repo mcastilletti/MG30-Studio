@@ -138,11 +138,11 @@ __turbopack_esm__({
 });
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAs-Placeholder",
-    authDomain: `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mg30-studio'}.firebaseapp.com`,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mg30-studio',
-    storageBucket: `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mg30-studio'}.appspot.com`,
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef123456"
+    authDomain: `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "mg30-studio"}.firebaseapp.com`,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "mg30-studio",
+    storageBucket: `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "mg30-studio"}.appspot.com`,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "000000000000",
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:000000000000:web:000000000000"
 };
 }}),
 "[project]/src/firebase/provider.tsx [app-ssr] (ecmascript)": ((__turbopack_context__) => {
@@ -331,6 +331,7 @@ function initializeFirebase() {
         googleProvider
     };
 }
+;
 ;
 ;
 ;
