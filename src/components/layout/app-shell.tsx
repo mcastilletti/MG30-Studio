@@ -1,34 +1,28 @@
 
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Activity, Zap, Info, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Zap, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
-import { auth, signInWithPopup, googleProvider, signOut } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { useFirebase, useUser } from '@/firebase';
+import { signInWithPopup, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { auth, googleProvider } = useFirebase();
+  const { user } = useUser();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (status === 'connected') {
@@ -62,7 +56,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <Sidebar className="border-r border-border">
           <SidebarHeader className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#FFD500] flex items-center justify-center overflow-hidden border border-white/10 shadow-sm">
+              <div className="w-9 h-9 rounded-lg bg-[#FFD500] flex items-center justify-center overflow-hidden border border-white/10 shadow-sm p-0.5">
                 <img 
                   src="/icon.png" 
                   alt="MG30 Studio Logo" 
@@ -94,7 +88,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
 
             <SidebarGroup className="mt-auto">
-              <SidebarGroupLabel>Cloud Sync</SidebarGroupLabel>
+              <SidebarGroupLabel>Account Google</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
                 {user ? (
                   <div className="flex flex-col gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -105,16 +99,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-bold truncate">{user.displayName}</p>
-                        <p className="text-[8px] text-muted-foreground truncate">Cloud Active</p>
+                        <p className="text-[8px] text-muted-foreground truncate">Sincronizzato</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold gap-2 w-full" onClick={handleLogout}>
-                      <LogOut className="w-3 h-3" /> Logout
+                      <LogOut className="w-3 h-3" /> Esci
                     </Button>
                   </div>
                 ) : (
                   <Button variant="outline" size="sm" className="w-full gap-2 text-[10px] font-bold h-9 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
-                    <LogIn className="w-3 h-3 text-primary" /> Login to Sync
+                    <LogIn className="w-3 h-3 text-primary" /> Login con Google
                   </Button>
                 )}
               </SidebarGroupContent>

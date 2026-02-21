@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, FileJson } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -20,9 +20,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { useFirebase, useUser } from '@/firebase';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -70,8 +69,9 @@ const CHORD_TABLE: Record<string, string[]> = {
 export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
+  const { firestore } = useFirebase();
+  const { user } = useUser();
   
-  const [user, setUser] = useState<User | null>(null);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -88,31 +88,12 @@ export default function NotesPage() {
     { id: '1', type: 'Intro', text: '', chords: [] }
   ]);
 
-  const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
-  const [actionNote, setActionNote] = useState<SavedNote | null>(null);
-  const [actionType, setActionType] = useState<'move' | 'duplicate'>('move');
-  const [targetBand, setTargetBand] = useState('');
-  const [targetSetlist, setTargetSetlist] = useState('');
-  const [isNewBand, setIsNewBand] = useState(false);
-  const [isNewSetlist, setIsNewSetlist] = useState(false);
-
-  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-  const [renameTarget, setRenameTarget] = useState<{ type: 'band' | 'setlist', bandName: string, setName?: string } | null>(null);
-  const [newName, setNewName] = useState('');
-
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
   const [jsonToPaste, setJsonToPaste] = useState('');
 
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-    });
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -128,14 +109,14 @@ export default function NotesPage() {
       return;
     }
 
-    const q = query(collection(db, "notes"), where("userId", "==", user.uid));
+    const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, firestore]);
 
   useEffect(() => {
     if (!user) {
@@ -154,13 +135,6 @@ export default function NotesPage() {
     });
     return groups;
   }, [savedNotes]);
-
-  const existingBands = useMemo(() => Object.keys(groupedNotes).filter(b => b !== 'Senza Band'), [groupedNotes]);
-  
-  const existingSetlistsForTargetBand = useMemo(() => {
-    if (!targetBand || targetBand === 'Senza Band') return [];
-    return Object.keys(groupedNotes[targetBand] || {}).filter(s => s !== 'Senza Scaletta');
-  }, [groupedNotes, targetBand]);
 
   const handlePresetChange = (slot: string) => {
     setSelectedPresetSlot(slot);
@@ -220,9 +194,9 @@ export default function NotesPage() {
     try {
       if (user) {
         if (selectedNoteId) {
-          await updateDoc(doc(db, "notes", selectedNoteId), noteData);
+          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
         } else {
-          const docRef = await addDoc(collection(db, "notes"), noteData);
+          const docRef = await addDoc(collection(firestore, "notes"), noteData);
           setSelectedNoteId(docRef.id);
         }
       } else {
@@ -279,7 +253,7 @@ export default function NotesPage() {
     e.stopPropagation();
     try {
       if (user) {
-        await deleteDoc(doc(db, "notes", id));
+        await deleteDoc(doc(firestore, "notes", id));
       } else {
         setSavedNotes(savedNotes.filter(n => n.id !== id));
       }
@@ -288,44 +262,6 @@ export default function NotesPage() {
     } catch (err) {
       toast({ title: "Errore eliminazione", variant: "destructive" });
     }
-  };
-
-  const handleConfirmAction = async () => {
-    if (!actionNote) return;
-
-    const finalBand = targetBand || 'Senza Band';
-    const finalSetlist = targetSetlist || 'Senza Scaletta';
-
-    try {
-      if (actionType === 'move') {
-        if (user) {
-          await updateDoc(doc(db, "notes", actionNote.id), { band: finalBand, setlist: finalSetlist });
-        } else {
-          setSavedNotes(savedNotes.map(n => n.id === actionNote.id ? { ...n, band: finalBand, setlist: finalSetlist } : n));
-        }
-        toast({ title: "Nota Spostata" });
-      } else {
-        const duplicatedNote = {
-          ...actionNote,
-          id: user ? undefined : Math.random().toString(),
-          title: `${actionNote.title} (Copia)`,
-          band: finalBand,
-          setlist: finalSetlist,
-          date: new Date().toISOString()
-        };
-        if (user) {
-          await addDoc(collection(db, "notes"), { ...duplicatedNote, userId: user.uid });
-        } else {
-          setSavedNotes([duplicatedNote as SavedNote, ...savedNotes]);
-        }
-        toast({ title: "Nota Duplicata" });
-      }
-    } catch (err) {
-      toast({ title: "Errore operazione", variant: "destructive" });
-    }
-
-    setIsActionDialogOpen(false);
-    setActionNote(null);
   };
 
   const handleApplyPasteJson = () => {
