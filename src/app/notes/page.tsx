@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, Upload, FileJson } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -66,6 +66,7 @@ const CHORD_TABLE: Record<string, string[]> = {
 export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -228,6 +229,42 @@ export default function NotesPage() {
     if (note.presetSlot && status === 'connected') {
       sendProgramChange(parseInt(note.presetSlot) - 1);
     }
+  };
+
+  const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        
+        // Validazione minima
+        if (!json.sections || !Array.isArray(json.sections)) {
+          throw new Error("Formato JSON non valido (manca 'sections')");
+        }
+
+        setTitle(json.title || title);
+        setBand(json.band || band);
+        setSetlist(json.setlist || setlist);
+        setSelectedPresetSlot(json.presetSlot || selectedPresetSlot);
+        setGeneralNotes(json.generalNotes || generalNotes);
+        setSections(json.sections.map((s: any) => ({
+          id: s.id || Math.random().toString(),
+          type: s.type || 'Verse',
+          text: s.text || '',
+          chords: Array.isArray(s.chords) ? s.chords : []
+        })));
+
+        setEditMode(true);
+        toast({ title: "JSON Caricato", description: "Modifica i dati e salva per confermare." });
+      } catch (err: any) {
+        toast({ title: "Errore Caricamento", description: err.message, variant: "destructive" });
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const deleteNote = (id: string, e: React.MouseEvent) => {
@@ -501,6 +538,22 @@ export default function NotesPage() {
               />
             </div>
             <div className="flex items-center gap-2">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleJsonUpload} 
+                className="hidden" 
+                accept=".json"
+              />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => fileInputRef.current?.click()} 
+                title="Carica JSON"
+                className="h-8 w-8 text-muted-foreground hover:text-primary"
+              >
+                <FileJson className="w-4 h-4" />
+              </Button>
               <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)} className={cn("h-8 w-8", editMode ? "text-primary bg-primary/10" : "text-muted-foreground")}>
                 <Pencil className="w-4 h-4" />
               </Button>
