@@ -2521,6 +2521,10 @@ body {
   background-color: hsl(var(--destructive) / .1);
 }
 
+.hover\:bg-primary\/10:hover {
+  background-color: hsl(var(--primary) / .1);
+}
+
 .hover\:text-accent-foreground:hover {
   color: hsl(var(--accent-foreground));
 }

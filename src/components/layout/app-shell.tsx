@@ -1,27 +1,52 @@
+
 "use client"
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { LayoutDashboard, Library, Sliders, Settings, Activity, Zap, Info, Wifi, WifiOff, NotebookPen } from 'lucide-react';
+import { LayoutDashboard, Library, Sliders, Settings, Activity, Zap, Info, Wifi, WifiOff, NotebookPen, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
+import { auth, signInWithPopup, googleProvider, signOut } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
   const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (status === 'connected') {
       syncActivePreset();
     }
   }, [status, syncActivePreset]);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
   const navItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -42,10 +67,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                   src="/icon.png" 
                   alt="MG30 Studio Logo" 
                   className="w-[90%] h-[90%] object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<div class="text-black font-black text-xs italic">NUX</div>';
-                  }}
                 />
               </div>
               <div>
@@ -73,16 +94,41 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
 
             <SidebarGroup className="mt-auto">
+              <SidebarGroupLabel>Cloud Sync</SidebarGroupLabel>
+              <SidebarGroupContent className="px-3 py-2">
+                {user ? (
+                  <div className="flex flex-col gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarImage src={user.photoURL || ''} />
+                        <AvatarFallback><UserIcon className="w-3 h-3" /></AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold truncate">{user.displayName}</p>
+                        <p className="text-[8px] text-muted-foreground truncate">Cloud Active</p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold gap-2 w-full" onClick={handleLogout}>
+                      <LogOut className="w-3 h-3" /> Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-[10px] font-bold h-9 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
+                    <LogIn className="w-3 h-3 text-primary" /> Login to Sync
+                  </Button>
+                )}
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
               <SidebarGroupLabel>Hardware Status</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between p-2 rounded-md bg-secondary/50 border border-border">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                      <span className="text-[11px] font-medium uppercase">{status}</span>
-                    </div>
-                    {status === 'connected' ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
+                <div className="flex items-center justify-between p-2 rounded-md bg-secondary/50 border border-border">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                    <span className="text-[11px] font-medium uppercase">{status}</span>
                   </div>
+                  {status === 'connected' ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -117,11 +163,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                   </Badge>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center">
-                 <Info className="w-4 h-4 text-muted-foreground" />
-               </div>
             </div>
           </header>
 

@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, FileJson, ClipboardPaste } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, FileJson } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { db, auth } from '@/lib/firebase';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -38,7 +41,8 @@ interface SavedNote {
   presetSlot: string;
   generalNotes: string;
   sections: NoteSection[];
-  date: Date;
+  date: any;
+  userId?: string;
 }
 
 const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
@@ -67,6 +71,7 @@ export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
   
+  const [user, setUser] = useState<User | null>(null);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -103,20 +108,40 @@ export default function NotesPage() {
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('mg30_studio_notes');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setSavedNotes(parsed.map((n: any) => ({ ...n, date: new Date(n.date) })));
-      } catch (e) {
-        console.error("Failed to parse notes", e);
-      }
-    }
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+    });
+    return () => unsub();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('mg30_studio_notes', JSON.stringify(savedNotes));
-  }, [savedNotes]);
+    if (!user) {
+      const stored = localStorage.getItem('mg30_studio_notes');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setSavedNotes(parsed);
+        } catch (e) {
+          console.error("Failed to parse notes", e);
+        }
+      }
+      return;
+    }
+
+    const q = query(collection(db, "notes"), where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedNote));
+      setSavedNotes(notes);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem('mg30_studio_notes', JSON.stringify(savedNotes));
+    }
+  }, [savedNotes, user]);
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
@@ -175,31 +200,48 @@ export default function NotesPage() {
     }));
   };
 
-  const handleSaveNote = () => {
+  const handleSaveNote = async () => {
     if (!title.trim()) {
       toast({ title: "Titolo mancante", description: "Inserisci un titolo per il brano.", variant: "destructive" });
       return;
     }
 
-    const newNote: SavedNote = {
-      id: selectedNoteId || Math.random().toString(),
-      title: title,
+    const noteData = {
+      title,
       band: band || 'Senza Band',
       setlist: setlist || 'Senza Scaletta',
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
-      date: new Date()
+      date: new Date().toISOString(),
+      userId: user?.uid || null
     };
-    
-    if (selectedNoteId) {
-      setSavedNotes(savedNotes.map(n => n.id === selectedNoteId ? newNote : n));
-    } else {
-      setSavedNotes([newNote, ...savedNotes]);
-      setSelectedNoteId(newNote.id);
+
+    try {
+      if (user) {
+        if (selectedNoteId) {
+          await updateDoc(doc(db, "notes", selectedNoteId), noteData);
+        } else {
+          const docRef = await addDoc(collection(db, "notes"), noteData);
+          setSelectedNoteId(docRef.id);
+        }
+      } else {
+        const newNote: SavedNote = {
+          ...noteData,
+          id: selectedNoteId || Math.random().toString()
+        };
+        if (selectedNoteId) {
+          setSavedNotes(savedNotes.map(n => n.id === selectedNoteId ? newNote : n));
+        } else {
+          setSavedNotes([newNote, ...savedNotes]);
+          setSelectedNoteId(newNote.id);
+        }
+      }
+      setEditMode(false);
+      toast({ title: "Nota Salvata" });
+    } catch (err) {
+      toast({ title: "Errore durante il salvataggio", variant: "destructive" });
     }
-    setEditMode(false);
-    toast({ title: "Nota Salvata" });
   };
 
   const handleNewNote = () => {
@@ -233,14 +275,63 @@ export default function NotesPage() {
     }
   };
 
+  const deleteNote = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (user) {
+        await deleteDoc(doc(db, "notes", id));
+      } else {
+        setSavedNotes(savedNotes.filter(n => n.id !== id));
+      }
+      if (selectedNoteId === id) handleNewNote();
+      toast({ title: "Nota eliminata" });
+    } catch (err) {
+      toast({ title: "Errore eliminazione", variant: "destructive" });
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!actionNote) return;
+
+    const finalBand = targetBand || 'Senza Band';
+    const finalSetlist = targetSetlist || 'Senza Scaletta';
+
+    try {
+      if (actionType === 'move') {
+        if (user) {
+          await updateDoc(doc(db, "notes", actionNote.id), { band: finalBand, setlist: finalSetlist });
+        } else {
+          setSavedNotes(savedNotes.map(n => n.id === actionNote.id ? { ...n, band: finalBand, setlist: finalSetlist } : n));
+        }
+        toast({ title: "Nota Spostata" });
+      } else {
+        const duplicatedNote = {
+          ...actionNote,
+          id: user ? undefined : Math.random().toString(),
+          title: `${actionNote.title} (Copia)`,
+          band: finalBand,
+          setlist: finalSetlist,
+          date: new Date().toISOString()
+        };
+        if (user) {
+          await addDoc(collection(db, "notes"), { ...duplicatedNote, userId: user.uid });
+        } else {
+          setSavedNotes([duplicatedNote as SavedNote, ...savedNotes]);
+        }
+        toast({ title: "Nota Duplicata" });
+      }
+    } catch (err) {
+      toast({ title: "Errore operazione", variant: "destructive" });
+    }
+
+    setIsActionDialogOpen(false);
+    setActionNote(null);
+  };
+
   const handleApplyPasteJson = () => {
     try {
       const json = JSON.parse(jsonToPaste);
-      
-      if (!json.sections || !Array.isArray(json.sections)) {
-        throw new Error("Formato JSON non valido (manca 'sections')");
-      }
-
+      if (!json.sections || !Array.isArray(json.sections)) throw new Error("Manca 'sections'");
       setTitle(json.title || title);
       setBand(json.band || band);
       setSetlist(json.setlist || setlist);
@@ -252,96 +343,12 @@ export default function NotesPage() {
         text: s.text || '',
         chords: Array.isArray(s.chords) ? s.chords : []
       })));
-
       setEditMode(true);
       setIsPasteJsonDialogOpen(false);
       setJsonToPaste('');
-      toast({ title: "JSON Applicato", description: "Controlla i dati e clicca sul floppy per salvare nell'archivio." });
+      toast({ title: "JSON Applicato" });
     } catch (err: any) {
       toast({ title: "Errore JSON", description: err.message, variant: "destructive" });
-    }
-  };
-
-  const deleteNote = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSavedNotes(savedNotes.filter(n => n.id !== id));
-    if (selectedNoteId === id) handleNewNote();
-    toast({ title: "Nota eliminata" });
-  };
-
-  const openActionDialog = (note: SavedNote, type: 'move' | 'duplicate', e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActionNote(note);
-    setActionType(type);
-    setTargetBand(note.band);
-    setTargetSetlist(note.setlist);
-    setIsNewBand(false);
-    setIsNewSetlist(false);
-    setIsActionDialogOpen(true);
-  };
-
-  const handleConfirmAction = () => {
-    if (!actionNote) return;
-
-    const finalBand = targetBand || 'Senza Band';
-    const finalSetlist = targetSetlist || 'Senza Scaletta';
-
-    if (actionType === 'move') {
-      const updatedNotes = savedNotes.map(n => 
-        n.id === actionNote.id ? { ...n, band: finalBand, setlist: finalSetlist } : n
-      );
-      setSavedNotes(updatedNotes);
-      toast({ title: "Nota Spostata" });
-    } else {
-      const duplicatedNote: SavedNote = {
-        ...actionNote,
-        id: Math.random().toString(),
-        title: `${actionNote.title} (Copia)`,
-        band: finalBand,
-        setlist: finalSetlist,
-        date: new Date()
-      };
-      setSavedNotes([duplicatedNote, ...savedNotes]);
-      toast({ title: "Nota Duplicata" });
-    }
-
-    setIsActionDialogOpen(false);
-    setActionNote(null);
-  };
-
-  const handleRenameGroup = () => {
-    if (!renameTarget || !newName.trim()) return;
-
-    const updatedNotes = savedNotes.map(n => {
-      if (renameTarget.type === 'band' && n.band === renameTarget.bandName) {
-        return { ...n, band: newName };
-      }
-      if (renameTarget.type === 'setlist' && n.band === renameTarget.bandName && n.setlist === renameTarget.setName) {
-        return { ...n, setlist: newName };
-      }
-      return n;
-    });
-
-    setSavedNotes(updatedNotes);
-    setIsRenameDialogOpen(false);
-    setRenameTarget(null);
-    setNewName('');
-    toast({ title: "Aggiornamento completato" });
-  };
-
-  const handleDeleteBand = (bandName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm(`Sei sicuro di voler eliminare TUTTE le note della band "${bandName}"?`)) {
-      setSavedNotes(savedNotes.filter(n => n.band !== bandName));
-      toast({ title: "Band eliminata" });
-    }
-  };
-
-  const handleDeleteSetlist = (bandName: string, setName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm(`Sei sicuro di voler eliminare TUTTE le note della scaletta "${setName}" per la band "${bandName}"?`)) {
-      setSavedNotes(savedNotes.filter(n => !(n.band === bandName && n.setlist === setName)));
-      toast({ title: "Scaletta eliminata" });
     }
   };
 
@@ -352,26 +359,21 @@ export default function NotesPage() {
       setSelectedLetter(letter);
       setChordPickerStep('accidental');
     };
-
     const handleAccidentalSelect = (root: string) => {
       setSelectedRoot(root);
       setChordPickerStep('quality');
     };
-
     const handleQualitySelect = (chord: string) => {
       addChordToSection(sectionId, chord);
       resetPicker();
     };
-
     const resetPicker = () => {
       setChordPickerStep('letter');
       setSelectedLetter(null);
       setSelectedRoot(null);
     };
 
-    const availableAccidentals = selectedLetter 
-      ? CHORD_ROOTS.filter(r => r.startsWith(selectedLetter))
-      : [];
+    const availableAccidentals = selectedLetter ? CHORD_ROOTS.filter(r => r.startsWith(selectedLetter)) : [];
 
     return (
       <div className="w-full space-y-4">
@@ -382,7 +384,6 @@ export default function NotesPage() {
             ))}
           </div>
         )}
-
         {chordPickerStep === 'accidental' && (
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-3 gap-2">
@@ -393,7 +394,6 @@ export default function NotesPage() {
             <Button variant="ghost" size="sm" onClick={() => setChordPickerStep('letter')} className="text-[10px] uppercase">Indietro</Button>
           </div>
         )}
-
         {chordPickerStep === 'quality' && selectedRoot && (
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
@@ -414,11 +414,9 @@ export default function NotesPage() {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-3 h-3" /> Archivio
+          <Layers className="w-3 h-3" /> Archivio {!user && <Badge variant="outline" className="text-[8px]">Locale</Badge>}
         </h3>
-        <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}>
-          <Plus className="w-3 h-3" />
-        </Button>
+        <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}><Plus className="w-3 h-3" /></Button>
       </div>
       <ScrollArea className="flex-1">
         <div className="pr-2 pb-8">
@@ -426,65 +424,30 @@ export default function NotesPage() {
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
                 <div className="flex items-center group/band">
-                  <AccordionTrigger 
-                    hideIcon 
-                    className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1"
-                  >
+                  <AccordionTrigger hideIcon className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
                       <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
                     </div>
                   </AccordionTrigger>
-                  <div className="flex items-center gap-1 opacity-0 group-hover/band:opacity-100 transition-opacity px-2">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => {
-                      e.stopPropagation();
-                      setRenameTarget({ type: 'band', bandName });
-                      setNewName(bandName);
-                      setIsRenameDialogOpen(true);
-                    }}><Pencil className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => handleDeleteBand(bandName, e)}><Trash2 className="w-3 h-3" /></Button>
-                  </div>
                 </div>
                 <AccordionContent className="pt-2">
                   <Accordion type="multiple" className="w-full ml-3 border-l border-primary/20 pl-3">
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
                         <div className="flex items-center group/set">
-                          <AccordionTrigger 
-                            hideIcon 
-                            className="hover:no-underline py-1.5 flex-1"
-                          >
+                          <AccordionTrigger hideIcon className="hover:no-underline py-1.5 flex-1">
                             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
                               <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
                             </div>
                           </AccordionTrigger>
-                          <div className="flex items-center gap-1 opacity-0 group-hover/set:opacity-100 transition-opacity px-2">
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={(e) => {
-                              e.stopPropagation();
-                              setRenameTarget({ type: 'setlist', bandName, setName });
-                              setNewName(setName);
-                              setIsRenameDialogOpen(true);
-                            }}><Pencil className="w-3 h-3" /></Button>
-                            <Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={(e) => handleDeleteSetlist(bandName, setName, e)}><Trash2 className="w-3 h-3" /></Button>
-                          </div>
                         </div>
                         <AccordionContent className="pt-1">
                           <div className="space-y-1 ml-2">
                             {notes.map((note) => (
-                              <div 
-                                key={note.id}
-                                onClick={() => loadNote(note)}
-                                className={cn(
-                                  "group flex flex-col p-2.5 rounded-md cursor-pointer transition-all border",
-                                  selectedNoteId === note.id 
-                                    ? "bg-primary/10 border-primary/40 text-primary shadow-sm" 
-                                    : "bg-card/40 border-border hover:border-primary/20"
-                                )}
-                              >
+                              <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex flex-col p-2.5 rounded-md cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/10 border-primary/40 text-primary shadow-sm" : "bg-card/40 border-border hover:border-primary/20")}>
                                 <span className="text-[11px] font-semibold truncate mb-1">{note.title}</span>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => openActionDialog(note, 'move', e)}><ArrowRightLeft className="w-3 h-3" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => openActionDialog(note, 'duplicate', e)}><Copy className="w-3 h-3" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3 h-3" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3 h-3" /></Button>
                                 </div>
                               </div>
                             ))}
@@ -519,35 +482,16 @@ export default function NotesPage() {
                   </button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[85%] sm:max-w-[340px]">
-                  <SheetHeader className="text-left mb-4">
-                    <SheetTitle>Archivio Note</SheetTitle>
-                  </SheetHeader>
+                  <SheetHeader className="text-left mb-4"><SheetTitle>Archivio Note</SheetTitle></SheetHeader>
                   <NoteList />
                 </SheetContent>
               </Sheet>
-              <Input 
-                placeholder="Titolo Brano..." 
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-sm font-bold h-8 bg-transparent border-none shadow-none focus-visible:ring-0 p-0"
-              />
+              <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-sm font-bold h-8 bg-transparent border-none shadow-none focus-visible:ring-0 p-0" />
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setIsPasteJsonDialogOpen(true)} 
-                title="Incolla JSON"
-                className="h-8 w-8 text-muted-foreground hover:text-primary"
-              >
-                <FileJson className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)} className={cn("h-8 w-8", editMode ? "text-primary bg-primary/10" : "text-muted-foreground")}>
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button onClick={handleSaveNote} size="icon" className="h-8 w-8 bg-primary shadow-md">
-                <Save className="w-4 h-4" />
-              </Button>
+              <Button variant="ghost" size="icon" onClick={() => setIsPasteJsonDialogOpen(true)} title="Incolla JSON" className="h-8 w-8 text-muted-foreground hover:text-primary"><FileJson className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)} className={cn("h-8 w-8", editMode ? "text-primary bg-primary/10" : "text-muted-foreground")}><Pencil className="w-4 h-4" /></Button>
+              <Button onClick={handleSaveNote} size="icon" className="h-8 w-8 bg-primary shadow-md"><Save className="w-4 h-4" /></Button>
             </div>
           </header>
 
@@ -596,21 +540,14 @@ export default function NotesPage() {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <Textarea 
-                  placeholder="Annotazioni libere, accordature, effetti esterni..." 
-                  className="min-h-[120px] text-sm bg-background/50 resize-none"
-                  value={generalNotes}
-                  onChange={(e) => setGeneralNotes(e.target.value)}
-                />
+                <Textarea placeholder="Annotazioni libere..." className="min-h-[120px] text-sm bg-background/50 resize-none" value={generalNotes} onChange={(e) => setGeneralNotes(e.target.value)} />
               </CollapsibleContent>
             </Collapsible>
 
             <Card className="border-border shadow-md bg-card/50">
               <CardHeader className="py-2 bg-secondary/40 flex flex-row items-center justify-between px-3">
                 <CardTitle className="text-[9px] uppercase tracking-widest font-black">Struttura Brano</CardTitle>
-                <Button variant="outline" size="sm" onClick={addSection} className="h-6 text-[8px] font-bold uppercase">
-                  <Plus className="w-2 h-2 mr-1" /> Sezione
-                </Button>
+                <Button variant="outline" size="sm" onClick={addSection} className="h-6 text-[8px] font-bold uppercase"><Plus className="w-2 h-2 mr-1" /> Sezione</Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
@@ -619,50 +556,26 @@ export default function NotesPage() {
                       <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
                         <TableCell className="p-1.5 w-[90px]">
                           <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
-                            <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}
-                            </SelectContent>
+                            <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0"><SelectValue /></SelectTrigger>
+                            <SelectContent>{sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}</SelectContent>
                           </Select>
                         </TableCell>
                         <TableCell className="p-1.5 flex-1 min-w-[200px]">
                           <div className="flex flex-wrap gap-2 items-center min-h-[40px]">
-                            {section.chords && section.chords.map((chord, i) => (
-                              <Badge 
-                                key={i} 
-                                variant="secondary" 
-                                className="h-6 px-2 text-xs font-bold cursor-pointer hover:bg-destructive/10 hover:text-destructive group transition-colors"
-                                onClick={() => removeChordFromSection(section.id, i)}
-                              >
-                                {chord}
-                                <X className="w-2 h-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            {section.chords?.map((chord, i) => (
+                              <Badge key={i} variant="secondary" className="h-6 px-2 text-xs font-bold cursor-pointer hover:bg-destructive/10 hover:text-destructive group transition-colors" onClick={() => removeChordFromSection(section.id, i)}>
+                                {chord}<X className="w-2 h-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </Badge>
                             ))}
-                            <Input 
-                              value={section.text}
-                              onChange={(e) => updateSectionText(section.id, e.target.value)}
-                              placeholder="Note..."
-                              className="h-8 text-sm border-none bg-transparent shadow-none focus-visible:ring-0 w-auto min-w-[50px] flex-1"
-                            />
+                            <Input value={section.text} onChange={(e) => updateSectionText(section.id, e.target.value)} placeholder="Note..." className="h-8 text-sm border-none bg-transparent shadow-none focus-visible:ring-0 w-auto min-w-[50px] flex-1" />
                           </div>
                         </TableCell>
                         <TableCell className="p-1 w-auto flex items-center gap-1">
                           <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64 p-4" align="end">
-                              <div className="space-y-3">
-                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aggiungi Accordo</h4>
-                                <ChordPicker sectionId={section.id} />
-                              </div>
-                            </PopoverContent>
+                            <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button></PopoverTrigger>
+                            <PopoverContent className="w-64 p-4" align="end"><ChordPicker sectionId={section.id} /></PopoverContent>
                           </Popover>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}><Trash2 className="w-3 h-3" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -676,98 +589,9 @@ export default function NotesPage() {
 
       <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Incolla JSON Preset</DialogTitle>
-            <DialogDescription>Incolla qui la configurazione JSON del brano.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea 
-              placeholder='{"title": "...", "sections": [...]}' 
-              value={jsonToPaste} 
-              onChange={(e) => setJsonToPaste(e.target.value)} 
-              className="min-h-[250px] font-mono text-xs bg-secondary/20"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsPasteJsonDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleApplyPasteJson} disabled={!jsonToPaste.trim()}>Applica JSON</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Rinomina {renameTarget?.type === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Input 
-              value={newName} 
-              onChange={(e) => setNewName(e.target.value)} 
-              placeholder="Nuovo nome..."
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsRenameDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleRenameGroup}>Salva</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {actionType === 'move' ? <ArrowRightLeft className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              {actionType === 'move' ? 'Sposta Nota' : 'Duplica Nota'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid gap-2">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground">Band</label>
-                <button onClick={() => setIsNewBand(!isNewBand)} className="text-[10px] text-primary hover:underline">
-                  {isNewBand ? "Scegli Esistente" : "Crea Nuova"}
-                </button>
-              </div>
-              {isNewBand ? (
-                <Input value={targetBand} onChange={(e) => setTargetBand(e.target.value)} placeholder="Nome Band..." autoFocus />
-              ) : (
-                <Select value={targetBand} onValueChange={setTargetBand}>
-                  <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Senza Band">Senza Band</SelectItem>
-                    {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground">Scaletta</label>
-                <button onClick={() => setIsNewSetlist(!isNewSetlist)} className="text-[10px] text-primary hover:underline">
-                  {isNewSetlist ? "Scegli Esistente" : "Crea Nuova"}
-                </button>
-              </div>
-              {isNewSetlist ? (
-                <Input value={targetSetlist} onChange={(e) => setTargetSetlist(e.target.value)} placeholder="Nome Scaletta..." />
-              ) : (
-                <Select value={targetSetlist} onValueChange={setTargetSetlist}>
-                  <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Senza Scaletta">Senza Scaletta</SelectItem>
-                    {existingSetlistsForTargetBand.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsActionDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleConfirmAction}>{actionType === 'move' ? 'Sposta' : 'Duplica'}</Button>
-          </DialogFooter>
+          <DialogHeader><DialogTitle>Incolla JSON Preset</DialogTitle><DialogDescription>Incolla qui la configurazione JSON del brano.</DialogDescription></DialogHeader>
+          <div className="py-4"><Textarea placeholder='{"title": "...", "sections": [...]}' value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} className="min-h-[250px] font-mono text-xs bg-secondary/20" /></div>
+          <DialogFooter><Button variant="ghost" onClick={() => setIsPasteJsonDialogOpen(false)}>Annulla</Button><Button onClick={handleApplyPasteJson} disabled={!jsonToPaste.trim()}>Applica JSON</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </AppShell>
