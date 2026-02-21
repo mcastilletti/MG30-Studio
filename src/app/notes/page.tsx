@@ -10,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, Upload, FileJson } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Check, Pencil, ArrowRightLeft, Copy, X, FileJson, ClipboardPaste } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,6 @@ const CHORD_TABLE: Record<string, string[]> = {
 export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -95,6 +94,9 @@ export default function NotesPage() {
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ type: 'band' | 'setlist', bandName: string, setName?: string } | null>(null);
   const [newName, setNewName] = useState('');
+
+  const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
+  const [jsonToPaste, setJsonToPaste] = useState('');
 
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -231,40 +233,33 @@ export default function NotesPage() {
     }
   };
 
-  const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result as string);
-        
-        // Validazione minima
-        if (!json.sections || !Array.isArray(json.sections)) {
-          throw new Error("Formato JSON non valido (manca 'sections')");
-        }
-
-        setTitle(json.title || title);
-        setBand(json.band || band);
-        setSetlist(json.setlist || setlist);
-        setSelectedPresetSlot(json.presetSlot || selectedPresetSlot);
-        setGeneralNotes(json.generalNotes || generalNotes);
-        setSections(json.sections.map((s: any) => ({
-          id: s.id || Math.random().toString(),
-          type: s.type || 'Verse',
-          text: s.text || '',
-          chords: Array.isArray(s.chords) ? s.chords : []
-        })));
-
-        setEditMode(true);
-        toast({ title: "JSON Caricato", description: "Modifica i dati e salva per confermare." });
-      } catch (err: any) {
-        toast({ title: "Errore Caricamento", description: err.message, variant: "destructive" });
+  const handleApplyPasteJson = () => {
+    try {
+      const json = JSON.parse(jsonToPaste);
+      
+      if (!json.sections || !Array.isArray(json.sections)) {
+        throw new Error("Formato JSON non valido (manca 'sections')");
       }
-    };
-    reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+      setTitle(json.title || title);
+      setBand(json.band || band);
+      setSetlist(json.setlist || setlist);
+      setSelectedPresetSlot(json.presetSlot || selectedPresetSlot);
+      setGeneralNotes(json.generalNotes || generalNotes);
+      setSections(json.sections.map((s: any) => ({
+        id: s.id || Math.random().toString(),
+        type: s.type || 'Verse',
+        text: s.text || '',
+        chords: Array.isArray(s.chords) ? s.chords : []
+      })));
+
+      setEditMode(true);
+      setIsPasteJsonDialogOpen(false);
+      setJsonToPaste('');
+      toast({ title: "JSON Applicato", description: "Controlla i dati e clicca sul floppy per salvare nell'archivio." });
+    } catch (err: any) {
+      toast({ title: "Errore JSON", description: err.message, variant: "destructive" });
+    }
   };
 
   const deleteNote = (id: string, e: React.MouseEvent) => {
@@ -538,18 +533,11 @@ export default function NotesPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleJsonUpload} 
-                className="hidden" 
-                accept=".json"
-              />
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={() => fileInputRef.current?.click()} 
-                title="Carica JSON"
+                onClick={() => setIsPasteJsonDialogOpen(true)} 
+                title="Incolla JSON"
                 className="h-8 w-8 text-muted-foreground hover:text-primary"
               >
                 <FileJson className="w-4 h-4" />
@@ -685,6 +673,27 @@ export default function NotesPage() {
           </div>
         </main>
       </div>
+
+      <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Incolla JSON Preset</DialogTitle>
+            <DialogDescription>Incolla qui la configurazione JSON del brano.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea 
+              placeholder='{"title": "...", "sections": [...]}' 
+              value={jsonToPaste} 
+              onChange={(e) => setJsonToPaste(e.target.value)} 
+              className="min-h-[250px] font-mono text-xs bg-secondary/20"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsPasteJsonDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleApplyPasteJson} disabled={!jsonToPaste.trim()}>Applica JSON</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
