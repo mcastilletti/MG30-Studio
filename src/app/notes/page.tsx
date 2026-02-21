@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -15,6 +16,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,6 +27,7 @@ interface NoteSection {
   id: string;
   type: SectionType;
   text: string;
+  chords?: string[];
 }
 
 interface SavedNote {
@@ -37,6 +41,29 @@ interface SavedNote {
   date: Date;
 }
 
+const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
+const CHORD_QUALITIES = ["", "m", "7", "maj7", "m7", " aum", "dim", "sus4", "sus2", "add9"];
+
+const CHORD_TABLE: Record<string, string[]> = {
+  "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
+  "C#": ["C#", "C#m", "C#7", "C#maj7", "C#m7", "C# aum", "C#dim", "C#sus4", "C#sus2", "C#add9"],
+  "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbadd9"],
+  "D": ["D", "Dm", "D7", "Dmaj7", "Dm7", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
+  "D#": ["D#", "D#m", "D#7", "D#maj7", "D#m7", "D# aum", "D#dim", "D#sus4", "D#sus2", "D#add9"],
+  "Eb": ["Eb", "Ebm", "Eb7", "Ebmaj7", "Ebm7", "Eb aum", "Ebdim", "Ebsus4", "Ebsus2", "Ebadd9"],
+  "E": ["E", "Em", "E7", "Emaj7", "Em7", "E aum", "Edim", "Esus4", "Esus2", "Eadd9"],
+  "F": ["F", "Fm", "F7", "Fmaj7", "Fm7", "F aum", "Fdim", "Fsus4", "Fsus2", "Fadd9"],
+  "F#": ["F#", "F#m", "F#7", "F#maj7", "F#m7", "F# aum", "F#dim", "F#sus4", "F#sus2", "F#add9"],
+  "Gb": ["Gb", "Gbm", "Gb7", "Gbmaj7", "Gbm7", "Gb aum", "Gbdim", "Gbsus4", "Gbsus2", "Gbadd9"],
+  "G": ["G", "Gm", "G7", "Gmaj7", "Gm7", "G aum", "Gdim", "Gsus4", "Gsus2", "Gadd9"],
+  "G#": ["G#", "G#m", "G#7", "G#maj7", "G#m7", "G# aum", "G#dim", "G#sus4", "G#sus2", "G#add9"],
+  "Ab": ["Ab", "Abm", "Ab7", "Abmaj7", "Abm7", "Ab aum", "Abdim", "Absus4", "Absus2", "Abadd9"],
+  "A": ["A", "Am", "A7", "Amaj7", "Am7", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
+  "A#": ["A#", "A#m", "A#7", "A#maj7", "A#m7", "A# aum", "A#dim", "A#sus4", "A#sus2", "A#add9"],
+  "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbadd9"],
+  "B": ["B", "Bm", "B7", "Bmaj7", "Bm7", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
+};
+
 export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
@@ -45,7 +72,6 @@ export default function NotesPage() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   
-  // Editor state
   const [title, setTitle] = useState('');
   const [band, setBand] = useState('');
   const [setlist, setSetlist] = useState('');
@@ -55,10 +81,9 @@ export default function NotesPage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
-    { id: '1', type: 'Intro', text: '' }
+    { id: '1', type: 'Intro', text: '', chords: [] }
   ]);
 
-  // Move/Duplicate Dialog State
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [actionNote, setActionNote] = useState<SavedNote | null>(null);
   const [actionType, setActionType] = useState<'move' | 'duplicate'>('move');
@@ -67,10 +92,13 @@ export default function NotesPage() {
   const [isNewBand, setIsNewBand] = useState(false);
   const [isNewSetlist, setIsNewSetlist] = useState(false);
 
-  // Rename Dialog State
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ type: 'band' | 'setlist', bandName: string, setName?: string } | null>(null);
   const [newName, setNewName] = useState('');
+
+  const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
@@ -115,7 +143,7 @@ export default function NotesPage() {
   };
 
   const addSection = () => {
-    setSections([...sections, { id: Math.random().toString(), type: 'Verse', text: '' }]);
+    setSections([...sections, { id: Math.random().toString(), type: 'Verse', text: '', chords: [] }]);
   };
 
   const removeSection = (id: string) => {
@@ -128,6 +156,21 @@ export default function NotesPage() {
 
   const updateSectionText = (id: string, text: string) => {
     setSections(sections.map(s => s.id === id ? { ...s, text } : s));
+  };
+
+  const addChordToSection = (sectionId: string, chord: string) => {
+    setSections(sections.map(s => s.id === sectionId ? { ...s, chords: [...(s.chords || []), chord] } : s));
+  };
+
+  const removeChordFromSection = (sectionId: string, chordIndex: number) => {
+    setSections(sections.map(s => {
+      if (s.id === sectionId && s.chords) {
+        const newChords = [...s.chords];
+        newChords.splice(chordIndex, 1);
+        return { ...s, chords: newChords };
+      }
+      return s;
+    }));
   };
 
   const handleSaveNote = () => {
@@ -164,7 +207,7 @@ export default function NotesPage() {
     setSetlist('');
     setSelectedPresetSlot('');
     setGeneralNotes('');
-    setSections([{ id: '1', type: 'Intro', text: '' }]);
+    setSections([{ id: '1', type: 'Intro', text: '', chords: [] }]);
     setIsMobileSheetOpen(false);
     setEditMode(true);
     setIsDetailsOpen(true);
@@ -177,7 +220,7 @@ export default function NotesPage() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot);
     setGeneralNotes(note.generalNotes);
-    setSections(note.sections);
+    setSections(note.sections.map(s => ({ ...s, chords: s.chords || [] })));
     setIsMobileSheetOpen(false);
     setEditMode(false);
     setIsNotesOpen(true);
@@ -272,6 +315,69 @@ export default function NotesPage() {
   };
 
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
+
+  const ChordPicker = ({ sectionId }: { sectionId: string }) => {
+    const handleLetterSelect = (letter: string) => {
+      setSelectedLetter(letter);
+      setChordPickerStep('accidental');
+    };
+
+    const handleAccidentalSelect = (root: string) => {
+      setSelectedRoot(root);
+      setChordPickerStep('quality');
+    };
+
+    const handleQualitySelect = (chord: string) => {
+      addChordToSection(sectionId, chord);
+      resetPicker();
+    };
+
+    const resetPicker = () => {
+      setChordPickerStep('letter');
+      setSelectedLetter(null);
+      setSelectedRoot(null);
+    };
+
+    const availableAccidentals = selectedLetter 
+      ? CHORD_ROOTS.filter(r => r.startsWith(selectedLetter))
+      : [];
+
+    return (
+      <div className="w-full space-y-4">
+        {chordPickerStep === 'letter' && (
+          <div className="grid grid-cols-4 gap-2">
+            {["A", "B", "C", "D", "E", "F", "G"].map(l => (
+              <Button key={l} variant="outline" size="sm" onClick={() => handleLetterSelect(l)} className="font-bold">{l}</Button>
+            ))}
+          </div>
+        )}
+
+        {chordPickerStep === 'accidental' && (
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-3 gap-2">
+              {availableAccidentals.map(r => (
+                <Button key={r} variant="outline" size="sm" onClick={() => handleAccidentalSelect(r)} className="font-bold">{r}</Button>
+              ))}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setChordPickerStep('letter')} className="text-[10px] uppercase">Indietro</Button>
+          </div>
+        )}
+
+        {chordPickerStep === 'quality' && selectedRoot && (
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
+              {CHORD_TABLE[selectedRoot]?.map((chord, i) => (
+                <Button key={i} variant="outline" size="sm" onClick={() => handleQualitySelect(chord)} className="text-xs font-bold truncate">
+                  {chord === selectedRoot ? 'Maggiore' : chord}
+                </Button>
+              ))}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setChordPickerStep('accidental')} className="text-[10px] uppercase">Indietro</Button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const NoteList = () => (
     <div className="flex flex-col h-full">
@@ -470,30 +576,58 @@ export default function NotesPage() {
                 <Table>
                   <TableBody>
                     {sections.map((section) => (
-                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
-                        <TableCell className="p-1.5 w-[90px]">
-                          <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
-                            <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="p-1.5">
-                          <Input 
-                            value={section.text}
-                            onChange={(e) => updateSectionText(section.id, e.target.value)}
-                            placeholder="Note per questa sezione..."
-                            className="h-10 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0"
-                          />
-                        </TableCell>
-                        <TableCell className="p-1 w-8">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </TableCell>
+                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 flex flex-col">
+                        <div className="flex items-center w-full">
+                          <TableCell className="p-1.5 w-[90px]">
+                            <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
+                              <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="p-1.5 flex-1">
+                            <Input 
+                              value={section.text}
+                              onChange={(e) => updateSectionText(section.id, e.target.value)}
+                              placeholder="Note per questa sezione..."
+                              className="h-10 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0"
+                            />
+                          </TableCell>
+                          <TableCell className="p-1 w-auto flex items-center gap-1">
+                            <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-4" align="end">
+                                <div className="space-y-3">
+                                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aggiungi Accordo</h4>
+                                  <ChordPicker sectionId={section.id} />
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </TableCell>
+                        </div>
+                        {section.chords && section.chords.length > 0 && (
+                          <div className="px-3 pb-3 flex flex-wrap gap-2">
+                            {section.chords.map((chord, i) => (
+                              <Badge 
+                                key={i} 
+                                variant="secondary" 
+                                className="h-6 px-2 text-xs font-bold cursor-pointer hover:bg-destructive/10 hover:text-destructive group transition-colors"
+                                onClick={() => removeChordFromSection(section.id, i)}
+                              >
+                                {chord}
+                                <X className="w-2 h-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -504,7 +638,6 @@ export default function NotesPage() {
         </main>
       </div>
 
-      {/* Rename Dialog */}
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -525,7 +658,6 @@ export default function NotesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Move/Duplicate Dialog */}
       <Dialog open={isActionDialogOpen} onOpenChange={setIsActionDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -535,7 +667,6 @@ export default function NotesPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
-            {/* Band Section */}
             <div className="grid gap-2">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground">Band</label>
@@ -556,7 +687,6 @@ export default function NotesPage() {
               )}
             </div>
 
-            {/* Setlist Section */}
             <div className="grid gap-2">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground">Scaletta</label>
