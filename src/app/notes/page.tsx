@@ -42,12 +42,11 @@ interface SavedNote {
 }
 
 const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
-const CHORD_QUALITIES = ["", "m", "7", "maj7", "m7", " aum", "dim", "sus4", "sus2", "add9"];
 
 const CHORD_TABLE: Record<string, string[]> = {
   "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
   "C#": ["C#", "C#m", "C#7", "C#maj7", "C#m7", "C# aum", "C#dim", "C#sus4", "C#sus2", "C#add9"],
-  "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbadd9"],
+  "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbmadd9"],
   "D": ["D", "Dm", "D7", "Dmaj7", "Dm7", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
   "D#": ["D#", "D#m", "D#7", "D#maj7", "D#m7", "D# aum", "D#dim", "D#sus4", "D#sus2", "D#add9"],
   "Eb": ["Eb", "Ebm", "Eb7", "Ebmaj7", "Ebm7", "Eb aum", "Ebdim", "Ebsus4", "Ebsus2", "Ebadd9"],
@@ -576,46 +575,20 @@ export default function NotesPage() {
                 <Table>
                   <TableBody>
                     {sections.map((section) => (
-                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 flex flex-col">
-                        <div className="flex items-center w-full">
-                          <TableCell className="p-1.5 w-[90px]">
-                            <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
-                              <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="p-1.5 flex-1">
-                            <Input 
-                              value={section.text}
-                              onChange={(e) => updateSectionText(section.id, e.target.value)}
-                              placeholder="Note per questa sezione..."
-                              className="h-10 text-lg font-semibold border-none bg-transparent shadow-none focus-visible:ring-0"
-                            />
-                          </TableCell>
-                          <TableCell className="p-1 w-auto flex items-center gap-1">
-                            <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-64 p-4" align="end">
-                                <div className="space-y-3">
-                                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aggiungi Accordo</h4>
-                                  <ChordPicker sectionId={section.id} />
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}>
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </TableCell>
-                        </div>
-                        {section.chords && section.chords.length > 0 && (
-                          <div className="px-3 pb-3 flex flex-wrap gap-2">
-                            {section.chords.map((chord, i) => (
+                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
+                        <TableCell className="p-1.5 w-[90px]">
+                          <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
+                            <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="p-1.5 flex-1 min-w-[200px]">
+                          <div className="flex flex-wrap gap-2 items-center min-h-[40px]">
+                            {section.chords && section.chords.map((chord, i) => (
                               <Badge 
                                 key={i} 
                                 variant="secondary" 
@@ -626,8 +599,30 @@ export default function NotesPage() {
                                 <X className="w-2 h-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </Badge>
                             ))}
+                            <Input 
+                              value={section.text}
+                              onChange={(e) => updateSectionText(section.id, e.target.value)}
+                              placeholder="Note..."
+                              className="h-8 text-sm border-none bg-transparent shadow-none focus-visible:ring-0 w-auto min-w-[50px] flex-1"
+                            />
                           </div>
-                        )}
+                        </TableCell>
+                        <TableCell className="p-1 w-auto flex items-center gap-1">
+                          <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-4" align="end">
+                              <div className="space-y-3">
+                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aggiungi Accordo</h4>
+                                <ChordPicker sectionId={section.id} />
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
