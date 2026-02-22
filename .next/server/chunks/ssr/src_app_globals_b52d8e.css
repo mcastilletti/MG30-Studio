@@ -2010,6 +2010,10 @@ body {
   font-size: 18px;
 }
 
+.text-\[13px\] {
+  font-size: 13px;
+}
+
 .font-black {
   font-weight: 900;
 }

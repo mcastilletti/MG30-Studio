@@ -1,5 +1,5 @@
 
-"use client"
+'use client';
 
 import React, { useEffect } from 'react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -93,22 +93,22 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 />
               </div>
               <div>
-                <h1 className="text-sm font-bold tracking-tight">MG30 STUDIO</h1>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">NUX EDITOR</p>
+                <h1 className="text-base font-bold tracking-tight">MG30 STUDIO</h1>
+                <p className="text-[12px] text-muted-foreground uppercase tracking-widest">NUX EDITOR</p>
               </div>
             </div>
           </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Navigation</SidebarGroupLabel>
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={pathname === item.href}>
                       <Link href={item.href}>
                         <item.icon className="w-4 h-4" />
-                        <span className="text-sm">{item.label}</span>
+                        <span className="text-base">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -117,7 +117,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
 
             <SidebarGroup className="mt-auto">
-              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Account Google</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Account Google</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
                 {user ? (
                   <div className="flex flex-col gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -127,16 +127,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                         <AvatarFallback><UserIcon className="w-4 h-4" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold truncate">{user.displayName}</p>
-                        <p className="text-[10px] text-muted-foreground truncate font-medium">Cloud Active</p>
+                        <p className="text-[13px] font-bold truncate">{user.displayName}</p>
+                        <p className="text-[12px] text-muted-foreground truncate font-medium">Cloud Active</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold uppercase gap-2 w-full hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
+                    <Button variant="ghost" size="sm" className="h-7 text-[12px] font-bold uppercase gap-2 w-full hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
                       <LogOut className="w-3.5 h-3.5" /> Esci
                     </Button>
                   </div>
                 ) : (
-                  <Button variant="outline" size="sm" className="w-full gap-2 text-[11px] font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-[13px] font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
                     <LogIn className="w-4 h-4 text-primary" /> Login con Google
                   </Button>
                 )}
@@ -144,12 +144,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Hardware Status</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sm font-bold uppercase tracking-wider opacity-70">Hardware Status</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
                 <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/50 border border-border">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                    <span className="text-[11px] font-bold uppercase tracking-tight">{status}</span>
+                    <span className="text-[13px] font-bold uppercase tracking-tight">{status}</span>
                   </div>
                   {status === 'connected' ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
                 </div>
@@ -163,7 +163,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <SidebarMenuButton asChild>
                   <Link href="/settings">
                     <Settings className="w-4 h-4" />
-                    <span className="text-sm">Settings</span>
+                    <span className="text-base">Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -177,11 +177,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               <SidebarTrigger />
               <div className="h-4 w-[1px] bg-border mx-2" />
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold">
+                <span className="text-base font-semibold">
                   {navItems.find(i => i.href === pathname)?.label || 'App'}
                 </span>
                 {status === 'connected' && (
-                  <Badge variant="outline" className="text-[10px] h-5 border-green-500/50 text-green-500">
+                  <Badge variant="outline" className="text-[12px] h-5 border-green-500/50 text-green-500">
                     USB MIDI ACTIVE
                   </Badge>
                 )}
