@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload, Info } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload, Info, ListMusic, UserSquare2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -19,10 +19,11 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { getChordPositions } from '@/lib/chord-data';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
@@ -79,6 +80,7 @@ export default function NotesPage() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [isMigrationDialogOpen, setIsMigrationDialogOpen] = useState(false);
+  const [noteListViewMode, setNoteListViewMode] = useState<'bands' | 'setlists'>('bands');
   
   const [title, setTitle] = useState('');
   const [band, setBand] = useState('');
@@ -86,7 +88,7 @@ export default function NotesPage() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = false;
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '', chords: [] }
@@ -127,7 +129,6 @@ export default function NotesPage() {
       (snapshot) => {
         const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
         setSavedNotes(notes);
-        if (localParsed.length > 0) setIsMigrationDialogOpen(true);
       },
       (err) => {
         console.error("Firestore sync error:", err);
@@ -144,7 +145,7 @@ export default function NotesPage() {
       localNotes.forEach(note => {
         const newDocRef = doc(collection(firestore, "notes"));
         const { id, ...noteData } = note;
-        batch.set(newDocRef, { ...noteData, userId: user.uid, updatedAt: serverTimestamp() });
+        batch.set(newDocRef, { ...noteData, userId: user.uid });
       });
       await batch.commit();
       localStorage.removeItem('mg30_studio_notes');
@@ -164,6 +165,16 @@ export default function NotesPage() {
       if (!groups[b]) groups[b] = {};
       if (!groups[b][s]) groups[b][s] = [];
       groups[b][s].push(note);
+    });
+    return groups;
+  }, [savedNotes]);
+
+  const setlistOnlyNotes = useMemo(() => {
+    const groups: Record<string, SavedNote[]> = {};
+    savedNotes.forEach(note => {
+      const s = note.setlist || 'Senza Scaletta';
+      if (!groups[s]) groups[s] = [];
+      groups[s].push(note);
     });
     return groups;
   }, [savedNotes]);
@@ -258,7 +269,6 @@ export default function NotesPage() {
     setSections([{ id: '1', type: 'Intro', text: '', chords: [] }]);
     setIsMobileSheetOpen(false);
     setEditMode(true);
-    setIsDetailsOpen(true);
   };
 
   const loadNote = (note: SavedNote) => {
@@ -272,7 +282,6 @@ export default function NotesPage() {
     setIsMobileSheetOpen(false);
     setEditMode(false);
     setIsNotesOpen(true);
-    setIsDetailsOpen(false);
     if (note.presetSlot && status === 'connected') sendProgramChange(parseInt(note.presetSlot) - 1);
   };
 
@@ -337,47 +346,82 @@ export default function NotesPage() {
 
   const NoteList = () => (
     <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-3 h-3" /> Archivio Note
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <Layers className="w-4 h-4" /> Archivio
         </h3>
-        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-4 h-4" /></Button>
+        <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-5 h-5" /></Button>
       </div>
+
+      <Tabs value={noteListViewMode} onValueChange={(v) => setNoteListViewMode(v as any)} className="mb-6">
+        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-10 p-1">
+          <TabsTrigger value="bands" className="text-[12px] font-bold gap-2"><UserSquare2 className="w-3.5 h-3.5" /> Band</TabsTrigger>
+          <TabsTrigger value="setlists" className="text-[12px] font-bold gap-2"><ListMusic className="w-3.5 h-3.5" /> Scalette</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <ScrollArea className="flex-1">
-        <Accordion type="multiple" className="w-full">
-          {Object.entries(groupedNotes).map(([bandName, setlists]) => (
-            <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
-              <AccordionTrigger hideIcon className="hover:no-underline py-2.5 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-tight text-primary text-left">
-                  <Users className="w-4 h-4 shrink-0" /> <span>{bandName}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pt-2">
-                <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-1">
-                  {Object.entries(setlists).map(([setName, notes]) => (
-                    <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
-                      <AccordionTrigger hideIcon className="hover:no-underline py-2">
-                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                          <Music2 className="w-3.5 h-3.5" /> <span>{setName}</span>
+        {noteListViewMode === 'bands' ? (
+          <Accordion type="multiple" defaultValue={band ? [`band-${band}`] : []} className="w-full">
+            {Object.entries(groupedNotes).map(([bandName, setlists]) => (
+              <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
+                <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
+                  <div className="flex items-center gap-3 text-base font-bold uppercase tracking-tight text-primary text-left">
+                    <UserSquare2 className="w-5 h-5 shrink-0 opacity-70" /> <span>{bandName}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <Accordion type="multiple" defaultValue={setlist ? [`set-${bandName}-${setlist}`] : []} className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-2">
+                    {Object.entries(setlists).map(([setName, notes]) => (
+                      <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
+                        <AccordionTrigger hideIcon className="hover:no-underline py-2">
+                          <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                            <Music2 className="w-4 h-4 opacity-60" /> <span>{setName}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-1">
+                          <div className="space-y-1.5">
+                            {notes.map((note) => (
+                              <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                                <span className="text-[14px] font-bold truncate">{note.title}</span>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <Accordion type="multiple" defaultValue={setlist ? [`setlist-only-${setlist}`] : []} className="w-full space-y-3">
+            {Object.entries(setlistOnlyNotes).map(([setName, notes]) => (
+              <AccordionItem key={setName} value={`setlist-only-${setName}`} className="border-none">
+                <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
+                  <div className="flex items-center gap-3 text-base font-bold uppercase tracking-tight text-primary text-left">
+                    <ListMusic className="w-5 h-5 shrink-0 opacity-70" /> <span>{setName}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-3 ml-4 border-l-2 border-primary/10 pl-4">
+                  <div className="space-y-1.5">
+                    {notes.map((note) => (
+                      <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[14px] font-bold truncate">{note.title}</span>
+                          <span className="text-[11px] opacity-60 truncate">{note.band}</span>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-1">
-                        <div className="space-y-1.5">
-                          {notes.map((note) => (
-                            <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
-                              <span className="text-[12px] font-bold truncate">{note.title}</span>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
       </ScrollArea>
     </div>
   );
@@ -395,7 +439,7 @@ export default function NotesPage() {
               <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="md:hidden text-primary">
-                    <NotebookPen className="w-6 h-6" />
+                    <NotebookPen className="w-7 h-7" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 border-none">
@@ -404,17 +448,12 @@ export default function NotesPage() {
               </Sheet>
               <div className="flex flex-col flex-1 min-w-0">
                 {editMode ? (
-                  <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" />
+                  <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-xl font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" />
                 ) : (
                   <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
                     {title || "Scegli un brano..."}
                     {selectedNoteId && (isDetailsOpen ? <ChevronUp className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 opacity-40" />)}
                   </h2>
-                )}
-                {(!editMode && selectedNoteId && !isDetailsOpen) && (
-                   <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground opacity-60">
-                    {band} • {setlist}
-                   </span>
                 )}
               </div>
             </div>
@@ -422,7 +461,7 @@ export default function NotesPage() {
               <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
-                    <FileJson className="w-5 h-5" />
+                    <FileJson className="w-6 h-6" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -433,17 +472,17 @@ export default function NotesPage() {
               </Dialog>
               {!editMode && selectedNoteId && (
                 <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary" title="Modifica">
-                  <Pencil className="w-5 h-5" />
+                  <Pencil className="w-6 h-6" />
                 </Button>
               )}
               {editMode && selectedNoteId && (
                 <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </Button>
               )}
               {editMode && (
                 <Button onClick={handleSaveNote} size="icon" className="h-10 w-10 bg-primary shadow-lg rounded-full" title="Salva">
-                  <Save className="w-5 h-5" />
+                  <Save className="w-6 h-6" />
                 </Button>
               )}
             </div>
@@ -506,7 +545,7 @@ export default function NotesPage() {
               <CollapsibleContent>
                 <Textarea 
                   placeholder="Scrivi qui i dettagli del brano, accordatura, ecc..." 
-                  className="min-h-[140px] text-[14px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
                   value={generalNotes} 
                   onChange={(e) => setGeneralNotes(e.target.value)} 
                   readOnly={!editMode}
@@ -517,7 +556,7 @@ export default function NotesPage() {
             <Card className="border-border shadow-xl bg-card/40 rounded-2xl overflow-hidden">
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
                 <CardTitle className="text-[11px] uppercase tracking-widest font-black text-primary flex items-center gap-2">
-                  <Layers className="w-3 h-3" /> Struttura Brano
+                  <Layers className="w-4 h-4" /> Struttura Brano
                 </CardTitle>
                 {editMode && (
                   <Button variant="outline" size="sm" onClick={addSection} className="h-8 text-[10px] font-bold bg-background/50"><Plus className="w-3 h-3 mr-1" /> Sezione</Button>
@@ -568,10 +607,10 @@ export default function NotesPage() {
                                 value={section.text} 
                                 onChange={(e) => updateSectionText(section.id, e.target.value)} 
                                 placeholder="Note blocco..." 
-                                className="h-8 text-[18px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
+                                className="h-8 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
                               />
                             ) : (
-                              <p className="text-[18px] font-medium leading-tight whitespace-pre-wrap">{section.text}</p>
+                              <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
                             )}
                           </div>
                         </TableCell>
@@ -581,7 +620,7 @@ export default function NotesPage() {
                               <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-primary/20 text-primary"><Plus className="w-5 h-5" /></Button></PopoverTrigger>
                               <PopoverContent className="w-72 p-4" align="end"><ChordPicker sectionId={section.id} /></PopoverContent>
                             </Popover>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/30 hover:text-destructive" onClick={() => removeSection(section.id)}><Trash2 className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/30 hover:text-destructive" onClick={() => removeSection(section.id)}><Trash2 className="w-5 h-5" /></Button>
                           </TableCell>
                         )}
                       </TableRow>

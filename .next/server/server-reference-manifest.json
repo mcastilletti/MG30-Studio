@@ -1,17 +1,5 @@
 {
-  "node": {
-    "40fa1dbcf3fb805a589f85b1d3b6349b59d90447a4": {
-      "workers": {
-        "app/tools/sysex-analyzer/page": {
-          "moduleId": "[project]/.next-internal/server/app/tools/sysex-analyzer/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/sysex-analysis.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/tools/sysex-analyzer/page": "action-browser"
-      }
-    }
-  },
+  "node": {},
   "edge": {},
   "encryptionKey": "bR7IdqwKIP6CxYvQ58gIGI3oOPRPdRbFon01Y8voaOE="
 }
