@@ -1966,6 +1966,10 @@ body {
   font-size: 20px;
 }
 
+.text-\[15px\] {
+  font-size: 15px;
+}
+
 .font-black {
   font-weight: 900;
 }
@@ -3371,6 +3375,10 @@ body {
     height: 1.5rem;
   }
 
+  .md\:h-7 {
+    height: 1.75rem;
+  }
+
   .md\:w-96 {
     width: 24rem;
   }
@@ -3389,6 +3397,14 @@ body {
 
   .md\:w-6 {
     width: 1.5rem;
+  }
+
+  .md\:w-12 {
+    width: 3rem;
+  }
+
+  .md\:w-7 {
+    width: 1.75rem;
   }
 
   .md\:max-w-\[420px\] {
@@ -3448,6 +3464,14 @@ body {
   .md\:text-lg {
     font-size: 1.125rem;
     line-height: 1.75rem;
+  }
+
+  .md\:text-\[17px\] {
+    font-size: 17px;
+  }
+
+  .md\:text-\[22px\] {
+    font-size: 22px;
   }
 
   .md\:opacity-0 {

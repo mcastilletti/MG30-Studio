@@ -117,8 +117,14 @@ export default function NotesPage() {
 
     if (userLoading) return;
 
-    if (!user) {
+    // Se non c'è utente o è l'utente fittizio di dev, usiamo solo i dati locali
+    const isMockUser = user?.uid === 'dev-user-123';
+    if (!user || isMockUser) {
       setSavedNotes(localParsed);
+      // Se siamo passati da non loggati a mock e ci sono note locali, mostriamo il banner di migrazione solo se ci sono dati locali non ancora migrati
+      if (isMockUser && localParsed.length > 0 && !localStorage.getItem('mg30_migrated')) {
+         // setIsMigrationDialogOpen(true); // Opzionale: attiva migrazione anche per mock user?
+      }
       return;
     }
 
@@ -138,7 +144,7 @@ export default function NotesPage() {
   }, [user, userLoading, firestore]);
 
   const handleMigrateNotes = async () => {
-    if (!user) return;
+    if (!user || user.uid === 'dev-user-123') return;
     try {
       const batch = writeBatch(firestore);
       localNotes.forEach(note => {
@@ -148,6 +154,7 @@ export default function NotesPage() {
       });
       await batch.commit();
       localStorage.removeItem('mg30_studio_notes');
+      localStorage.setItem('mg30_migrated', 'true');
       setLocalNotes([]);
       setIsMigrationDialogOpen(false);
       toast({ title: "Migrazione completata" });
@@ -229,7 +236,9 @@ export default function NotesPage() {
     }
 
     const isDev = process.env.NODE_ENV === 'development';
+    const isMockUser = user?.uid === 'dev-user-123';
 
+    // Se non siamo in dev e non c'è un utente reale, blocchiamo
     if (!user && !isDev) {
       toast({ title: "Login richiesto per il salvataggio cloud", variant: "destructive" });
       return;
@@ -242,11 +251,12 @@ export default function NotesPage() {
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
-      updatedAt: user ? serverTimestamp() : new Date().toISOString(),
+      updatedAt: (user && !isMockUser) ? serverTimestamp() : new Date().toISOString(),
       userId: user?.uid || 'local-dev-user'
     };
 
-    if (user) {
+    // Salvataggio Cloud se utente REALE presente
+    if (user && !isMockUser) {
       try {
         if (selectedNoteId && !selectedNoteId.startsWith('local-')) {
           await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
@@ -259,10 +269,12 @@ export default function NotesPage() {
       } catch (err) {
         toast({ title: "Errore salvataggio cloud", variant: "destructive" });
       }
-    } else if (isDev) {
+    } 
+    // Salvataggio Locale se ambiente Dev o utente Mock
+    else if (isDev || isMockUser) {
       const id = selectedNoteId || `local-${Date.now()}`;
       const newNote = { ...noteData, id };
-      const updatedLocalNotes = selectedNoteId 
+      const updatedLocalNotes = (selectedNoteId && selectedNoteId.startsWith('local-'))
         ? localNotes.map(n => n.id === id ? newNote : n)
         : [...localNotes, newNote];
       
@@ -271,7 +283,7 @@ export default function NotesPage() {
       setSavedNotes(updatedLocalNotes);
       setSelectedNoteId(id);
       setEditMode(false);
-      toast({ title: "Nota Salvata Localmente (Dev Mode)" });
+      toast({ title: "Nota Salvata Localmente" });
     }
   };
 
@@ -303,19 +315,19 @@ export default function NotesPage() {
 
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isDev = process.env.NODE_ENV === 'development';
     
     if (id.startsWith('local-')) {
       const updatedLocalNotes = localNotes.filter(n => n.id !== id);
       setLocalNotes(updatedLocalNotes);
       localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedLocalNotes));
-      if (!user) setSavedNotes(updatedLocalNotes);
+      // Se siamo in modalità locale (mock o no user), aggiorniamo la lista visualizzata
+      if (!user || user.uid === 'dev-user-123') setSavedNotes(updatedLocalNotes);
       if (selectedNoteId === id) handleNewNote();
       toast({ title: "Nota locale eliminata" });
       return;
     }
 
-    if (!user) return;
+    if (!user || user.uid === 'dev-user-123') return;
     try {
       await deleteDoc(doc(firestore, "notes", id));
       if (selectedNoteId === id) handleNewNote();
@@ -375,16 +387,16 @@ export default function NotesPage() {
   const NoteList = () => (
     <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-4 h-4 md:w-5 md:h-5" /> Archivio
+        <h3 className="text-base md:text-lg font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <Layers className="w-5 h-5 md:w-6 md:h-6" /> Archivio
         </h3>
-        <Button variant="outline" size="icon" className="h-9 w-9 md:h-11 md:w-11 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-5 h-5 md:w-6 md:h-6" /></Button>
+        <Button variant="outline" size="icon" className="h-10 w-10 md:h-12 md:w-12 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-6 h-6 md:w-7 md:h-7" /></Button>
       </div>
 
       <Tabs value={noteListViewMode} onValueChange={(v) => setNoteListViewMode(v as any)} className="mb-6">
-        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-10 md:h-12 p-1">
-          <TabsTrigger value="bands" className="text-[12px] md:text-[14px] font-bold gap-2"><UserSquare2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> Band</TabsTrigger>
-          <TabsTrigger value="setlists" className="text-[12px] md:text-[14px] font-bold gap-2"><ListMusic className="w-3.5 h-3.5 md:w-4 md:h-4" /> Scalette</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-11 md:h-13 p-1">
+          <TabsTrigger value="bands" className="text-[13px] md:text-[15px] font-bold gap-2"><UserSquare2 className="w-4 h-4 md:w-5 md:h-5" /> Band</TabsTrigger>
+          <TabsTrigger value="setlists" className="text-[13px] md:text-[15px] font-bold gap-2"><ListMusic className="w-4 h-4 md:w-5 md:h-5" /> Scalette</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -395,7 +407,7 @@ export default function NotesPage() {
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
                   <div className="flex items-center gap-3 text-base md:text-lg font-bold uppercase tracking-tight text-primary text-left">
-                    <UserSquare2 className="w-5 h-5 md:w-6 md:h-6 shrink-0 opacity-70" /> <span>{bandName}</span>
+                    <UserSquare2 className="w-6 h-6 md:w-7 md:h-7 shrink-0 opacity-70" /> <span>{bandName}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
@@ -403,15 +415,15 @@ export default function NotesPage() {
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
                         <AccordionTrigger hideIcon className="hover:no-underline py-2">
-                          <div className="flex items-center gap-2 text-[13px] md:text-[15px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                            <Music2 className="w-4 h-4 md:w-5 md:h-5 opacity-60" /> <span>{setName}</span>
+                          <div className="flex items-center gap-2 text-[14px] md:text-[16px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                            <Music2 className="w-5 h-5 md:w-6 md:h-6 opacity-60" /> <span>{setName}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-1">
                           <div className="space-y-1.5">
                             {notes.map((note) => (
                               <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
-                                <span className="text-[14px] md:text-[16px] font-bold truncate">{note.title}</span>
+                                <span className="text-[15px] md:text-[17px] font-bold truncate">{note.title}</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
                               </div>
                             ))}
@@ -430,7 +442,7 @@ export default function NotesPage() {
               <AccordionItem key={setName} value={`setlist-only-${setName}`} className="border-none">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
                   <div className="flex items-center gap-3 text-base md:text-lg font-bold uppercase tracking-tight text-primary text-left">
-                    <ListMusic className="w-5 h-5 md:w-6 md:h-6 shrink-0 opacity-70" /> <span>{setName}</span>
+                    <ListMusic className="w-6 h-6 md:w-7 md:h-7 shrink-0 opacity-70" /> <span>{setName}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-3 ml-4 border-l-2 border-primary/10 pl-4">
@@ -438,8 +450,8 @@ export default function NotesPage() {
                     {notes.map((note) => (
                       <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[14px] md:text-[16px] font-bold truncate">{note.title}</span>
-                          <span className="text-[11px] md:text-[13px] opacity-60 truncate">{note.band}</span>
+                          <span className="text-[15px] md:text-[17px] font-bold truncate">{note.title}</span>
+                          <span className="text-[12px] md:text-[14px] opacity-60 truncate">{note.band}</span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
@@ -467,7 +479,7 @@ export default function NotesPage() {
               <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="md:hidden text-primary">
-                    <NotebookPen className="w-7 h-7" />
+                    <NotebookPen className="w-8 h-8" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 border-none">
@@ -480,7 +492,7 @@ export default function NotesPage() {
                 ) : (
                   <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
                     {title || "Scegli un brano..."}
-                    {selectedNoteId && (isDetailsOpen ? <ChevronUp className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 opacity-40" />)}
+                    {selectedNoteId && (isDetailsOpen ? <ChevronUp className="w-5 h-5 opacity-40" /> : <ChevronDown className="w-5 h-5 opacity-40" />)}
                   </h2>
                 )}
               </div>
@@ -488,29 +500,29 @@ export default function NotesPage() {
             <div className="flex items-center gap-2">
               <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
-                    <FileJson className="w-6 h-6" />
+                  <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
+                    <FileJson className="w-7 h-7" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON per importare il brano.</DialogDescription></DialogHeader>
-                  <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-xs" />
+                  <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-[13px]" />
                   <DialogFooter><Button onClick={handleImportJson}>Importa Ora</Button></DialogFooter>
                 </DialogContent>
               </Dialog>
               {!editMode && selectedNoteId && (
-                <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary" title="Modifica">
-                  <Pencil className="w-6 h-6" />
+                <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary" title="Modifica">
+                  <Pencil className="w-7 h-7" />
                 </Button>
               )}
               {editMode && selectedNoteId && (
-                <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
-                  <X className="w-6 h-6" />
+                <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
+                  <X className="w-7 h-7" />
                 </Button>
               )}
               {editMode && (
-                <Button onClick={handleSaveNote} size="icon" className="h-10 w-10 bg-primary shadow-lg rounded-full" title="Salva">
-                  <Save className="w-6 h-6" />
+                <Button onClick={handleSaveNote} size="icon" className="h-11 w-11 bg-primary shadow-lg rounded-full" title="Salva">
+                  <Save className="w-7 h-7" />
                 </Button>
               )}
             </div>
@@ -520,9 +532,9 @@ export default function NotesPage() {
             {(editMode || isDetailsOpen) && (
               <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50 animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Hardware Preset</label>
+                  <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Hardware Preset</label>
                   <Select value={selectedPresetSlot} onValueChange={handlePresetChange} disabled={!editMode}>
-                    <SelectTrigger className="w-full h-10 bg-background/50 border-border font-mono text-xs"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
+                    <SelectTrigger className="w-full h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
                     <SelectContent>
                       {devicePresets.map((p) => (
                         <SelectItem key={p.slot} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>
@@ -532,12 +544,12 @@ export default function NotesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Band</label>
+                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Band</label>
                     {isAddingNewBand ? (
-                      <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
+                      <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-11 text-[14px] bg-background/50" autoFocus />
                     ) : (
                       <Select value={band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewBand(true) : setBand(val)} disabled={!editMode}>
-                        <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
+                        <SelectTrigger className="h-11 text-[14px] bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
                         <SelectContent>
                           {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                           {editMode && <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>}
@@ -546,12 +558,12 @@ export default function NotesPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Scaletta</label>
+                    <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Scaletta</label>
                     {isAddingNewSetlist ? (
-                      <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
+                      <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-11 text-[14px] bg-background/50" autoFocus />
                     ) : (
                       <Select value={setlist} disabled={!band || !editMode} onValueChange={(val) => val === 'NEW' ? setIsAddingNewSetlist(true) : setSetlist(val)}>
-                        <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scaletta" /></SelectTrigger>
+                        <SelectTrigger className="h-11 text-[14px] bg-background/50"><SelectValue placeholder="Scaletta" /></SelectTrigger>
                         <SelectContent>
                           {existingSetlists.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           {editMode && <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>}
@@ -565,15 +577,15 @@ export default function NotesPage() {
 
             <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-between h-9 text-[10px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30">
+                <Button variant="ghost" size="sm" className="w-full justify-between h-10 text-[11px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30">
                   <span>Note Generali</span>
-                  {isNotesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {isNotesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <Textarea 
                   placeholder="Scrivi qui i dettagli del brano, accordatura, ecc..." 
-                  className="min-h-[140px] text-[14px] md:text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
                   value={generalNotes} 
                   onChange={(e) => setGeneralNotes(e.target.value)} 
                   readOnly={!editMode}
@@ -583,11 +595,11 @@ export default function NotesPage() {
 
             <Card className="border-border shadow-xl bg-card/40 rounded-2xl overflow-hidden">
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
-                <CardTitle className="text-[11px] uppercase tracking-widest font-black text-primary flex items-center gap-2">
-                  <Layers className="w-4 h-4" /> Struttura Brano
+                <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2">
+                  <Layers className="w-5 h-5" /> Struttura Brano
                 </CardTitle>
                 {editMode && (
-                  <Button variant="outline" size="sm" onClick={addSection} className="h-8 text-[10px] font-bold bg-background/50"><Plus className="w-3 h-3 mr-1" /> Sezione</Button>
+                  <Button variant="outline" size="sm" onClick={addSection} className="h-9 text-[11px] font-bold bg-background/50"><Plus className="w-4 h-4 mr-1" /> Sezione</Button>
                 )}
               </CardHeader>
               <CardContent className="p-0">
@@ -596,7 +608,7 @@ export default function NotesPage() {
                     {sections.map((section) => (
                       <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 last:border-0">
                         <TableCell className="p-3 w-[100px] align-top">
-                          <Badge variant="secondary" className="w-full justify-center h-8 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">
+                          <Badge variant="secondary" className="w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">
                             {section.type}
                           </Badge>
                         </TableCell>
@@ -608,21 +620,21 @@ export default function NotesPage() {
                                 return (
                                   <Tooltip key={i}>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className="h-8 px-3 text-[18px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help">
+                                      <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help">
                                         {chord}
-                                        {editMode && <X className="w-3 h-3 ml-2 opacity-40 cursor-pointer" onClick={(e) => { e.stopPropagation(); removeChordFromSection(section.id, i); }} />}
+                                        {editMode && <X className="w-4 h-4 ml-2 opacity-40 cursor-pointer" onClick={(e) => { e.stopPropagation(); removeChordFromSection(section.id, i); }} />}
                                       </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent className="p-3 bg-card border-primary/40">
                                       <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Tabella posizioni accordi</p>
+                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Tabella posizioni accordi</p>
                                         <div className="space-y-1">
                                           {positions ? positions.map((pos, idx) => (
-                                            <div key={idx} className="flex items-center gap-2 font-mono text-[11px]">
+                                            <div key={idx} className="flex items-center gap-2 font-mono text-[12px]">
                                               <span className="text-muted-foreground w-4">{idx + 1}.</span>
                                               <span className="text-foreground font-bold">{pos}</span>
                                             </div>
-                                          )) : <p className="text-[10px] italic opacity-60">Nessuna posizione trovata</p>}
+                                          )) : <p className="text-[11px] italic opacity-60">Nessuna posizione trovata</p>}
                                         </div>
                                       </div>
                                     </TooltipContent>
@@ -635,20 +647,20 @@ export default function NotesPage() {
                                 value={section.text} 
                                 onChange={(e) => updateSectionText(section.id, e.target.value)} 
                                 placeholder="Note blocco..." 
-                                className="h-8 text-[18px] md:text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
+                                className="h-9 text-[20px] md:text-[22px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
                               />
                             ) : (
-                              <p className="text-[18px] md:text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
+                              <p className="text-[20px] md:text-[22px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
                             )}
                           </div>
                         </TableCell>
                         {editMode && (
                           <TableCell className="p-3 w-auto flex items-center gap-2 align-top">
                             <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
-                              <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-primary/20 text-primary"><Plus className="w-5 h-5" /></Button></PopoverTrigger>
+                              <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-primary/20 text-primary"><Plus className="w-6 h-6" /></Button></PopoverTrigger>
                               <PopoverContent className="w-72 p-4" align="end"><ChordPicker sectionId={section.id} /></PopoverContent>
                             </Popover>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/30 hover:text-destructive" onClick={() => removeSection(section.id)}><Trash2 className="w-5 h-5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground/30 hover:text-destructive" onClick={() => removeSection(section.id)}><Trash2 className="w-6 h-6" /></Button>
                           </TableCell>
                         )}
                       </TableRow>
