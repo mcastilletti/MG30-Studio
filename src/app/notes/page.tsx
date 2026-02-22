@@ -419,7 +419,9 @@ export default function NotesPage() {
             <div className="flex items-center gap-2">
               <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON"><FileJson className="w-5 h-5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
+                    <FileJson className="w-5 h-5" />
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON per importare il brano.</DialogDescription></DialogHeader>
@@ -428,10 +430,19 @@ export default function NotesPage() {
                 </DialogContent>
               </Dialog>
               {!editMode && selectedNoteId && (
-                <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary"><Pencil className="w-5 h-5" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary" title="Modifica">
+                  <Pencil className="w-5 h-5" />
+                </Button>
+              )}
+              {editMode && selectedNoteId && (
+                <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
+                  <X className="w-5 h-5" />
+                </Button>
               )}
               {editMode && (
-                <Button onClick={handleSaveNote} size="icon" className="h-10 w-10 bg-primary shadow-lg rounded-full"><Save className="w-5 h-5" /></Button>
+                <Button onClick={handleSaveNote} size="icon" className="h-10 w-10 bg-primary shadow-lg rounded-full" title="Salva">
+                  <Save className="w-5 h-5" />
+                </Button>
               )}
             </div>
           </header>
