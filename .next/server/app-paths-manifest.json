@@ -1,3 +1,9 @@
 {
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/notes/page": "app/notes/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/notes/editor/page": "app/notes/editor/page.js",
+  "/tools/sysex-analyzer/page": "app/tools/sysex-analyzer/page.js",
+  "/editor/page": "app/editor/page.js",
+  "/library/page": "app/library/page.js"
 }

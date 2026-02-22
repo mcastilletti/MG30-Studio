@@ -98,8 +98,6 @@ function NoteEditorContent() {
     { id: '1', type: 'Intro', text: '', chords: [] }
   ]);
 
-  const [isAddingNewBand, setIsAddingNewBand] = useState(false);
-  const [isAddingNewSetlist, setIsAddingNewSetlist] = useState(false);
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
   const [jsonToPaste, setJsonToPaste] = useState('');
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
@@ -164,12 +162,6 @@ function NoteEditorContent() {
     });
     return groups;
   }, [savedNotes]);
-
-  const existingBands = useMemo(() => Object.keys(groupedNotes).filter(b => b !== 'Senza Band'), [groupedNotes]);
-  const existingSetlists = useMemo(() => {
-    if (!band || !groupedNotes[band]) return [];
-    return Object.keys(groupedNotes[band]).filter(s => s !== 'Senza Scaletta');
-  }, [band, groupedNotes]);
 
   const loadNote = (note: SavedNote) => {
     setSelectedNoteId(note.id);
@@ -395,8 +387,12 @@ function NoteEditorContent() {
                     try {
                       const data = JSON.parse(jsonToPaste);
                       setTitle(data.title || '');
+                      setBand(data.band || '');
+                      setSetlist(data.setlist || '');
                       setGeneralNotes(data.generalNotes || '');
                       setSections(data.sections || []);
+                      setEditMode(true);
+                      setIsDetailsOpen(true);
                       setIsPasteJsonDialogOpen(false);
                       setJsonToPaste('');
                       toast({ title: "JSON Importato" });
