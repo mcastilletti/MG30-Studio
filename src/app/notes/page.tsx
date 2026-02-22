@@ -106,7 +106,6 @@ export default function NotesPage() {
   const [renameNewValue, setRenameNewValue] = useState('');
   const [renameParentBand, setRenameParentBand] = useState('');
 
-  // Caricamento Note (Cloud o Locali)
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
@@ -119,9 +118,7 @@ export default function NotesPage() {
       }
     }
 
-    if (userLoading) {
-      return; 
-    }
+    if (userLoading) return;
 
     if (!user) {
       setSavedNotes(localParsed);
@@ -134,22 +131,15 @@ export default function NotesPage() {
       (snapshot) => {
         const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
         setSavedNotes(notes);
-        if (localParsed.length > 0) {
-          setIsMigrationDialogOpen(true);
-        }
+        if (localParsed.length > 0) setIsMigrationDialogOpen(true);
       },
       (err) => {
         console.error("Firestore sync error:", err);
-        toast({
-          title: "Errore di sincronizzazione",
-          description: "Impossibile caricare le note dal cloud. Controlla la tua connessione e le autorizzazioni di Firebase.",
-          variant: "destructive",
-        });
       }
     );
 
     return () => unsubscribe();
-  }, [user, userLoading, firestore, toast]);
+  }, [user, userLoading, firestore]);
 
   const handleMigrateNotes = async () => {
     if (!user) return;
@@ -164,7 +154,7 @@ export default function NotesPage() {
       localStorage.removeItem('mg30_studio_notes');
       setLocalNotes([]);
       setIsMigrationDialogOpen(false);
-      toast({ title: "Migrazione completata", description: `${localNotes.length} note caricate nel cloud.` });
+      toast({ title: "Migrazione completata" });
     } catch (err) {
       toast({ title: "Errore migrazione", variant: "destructive" });
     }
@@ -183,7 +173,6 @@ export default function NotesPage() {
   }, [savedNotes]);
 
   const existingBands = useMemo(() => Object.keys(groupedNotes).filter(b => b !== 'Senza Band'), [groupedNotes]);
-  
   const existingSetlists = useMemo(() => {
     if (!band || !groupedNotes[band]) return [];
     return Object.keys(groupedNotes[band]).filter(s => s !== 'Senza Scaletta');
@@ -229,13 +218,12 @@ export default function NotesPage() {
 
   const handleSaveNote = async () => {
     if (!title.trim()) {
-      toast({ title: "Titolo mancante", description: "Inserisci un titolo per il brano.", variant: "destructive" });
+      toast({ title: "Titolo mancante", variant: "destructive" });
       return;
     }
-
     if (!user) {
-        toast({ title: "Utente non autenticato", description: "Devi effettuare il login per salvare le note nel cloud.", variant: "destructive" });
-        return;
+      toast({ title: "Login richiesto", variant: "destructive" });
+      return;
     }
 
     const noteData = {
@@ -250,20 +238,17 @@ export default function NotesPage() {
     };
 
     try {
-        const isFirestoreId = selectedNoteId && selectedNoteId.length > 10;
-        if (isFirestoreId) {
-          await updateDoc(doc(firestore, "notes", selectedNoteId!), noteData);
-        } else {
-          const docRef = await addDoc(collection(firestore, "notes"), noteData);
-          setSelectedNoteId(docRef.id);
-        }
+      const isFirestoreId = selectedNoteId && selectedNoteId.length > 10;
+      if (isFirestoreId) {
+        await updateDoc(doc(firestore, "notes", selectedNoteId!), noteData);
+      } else {
+        const docRef = await addDoc(collection(firestore, "notes"), noteData);
+        setSelectedNoteId(docRef.id);
+      }
       setEditMode(false);
-      setIsAddingNewBand(false);
-      setIsAddingNewSetlist(false);
-      toast({ title: "Nota Salvata", description: "Sincronizzata nel cloud." });
+      toast({ title: "Nota Salvata" });
     } catch (err) {
-      console.error("Save error:", err);
-      toast({ title: "Errore durante il salvataggio", variant: "destructive" });
+      toast({ title: "Errore salvataggio", variant: "destructive" });
     }
   };
 
@@ -292,10 +277,7 @@ export default function NotesPage() {
     setEditMode(false);
     setIsNotesOpen(true);
     setIsDetailsOpen(false);
-
-    if (note.presetSlot && status === 'connected') {
-      sendProgramChange(parseInt(note.presetSlot) - 1);
-    }
+    if (note.presetSlot && status === 'connected') sendProgramChange(parseInt(note.presetSlot) - 1);
   };
 
   const deleteNote = async (id: string, e: React.MouseEvent) => {
@@ -312,85 +294,22 @@ export default function NotesPage() {
 
   const handleRenameGroup = async () => {
     if (!renameNewValue.trim() || !user) return;
-
     try {
       const batch = writeBatch(firestore);
-      const notesToUpdateQuery = query(
+      const qNotes = query(
         collection(firestore, "notes"),
         where("userId", "==", user.uid),
         where(renameType, "==", renameOldValue),
         ...(renameType === 'setlist' ? [where("band", "==", renameParentBand)] : [])
       );
-      
-      const querySnapshot = await getDocs(notesToUpdateQuery);
-      
-      querySnapshot.forEach((doc) => {
-        batch.update(doc.ref, { [renameType]: renameNewValue });
-      });
-
+      const snap = await getDocs(qNotes);
+      snap.forEach((doc) => batch.update(doc.ref, { [renameType]: renameNewValue }));
       await batch.commit();
-
-      if (renameType === 'band' && band === renameOldValue) setBand(renameNewValue);
-      if (renameType === 'setlist' && band === renameParentBand && setlist === renameOldValue) setSetlist(renameNewValue);
-
       setRenameDialogOpen(false);
-      setRenameNewValue('');
       toast({ title: "Ridenominazione completata" });
     } catch (err) {
-      console.error(err);
       toast({ title: "Errore ridenominazione", variant: "destructive" });
     }
-  };
-
-  const handleApplyPasteJson = () => {
-    if (!jsonToPaste.trim()) {
-      toast({ title: "JSON vuoto", description: "Nessun contenuto da applicare.", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const parsedData = JSON.parse(jsonToPaste);
-
-      if (!parsedData.title || !Array.isArray(parsedData.sections)) {
-        throw new Error("Formato JSON non valido. 'title' e 'sections' sono obbligatori.");
-      }
-
-      setTitle(parsedData.title || '');
-      setBand(parsedData.band || 'Senza Band');
-      setSetlist(parsedData.setlist || 'Senza Scaletta');
-      setSelectedPresetSlot(parsedData.presetSlot || '');
-      setGeneralNotes(parsedData.generalNotes || '');
-      
-      const sanitizedSections = parsedData.sections.map((s: any, index: number) => ({
-        id: s.id || Math.random().toString(),
-        type: s.type || 'Verse',
-        text: s.text || '',
-        chords: s.chords || []
-      }));
-      setSections(sanitizedSections);
-
-      setIsPasteJsonDialogOpen(false);
-      setJsonToPaste('');
-      setEditMode(true);
-      setIsDetailsOpen(true);
-      toast({ title: "JSON Applicato", description: `Brano "${parsedData.title}" caricato con successo.` });
-
-    } catch (error: any) {
-      toast({
-        title: "Errore nel parsing del JSON",
-        description: error.message || "Controlla la sintassi del JSON inserito.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const openRenameDialog = (e: React.MouseEvent, type: 'band' | 'setlist', oldValue: string, parentBand?: string) => {
-    e.stopPropagation();
-    setRenameType(type);
-    setRenameOldValue(oldValue);
-    setRenameNewValue(oldValue);
-    setRenameParentBand(parentBand || '');
-    setRenameDialogOpen(true);
   };
 
   const sectionTypes: SectionType[] = ["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"];
@@ -398,11 +317,7 @@ export default function NotesPage() {
   const ChordPicker = ({ sectionId }: { sectionId: string }) => {
     const handleLetterSelect = (letter: string) => { setSelectedLetter(letter); setChordPickerStep('accidental'); };
     const handleAccidentalSelect = (root: string) => { setSelectedRoot(root); setChordPickerStep('quality'); };
-    const handleQualitySelect = (chord: string) => { addChordToSection(sectionId, chord); resetPicker(); };
-    const resetPicker = () => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); };
-
-    const availableAccidentals = selectedLetter ? CHORD_ROOTS.filter(r => r.startsWith(selectedLetter)) : [];
-
+    const handleQualitySelect = (chord: string) => { addChordToSection(sectionId, chord); setChordPickerStep('letter'); };
     return (
       <div className="w-full space-y-4">
         {chordPickerStep === 'letter' && (
@@ -413,25 +328,17 @@ export default function NotesPage() {
           </div>
         )}
         {chordPickerStep === 'accidental' && (
-          <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-3 gap-2">
-              {availableAccidentals.map(r => (
-                <Button key={r} variant="outline" size="sm" onClick={() => handleAccidentalSelect(r)} className="font-bold">{r}</Button>
-              ))}
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setChordPickerStep('letter')} className="text-[10px] uppercase">Indietro</Button>
+          <div className="grid grid-cols-3 gap-2">
+            {CHORD_ROOTS.filter(r => r.startsWith(selectedLetter!)).map(r => (
+              <Button key={r} variant="outline" size="sm" onClick={() => handleAccidentalSelect(r)} className="font-bold">{r}</Button>
+            ))}
           </div>
         )}
         {chordPickerStep === 'quality' && selectedRoot && (
-          <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
-              {CHORD_TABLE[selectedRoot]?.map((chord, i) => (
-                <Button key={i} variant="outline" size="sm" onClick={() => handleQualitySelect(chord)} className="text-xs font-bold truncate">
-                  {chord === selectedRoot ? 'Maggiore' : chord}
-                </Button>
-              ))}
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setChordPickerStep('accidental')} className="text-[10px] uppercase">Indietro</Button>
+          <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
+            {CHORD_TABLE[selectedRoot]?.map((chord, i) => (
+              <Button key={i} variant="outline" size="sm" onClick={() => handleQualitySelect(chord)} className="text-xs font-bold truncate">{chord}</Button>
+            ))}
           </div>
         )}
       </div>
@@ -439,70 +346,49 @@ export default function NotesPage() {
   };
 
   const NoteList = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-3 h-3" /> Archivio {!user && <Badge variant="outline" className="text-[8px]">Locale</Badge>}
+          <Layers className="w-3 h-3" /> Archivio Note
         </h3>
-        <div className="flex gap-1">
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleNewNote}><Plus className="w-3 h-3" /></Button>
-        </div>
+        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-4 h-4" /></Button>
       </div>
       <ScrollArea className="flex-1">
-        <div className="pr-2 pb-8">
-            {userLoading ? (
-                <p className="text-xs text-muted-foreground">Caricamento utente...</p>
-            ) : !user ? (
-                 <p className="text-xs text-muted-foreground">Nessuna nota locale trovata.</p>
-            ) : (
-          <Accordion type="multiple" className="w-full">
-            {Object.entries(groupedNotes).map(([bandName, setlists]) => (
-              <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
-                <div className="flex items-center group/band pr-2">
-                  <AccordionTrigger hideIcon className="hover:no-underline py-2 bg-secondary/20 px-3 rounded-lg flex-1">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-tight text-primary text-left">
-                      <Users className="w-3 h-3 shrink-0" /> <span className="truncate">{bandName}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/band:opacity-100 transition-opacity ml-1" onClick={(e) => openRenameDialog(e, 'band', bandName)}>
-                    <Pencil className="w-3 h-3" />
-                  </Button>
-                </div>
-                <AccordionContent className="pt-2">
-                  <Accordion type="multiple" className="w-full ml-3 border-l border-primary/20 pl-3">
-                    {Object.entries(setlists).map(([setName, notes]) => (
-                      <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none mb-1">
-                        <div className="flex items-center group/set pr-2">
-                          <AccordionTrigger hideIcon className="hover:no-underline py-1.5 flex-1">
-                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                              <Music2 className="w-3 h-3 shrink-0" /> <span className="truncate">{setName}</span>
-                            </div>
-                          </AccordionTrigger>
-                          <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover/set:opacity-100 transition-opacity ml-1" onClick={(e) => openRenameDialog(e, 'setlist', setName, bandName)}>
-                            <Pencil className="w-2.5 h-2.5" />
-                          </Button>
+        <Accordion type="multiple" className="w-full">
+          {Object.entries(groupedNotes).map(([bandName, setlists]) => (
+            <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
+              <div className="flex items-center group/band pr-2">
+                <AccordionTrigger hideIcon className="hover:no-underline py-2.5 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
+                  <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-tight text-primary text-left">
+                    <Users className="w-4 h-4 shrink-0" /> <span>{bandName}</span>
+                  </div>
+                </AccordionTrigger>
+              </div>
+              <AccordionContent className="pt-2">
+                <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-1">
+                  {Object.entries(setlists).map(([setName, notes]) => (
+                    <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
+                      <AccordionTrigger hideIcon className="hover:no-underline py-2">
+                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                          <Music2 className="w-3.5 h-3.5" /> <span>{setName}</span>
                         </div>
-                        <AccordionContent className="pt-1">
-                          <div className="space-y-1 ml-2">
-                            {notes.map((note) => (
-                              <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex flex-col p-2.5 rounded-md cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/10 border-primary/40 text-primary shadow-sm" : "bg-card/40 border-border hover:border-primary/20")}>
-                                <span className="text-[11px] font-semibold truncate mb-1">{note.title}</span>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3 h-3" /></Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-          )}
-        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-1">
+                        <div className="space-y-1.5">
+                          {notes.map((note) => (
+                            <div key={note.id} onClick={() => loadNote(note)} className={cn("flex flex-col p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                              <span className="text-[12px] font-bold truncate">{note.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </ScrollArea>
     </div>
   );
@@ -510,141 +396,163 @@ export default function NotesPage() {
   return (
     <AppShell>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
-        <aside className="hidden md:flex w-64 flex-col gap-4 border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
+        <aside className="hidden md:flex w-72 flex-col border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
           <NoteList />
         </aside>
 
-        <main className="flex-1 space-y-4 max-w-xl mx-auto md:mx-0 w-full pb-20">
-          <header className="flex items-center justify-between gap-2 py-2 border-b border-border/30">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+        <main className="flex-1 space-y-6 max-w-2xl mx-auto md:mx-0 w-full pb-20">
+          <header className="flex items-center justify-between gap-4 py-4 border-b border-border/50">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
                 <SheetTrigger asChild>
-                  <button className="p-2 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 md:hidden">
-                    <NotebookPen className="w-5 h-5 text-primary" />
-                  </button>
+                  <Button variant="ghost" size="icon" className="md:hidden text-primary">
+                    <NotebookPen className="w-6 h-6" />
+                  </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[85%] sm:max-w-[340px]">
-                  <SheetHeader className="text-left mb-4"><SheetTitle>Archivio Note</SheetTitle></SheetHeader>
+                <SheetContent side="left" className="p-0 border-none">
                   <NoteList />
                 </SheetContent>
               </Sheet>
-              <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-sm font-bold h-8 bg-transparent border-none shadow-none focus-visible:ring-0 p-0" />
+              <div className="flex flex-col flex-1 min-w-0">
+                {editMode ? (
+                  <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" />
+                ) : (
+                  <h2 onClick={() => setEditMode(true)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity">
+                    {title || "Scegli un brano..."}
+                  </h2>
+                )}
+                {(!editMode && selectedNoteId) && (
+                   <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground opacity-60">
+                    {band} • {setlist}
+                   </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setIsPasteJsonDialogOpen(true)} title="Incolla JSON" className="h-8 w-8 text-muted-foreground hover:text-primary"><FileJson className="w-4 h-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={() => setEditMode(!editMode)} className={cn("h-8 w-8", editMode ? "text-primary bg-primary/10" : "text-muted-foreground")}><Pencil className="w-4 h-4" /></Button>
-              <Button onClick={handleSaveNote} size="icon" className="h-8 w-8 bg-primary shadow-md"><Save className="w-4 h-4" /></Button>
+              {!editMode && selectedNoteId && (
+                <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary"><Pencil className="w-5 h-5" /></Button>
+              )}
+              {editMode && (
+                <Button onClick={handleSaveNote} size="icon" className="h-10 w-10 bg-primary shadow-lg rounded-full"><Save className="w-5 h-5" /></Button>
+              )}
             </div>
           </header>
 
-          <div className="space-y-3">
-            <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
-              <SelectTrigger className="w-full h-10 bg-primary/5 border-primary/20 font-mono text-xs">
-                <SelectValue placeholder="Seleziona Preset Hardware" />
-              </SelectTrigger>
-              <SelectContent>
-                {devicePresets.map((p) => (
-                  <SelectItem key={p.slot} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {(selectedNoteId === null || editMode) && (
-              <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="space-y-1">
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] font-bold bg-secondary/30">
-                    <span>ORGANIZZAZIONE (BAND / SCALETTA)</span>
-                    {isDetailsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="p-3 rounded-lg bg-secondary/30 border border-border/50 space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Band</label>
-                        {isAddingNewBand ? (
-                          <div className="flex gap-1">
-                            <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-8 text-xs bg-background/50 flex-1" autoFocus />
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewBand(false)}><RotateCcw className="w-3 h-3" /></Button>
-                          </div>
-                        ) : (
-                          <Select value={band} onValueChange={(val) => { if (val === 'NEW_BAND') { setBand(''); setIsAddingNewBand(true); } else { setBand(val); setSetlist(''); } }}>
-                            <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
-                            <SelectContent>
-                              {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                              <SelectItem value="NEW_BAND" className="font-bold text-primary italic">+ Nuova Band...</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-muted-foreground ml-1">Scaletta</label>
-                        {isAddingNewSetlist ? (
-                          <div className="flex gap-1">
-                            <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-8 text-xs bg-background/50 flex-1" autoFocus />
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsAddingNewSetlist(false)}><RotateCcw className="w-3 h-3" /></Button>
-                          </div>
-                        ) : (
-                          <Select value={setlist} disabled={!band && !isAddingNewBand} onValueChange={(val) => { if (val === 'NEW_SETLIST') { setSetlist(''); setIsAddingNewSetlist(true); } else { setSetlist(val); } }}>
-                            <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue placeholder={!band && !isAddingNewBand ? "Scegli prima Band" : "Scegli Scaletta"} /></SelectTrigger>
-                            <SelectContent>
-                              {existingSetlists.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                              <SelectItem value="NEW_SETLIST" className="font-bold text-primary italic">+ Nuova Scaletta...</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      </div>
-                    </div>
+          <div className="space-y-6">
+            {editMode && (
+              <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Hardware Preset</label>
+                  <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
+                    <SelectTrigger className="w-full h-10 bg-background/50 border-border font-mono text-xs"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
+                    <SelectContent>
+                      {devicePresets.map((p) => (
+                        <SelectItem key={p.slot} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Band</label>
+                    {isAddingNewBand ? (
+                      <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
+                    ) : (
+                      <Select value={band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewBand(true) : setBand(val)}>
+                        <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
+                        <SelectContent>
+                          {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                          <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Scaletta</label>
+                    {isAddingNewSetlist ? (
+                      <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
+                    ) : (
+                      <Select value={setlist} disabled={!band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewSetlist(true) : setSetlist(val)}>
+                        <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scaletta" /></SelectTrigger>
+                        <SelectContent>
+                          {existingSetlists.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
 
-            <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-1">
+            <Collapsible open={isNotesOpen} onOpenChange={setIsNotesOpen} className="space-y-2">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-[9px] font-bold bg-secondary/30">
-                  <span>NOTE GENERALI</span>
-                  {isNotesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                <Button variant="ghost" size="sm" className="w-full justify-between h-9 text-[10px] font-black uppercase tracking-widest bg-secondary/30 rounded-xl px-4 border border-border/30">
+                  <span>Note Generali</span>
+                  {isNotesOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <Textarea placeholder="Annotazioni libere..." className="min-h-[120px] text-sm bg-background/50 resize-none" value={generalNotes} onChange={(e) => setGeneralNotes(e.target.value)} />
+                <Textarea 
+                  placeholder="Scrivi qui i dettagli del brano, accordatura, ecc..." 
+                  className="min-h-[140px] text-[14px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  value={generalNotes} 
+                  onChange={(e) => setGeneralNotes(e.target.value)} 
+                  readOnly={!editMode}
+                />
               </CollapsibleContent>
             </Collapsible>
 
-            <Card className="border-border shadow-md bg-card/50">
-              <CardHeader className="py-2 bg-secondary/40 flex flex-row items-center justify-between px-3">
-                <CardTitle className="text-[9px] uppercase tracking-widest font-black">Struttura Brano</CardTitle>
-                <Button variant="outline" size="sm" onClick={addSection} className="h-6 text-[8px] font-bold uppercase"><Plus className="w-2 h-2 mr-1" /> Sezione</Button>
+            <Card className="border-border shadow-xl bg-card/40 rounded-2xl overflow-hidden">
+              <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
+                <CardTitle className="text-[11px] uppercase tracking-widest font-black text-primary flex items-center gap-2">
+                  <Layers className="w-3 h-3" /> Struttura Brano
+                </CardTitle>
+                {editMode && (
+                  <Button variant="outline" size="sm" onClick={addSection} className="h-8 text-[10px] font-bold bg-background/50"><Plus className="w-3 h-3 mr-1" /> Sezione</Button>
+                )}
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableBody>
                     {sections.map((section) => (
-                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20">
-                        <TableCell className="p-1.5 w-[90px]">
-                          <Select value={section.type} onValueChange={(val: SectionType) => updateSectionType(section.id, val)}>
-                            <SelectTrigger className="h-8 text-[9px] border-none bg-primary/10 font-black focus:ring-0"><SelectValue /></SelectTrigger>
-                            <SelectContent>{sectionTypes.map(type => <SelectItem key={type} value={type} className="text-[10px] uppercase font-bold">{type}</SelectItem>)}</SelectContent>
-                          </Select>
+                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 last:border-0">
+                        <TableCell className="p-3 w-[100px] align-top">
+                          <Badge variant="secondary" className="w-full justify-center h-8 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">
+                            {section.type}
+                          </Badge>
                         </TableCell>
-                        <TableCell className="p-1.5 flex-1 min-w-[200px]">
-                          <div className="flex flex-wrap gap-2 items-center min-h-[40px]">
-                            {section.chords?.map((chord, i) => (
-                              <Badge key={i} variant="secondary" className="h-6 px-2 text-xs font-bold cursor-pointer hover:bg-destructive/10 hover:text-destructive group transition-colors" onClick={() => removeChordFromSection(section.id, i)}>
-                                {chord}<X className="w-2 h-2 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </Badge>
-                            ))}
-                            <Input value={section.text} onChange={(e) => updateSectionText(section.id, e.target.value)} placeholder="Note..." className="h-8 text-sm border-none bg-transparent shadow-none focus-visible:ring-0 w-auto min-w-[50px] flex-1" />
+                        <TableCell className="p-3 flex-1">
+                          <div className="flex flex-col gap-3 min-h-[44px]">
+                            <div className="flex flex-wrap gap-2">
+                              {section.chords?.map((chord, i) => (
+                                <Badge key={i} variant="outline" className="h-8 px-3 text-[18px] font-black bg-background border-primary/30 text-primary shadow-sm">
+                                  {chord}
+                                  {editMode && <X className="w-3 h-3 ml-2 opacity-40 cursor-pointer" onClick={() => removeChordFromSection(section.id, i)} />}
+                                </Badge>
+                              ))}
+                            </div>
+                            {editMode ? (
+                              <Input 
+                                value={section.text} 
+                                onChange={(e) => updateSectionText(section.id, e.target.value)} 
+                                placeholder="Note blocco..." 
+                                className="h-8 text-[18px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
+                              />
+                            ) : (
+                              <p className="text-[18px] font-medium leading-tight whitespace-pre-wrap">{section.text}</p>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell className="p-1 w-auto flex items-center gap-1">
-                          <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
-                            <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-8 w-8 text-primary border-primary/20"><Plus className="w-4 h-4" /></Button></PopoverTrigger>
-                            <PopoverContent className="w-64 p-4" align="end"><ChordPicker sectionId={section.id} /></PopoverContent>
-                          </Popover>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40" onClick={() => removeSection(section.id)}><Trash2 className="w-3 h-3" /></Button>
-                        </TableCell>
+                        {editMode && (
+                          <TableCell className="p-3 w-auto flex items-center gap-2 align-top">
+                            <Popover onOpenChange={(open) => !open && setChordPickerStep('letter')}>
+                              <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-primary/20 text-primary"><Plus className="w-5 h-5" /></Button></PopoverTrigger>
+                              <PopoverContent className="w-72 p-4" align="end"><ChordPicker sectionId={section.id} /></PopoverContent>
+                            </Popover>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground/30 hover:text-destructive" onClick={() => removeSection(section.id)}><Trash2 className="w-4 h-4" /></Button>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -655,48 +563,10 @@ export default function NotesPage() {
         </main>
       </div>
 
-      {/* Migration Dialog */}
       <Dialog open={isMigrationDialogOpen} onOpenChange={setIsMigrationDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><CloudUpload className="w-5 h-5 text-primary" /> Sincronizzazione Cloud</DialogTitle>
-            <DialogDescription>
-              Abbiamo trovato delle note salvate localmente su questo dispositivo. Vuoi caricarle nel tuo account cloud per trovarle su tutti i tuoi dispositivi?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setIsMigrationDialogOpen(false)}>Mantieni Locali</Button>
-            <Button onClick={handleMigrateNotes} className="gap-2"><Check className="w-4 h-4" /> Carica nel Cloud</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Rinomina {renameType === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
-            <DialogDescription>Stai rinominando "{renameOldValue}". Tutte le note associate verranno aggiornate.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-xs font-bold uppercase text-muted-foreground">Nuovo Nome</label>
-              <Input id="name" value={renameNewValue} onChange={(e) => setRenameNewValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup()} className="bg-secondary/20" autoFocus />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setRenameDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleRenameGroup} className="gap-2"><Check className="w-4 h-4" /> Conferma</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader><DialogTitle>Incolla JSON Preset</DialogTitle><DialogDescription>Incolla qui la configurazione JSON del brano.</DialogDescription></DialogHeader>
-          <div className="py-4"><Textarea placeholder='{"title": "...", "sections": [...]}' value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} className="min-h-[250px] font-mono text-xs bg-secondary/20" /></div>
-          <DialogFooter><Button variant="ghost" onClick={() => setIsPasteJsonDialogOpen(false)}>Annulla</Button><Button onClick={handleApplyPasteJson} disabled={!jsonToPaste.trim()}>Applica JSON</Button></DialogFooter>
-        </DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Carica nel Cloud</DialogTitle><DialogDescription>Sincronizza le note locali col tuo account Google.</DialogDescription></DialogHeader><DialogFooter className="gap-2"><Button variant="ghost" onClick={() => setIsMigrationDialogOpen(false)}>Mantieni Locali</Button><Button onClick={handleMigrateNotes}>Sincronizza</Button></DialogFooter></DialogContent>
       </Dialog>
     </AppShell>
   );
 }
+
