@@ -101,14 +101,14 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Navigation</SidebarGroupLabel>
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={pathname === item.href}>
                       <Link href={item.href}>
                         <item.icon className="w-4 h-4" />
-                        <span>{item.label}</span>
+                        <span className="text-sm">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -117,41 +117,41 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             </SidebarGroup>
 
             <SidebarGroup className="mt-auto">
-              <SidebarGroupLabel>Account Google</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Account Google</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
                 {user ? (
                   <div className="flex flex-col gap-3 p-3 rounded-lg bg-secondary/30 border border-border">
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
+                      <Avatar className="w-7 h-7">
                         <AvatarImage src={user.photoURL || ''} />
-                        <AvatarFallback><UserIcon className="w-3 h-3" /></AvatarFallback>
+                        <AvatarFallback><UserIcon className="w-4 h-4" /></AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold truncate">{user.displayName}</p>
-                        <p className="text-[8px] text-muted-foreground truncate">Cloud Active</p>
+                        <p className="text-[11px] font-bold truncate">{user.displayName}</p>
+                        <p className="text-[10px] text-muted-foreground truncate font-medium">Cloud Active</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold gap-2 w-full" onClick={handleLogout}>
-                      <LogOut className="w-3 h-3" /> Esci
+                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold uppercase gap-2 w-full hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
+                      <LogOut className="w-3.5 h-3.5" /> Esci
                     </Button>
                   </div>
                 ) : (
-                  <Button variant="outline" size="sm" className="w-full gap-2 text-[10px] font-bold h-9 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
-                    <LogIn className="w-3 h-3 text-primary" /> Login con Google
+                  <Button variant="outline" size="sm" className="w-full gap-2 text-[11px] font-bold h-10 border-primary/20 bg-primary/5 hover:bg-primary/10" onClick={handleLogin}>
+                    <LogIn className="w-4 h-4 text-primary" /> Login con Google
                   </Button>
                 )}
               </SidebarGroupContent>
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel>Hardware Status</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider opacity-70">Hardware Status</SidebarGroupLabel>
               <SidebarGroupContent className="px-3 py-2">
-                <div className="flex items-center justify-between p-2 rounded-md bg-secondary/50 border border-border">
+                <div className="flex items-center justify-between p-2.5 rounded-md bg-secondary/50 border border-border">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                    <span className="text-[11px] font-medium uppercase">{status}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-tight">{status}</span>
                   </div>
-                  {status === 'connected' ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
+                  {status === 'connected' ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -163,7 +163,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 <SidebarMenuButton asChild>
                   <Link href="/settings">
                     <Settings className="w-4 h-4" />
-                    <span>Settings</span>
+                    <span className="text-sm">Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
