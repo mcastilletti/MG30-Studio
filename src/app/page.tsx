@@ -25,6 +25,78 @@ export default function HomePage() {
           </Badge>
         </header>
 
+        {/* Navigation Buttons - Now at the Top */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <Link href="/library" className="group">
+            <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Library className="w-6 h-6 text-accent" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">Libreria Preset</h4>
+                  <p className="text-xs text-muted-foreground">Sfoglia la tua collezione</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/editor" className="group">
+            <Card className="h-full border-border hover:border-primary/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Sliders className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">Visual Editor</h4>
+                  <p className="text-xs text-muted-foreground">Regola i parametri</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/notes" className="group">
+            <Card className="h-full border-border hover:border-orange-500/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <NotebookPen className="w-6 h-6 text-orange-500" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">Note Brani</h4>
+                  <p className="text-xs text-muted-foreground">Scalette e accordi</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/tools/sysex-analyzer" className="group">
+            <Card className="h-full border-border hover:border-yellow-500/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Zap className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">AI Analyzer</h4>
+                  <p className="text-xs text-muted-foreground">Reverse engineering</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Card className="h-full border-border cursor-pointer hover:border-green-500/50 transition-colors bg-card/50">
+            <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Download className="w-6 h-6 text-green-500" />
+              </div>
+              <div className="text-center">
+                <h4 className="font-bold">Bulk Backup</h4>
+                <p className="text-xs text-muted-foreground">Salva tutti i 128 slot</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Connection Status and AI Smart Studio - Now at the Bottom */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 border-primary/20 bg-primary/5">
             <CardHeader>
@@ -97,76 +169,6 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          <Link href="/library" className="group">
-            <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
-              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Library className="w-6 h-6 text-accent" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold">Libreria Preset</h4>
-                  <p className="text-xs text-muted-foreground">Sfoglia la tua collezione</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/editor" className="group">
-            <Card className="h-full border-border hover:border-primary/50 transition-colors bg-card/50">
-              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Sliders className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold">Visual Editor</h4>
-                  <p className="text-xs text-muted-foreground">Regola i parametri</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/notes" className="group">
-            <Card className="h-full border-border hover:border-orange-500/50 transition-colors bg-card/50">
-              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <NotebookPen className="w-6 h-6 text-orange-500" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold">Note Brani</h4>
-                  <p className="text-xs text-muted-foreground">Scalette e accordi</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/tools/sysex-analyzer" className="group">
-            <Card className="h-full border-border hover:border-yellow-500/50 transition-colors bg-card/50">
-              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Zap className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div className="text-center">
-                  <h4 className="font-bold">AI Analyzer</h4>
-                  <p className="text-xs text-muted-foreground">Reverse engineering</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Card className="h-full border-border cursor-pointer hover:border-green-500/50 transition-colors bg-card/50">
-            <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
-              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Download className="w-6 h-6 text-green-500" />
-              </div>
-              <div className="text-center">
-                <h4 className="font-bold">Bulk Backup</h4>
-                <p className="text-xs text-muted-foreground">Salva tutti i 128 slot</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </AppShell>
