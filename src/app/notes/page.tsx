@@ -43,8 +43,9 @@ interface SavedNote {
   presetSlot: string;
   generalNotes: string;
   sections: NoteSection[];
-  date: any;
+  date?: any;
   userId?: string;
+  updatedAt?: any;
 }
 
 const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
@@ -226,8 +227,11 @@ export default function NotesPage() {
       toast({ title: "Titolo mancante", variant: "destructive" });
       return;
     }
-    if (!user) {
-      toast({ title: "Login richiesto", variant: "destructive" });
+
+    const isDev = process.env.NODE_ENV === 'development';
+
+    if (!user && !isDev) {
+      toast({ title: "Login richiesto per il salvataggio cloud", variant: "destructive" });
       return;
     }
 
@@ -238,21 +242,36 @@ export default function NotesPage() {
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
-      updatedAt: serverTimestamp(),
-      userId: user.uid
+      updatedAt: user ? serverTimestamp() : new Date().toISOString(),
+      userId: user?.uid || 'local-dev-user'
     };
 
-    try {
-      if (selectedNoteId) {
-        await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
-      } else {
-        const docRef = await addDoc(collection(firestore, "notes"), noteData);
-        setSelectedNoteId(docRef.id);
+    if (user) {
+      try {
+        if (selectedNoteId && !selectedNoteId.startsWith('local-')) {
+          await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
+        } else {
+          const docRef = await addDoc(collection(firestore, "notes"), noteData);
+          setSelectedNoteId(docRef.id);
+        }
+        setEditMode(false);
+        toast({ title: "Nota Salvata nel Cloud" });
+      } catch (err) {
+        toast({ title: "Errore salvataggio cloud", variant: "destructive" });
       }
+    } else if (isDev) {
+      const id = selectedNoteId || `local-${Date.now()}`;
+      const newNote = { ...noteData, id };
+      const updatedLocalNotes = selectedNoteId 
+        ? localNotes.map(n => n.id === id ? newNote : n)
+        : [...localNotes, newNote];
+      
+      setLocalNotes(updatedLocalNotes);
+      localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedLocalNotes));
+      setSavedNotes(updatedLocalNotes);
+      setSelectedNoteId(id);
       setEditMode(false);
-      toast({ title: "Nota Salvata" });
-    } catch (err) {
-      toast({ title: "Errore salvataggio", variant: "destructive" });
+      toast({ title: "Nota Salvata Localmente (Dev Mode)" });
     }
   };
 
@@ -284,13 +303,25 @@ export default function NotesPage() {
 
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    if (id.startsWith('local-')) {
+      const updatedLocalNotes = localNotes.filter(n => n.id !== id);
+      setLocalNotes(updatedLocalNotes);
+      localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedLocalNotes));
+      if (!user) setSavedNotes(updatedLocalNotes);
+      if (selectedNoteId === id) handleNewNote();
+      toast({ title: "Nota locale eliminata" });
+      return;
+    }
+
     if (!user) return;
     try {
       await deleteDoc(doc(firestore, "notes", id));
       if (selectedNoteId === id) handleNewNote();
-      toast({ title: "Nota eliminata" });
+      toast({ title: "Nota eliminata dal cloud" });
     } catch (err) {
-      toast({ title: "Errore eliminazione", variant: "destructive" });
+      toast({ title: "Errore eliminazione cloud", variant: "destructive" });
     }
   };
 
@@ -344,16 +375,16 @@ export default function NotesPage() {
   const NoteList = () => (
     <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-4 h-4" /> Archivio
+        <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <Layers className="w-4 h-4 md:w-5 md:h-5" /> Archivio
         </h3>
-        <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-5 h-5" /></Button>
+        <Button variant="outline" size="icon" className="h-9 w-9 md:h-11 md:w-11 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-5 h-5 md:w-6 md:h-6" /></Button>
       </div>
 
       <Tabs value={noteListViewMode} onValueChange={(v) => setNoteListViewMode(v as any)} className="mb-6">
-        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-10 p-1">
-          <TabsTrigger value="bands" className="text-[12px] font-bold gap-2"><UserSquare2 className="w-3.5 h-3.5" /> Band</TabsTrigger>
-          <TabsTrigger value="setlists" className="text-[12px] font-bold gap-2"><ListMusic className="w-3.5 h-3.5" /> Scalette</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-10 md:h-12 p-1">
+          <TabsTrigger value="bands" className="text-[12px] md:text-[14px] font-bold gap-2"><UserSquare2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> Band</TabsTrigger>
+          <TabsTrigger value="setlists" className="text-[12px] md:text-[14px] font-bold gap-2"><ListMusic className="w-3.5 h-3.5 md:w-4 md:h-4" /> Scalette</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -363,8 +394,8 @@ export default function NotesPage() {
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                  <div className="flex items-center gap-3 text-base font-bold uppercase tracking-tight text-primary text-left">
-                    <UserSquare2 className="w-5 h-5 shrink-0 opacity-70" /> <span>{bandName}</span>
+                  <div className="flex items-center gap-3 text-base md:text-lg font-bold uppercase tracking-tight text-primary text-left">
+                    <UserSquare2 className="w-5 h-5 md:w-6 md:h-6 shrink-0 opacity-70" /> <span>{bandName}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
@@ -372,15 +403,15 @@ export default function NotesPage() {
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
                         <AccordionTrigger hideIcon className="hover:no-underline py-2">
-                          <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                            <Music2 className="w-4 h-4 opacity-60" /> <span>{setName}</span>
+                          <div className="flex items-center gap-2 text-[13px] md:text-[15px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+                            <Music2 className="w-4 h-4 md:w-5 md:h-5 opacity-60" /> <span>{setName}</span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-1">
                           <div className="space-y-1.5">
                             {notes.map((note) => (
                               <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
-                                <span className="text-[14px] font-bold truncate">{note.title}</span>
+                                <span className="text-[14px] md:text-[16px] font-bold truncate">{note.title}</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
                               </div>
                             ))}
@@ -398,8 +429,8 @@ export default function NotesPage() {
             {Object.entries(setlistOnlyNotes).map(([setName, notes]) => (
               <AccordionItem key={setName} value={`setlist-only-${setName}`} className="border-none">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                  <div className="flex items-center gap-3 text-base font-bold uppercase tracking-tight text-primary text-left">
-                    <ListMusic className="w-5 h-5 shrink-0 opacity-70" /> <span>{setName}</span>
+                  <div className="flex items-center gap-3 text-base md:text-lg font-bold uppercase tracking-tight text-primary text-left">
+                    <ListMusic className="w-5 h-5 md:w-6 md:h-6 shrink-0 opacity-70" /> <span>{setName}</span>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-3 ml-4 border-l-2 border-primary/10 pl-4">
@@ -407,8 +438,8 @@ export default function NotesPage() {
                     {notes.map((note) => (
                       <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[14px] font-bold truncate">{note.title}</span>
-                          <span className="text-[11px] opacity-60 truncate">{note.band}</span>
+                          <span className="text-[14px] md:text-[16px] font-bold truncate">{note.title}</span>
+                          <span className="text-[11px] md:text-[13px] opacity-60 truncate">{note.band}</span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
                       </div>
@@ -542,7 +573,7 @@ export default function NotesPage() {
               <CollapsibleContent>
                 <Textarea 
                   placeholder="Scrivi qui i dettagli del brano, accordatura, ecc..." 
-                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  className="min-h-[140px] text-[14px] md:text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
                   value={generalNotes} 
                   onChange={(e) => setGeneralNotes(e.target.value)} 
                   readOnly={!editMode}
@@ -604,10 +635,10 @@ export default function NotesPage() {
                                 value={section.text} 
                                 onChange={(e) => updateSectionText(section.id, e.target.value)} 
                                 placeholder="Note blocco..." 
-                                className="h-8 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
+                                className="h-8 text-[18px] md:text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" 
                               />
                             ) : (
-                              <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
+                              <p className="text-[18px] md:text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
                             )}
                           </div>
                         </TableCell>
