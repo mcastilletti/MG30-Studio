@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload, Info } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -18,10 +18,12 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, addDoc, onSnapshot, query, where, doc, deleteDoc, updateDoc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { getChordPositions } from '@/lib/chord-data';
 
 type SectionType = "Intro" | "Verse" | "Chorus" | "Bridge" | "Strum" | "Out" | "Solo";
 
@@ -534,12 +536,32 @@ export default function NotesPage() {
                         <TableCell className="p-3 flex-1">
                           <div className="flex flex-col gap-3 min-h-[44px]">
                             <div className="flex flex-wrap gap-2">
-                              {section.chords?.map((chord, i) => (
-                                <Badge key={i} variant="outline" className="h-8 px-3 text-[18px] font-black bg-background border-primary/30 text-primary shadow-sm">
-                                  {chord}
-                                  {editMode && <X className="w-3 h-3 ml-2 opacity-40 cursor-pointer" onClick={() => removeChordFromSection(section.id, i)} />}
-                                </Badge>
-                              ))}
+                              {section.chords?.map((chord, i) => {
+                                const positions = getChordPositions(chord);
+                                return (
+                                  <Tooltip key={i}>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="h-8 px-3 text-[18px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help">
+                                        {chord}
+                                        {editMode && <X className="w-3 h-3 ml-2 opacity-40 cursor-pointer" onClick={(e) => { e.stopPropagation(); removeChordFromSection(section.id, i); }} />}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="p-3 bg-card border-primary/40">
+                                      <div className="space-y-2">
+                                        <p className="text-[10px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Tabella posizioni accordi</p>
+                                        <div className="space-y-1">
+                                          {positions ? positions.map((pos, idx) => (
+                                            <div key={idx} className="flex items-center gap-2 font-mono text-[11px]">
+                                              <span className="text-muted-foreground w-4">{idx + 1}.</span>
+                                              <span className="text-foreground font-bold">{pos}</span>
+                                            </div>
+                                          )) : <p className="text-[10px] italic opacity-60">Nessuna posizione trovata</p>}
+                                        </div>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })}
                             </div>
                             {editMode ? (
                               <Input 

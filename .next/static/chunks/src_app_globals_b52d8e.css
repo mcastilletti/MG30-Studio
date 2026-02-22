@@ -1112,6 +1112,10 @@ body {
   cursor: pointer;
 }
 
+.cursor-help {
+  cursor: help;
+}
+
 .touch-none {
   touch-action: none;
 }
@@ -1905,6 +1909,10 @@ body {
 
 .pt-4 {
   padding-top: 1rem;
+}
+
+.pb-1 {
+  padding-bottom: .25rem;
 }
 
 .text-left {
