@@ -1,10 +1,11 @@
+
 "use client"
 
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles } from 'lucide-react';
+import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles, NotebookPen } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
@@ -98,7 +99,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <Link href="/library" className="group">
             <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
               <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
@@ -122,6 +123,20 @@ export default function HomePage() {
                 <div className="text-center">
                   <h4 className="font-bold">Visual Editor</h4>
                   <p className="text-xs text-muted-foreground">Regola i parametri</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/notes" className="group">
+            <Card className="h-full border-border hover:border-orange-500/50 transition-colors bg-card/50">
+              <CardContent className="flex flex-col items-center justify-center py-10 gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <NotebookPen className="w-6 h-6 text-orange-500" />
+                </div>
+                <div className="text-center">
+                  <h4 className="font-bold">Note Brani</h4>
+                  <p className="text-xs text-muted-foreground">Scalette e accordi</p>
                 </div>
               </CardContent>
             </Card>

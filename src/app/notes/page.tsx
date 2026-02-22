@@ -70,7 +70,7 @@ export default function NotesPage() {
   const { devicePresets, status, sendProgramChange } = useMidiStore();
   const { toast } = useToast();
   const { firestore } = useFirebase();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [localNotes, setLocalNotes] = useState<SavedNote[]>([]);
@@ -108,11 +108,19 @@ export default function NotesPage() {
 
   // Caricamento Note (Cloud o Locali)
   useEffect(() => {
-    // Carica sempre le locali per controllo migrazione
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
     if (stored) {
-      try { localParsed = JSON.parse(stored); setLocalNotes(localParsed); } catch(e) { console.error(e); }
+      try {
+        localParsed = JSON.parse(stored);
+        setLocalNotes(localParsed);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (userLoading) {
+      return; 
     }
 
     if (!user) {
@@ -120,22 +128,28 @@ export default function NotesPage() {
       return;
     }
 
-    // Se loggato, attiva listener Firestore
     const q = query(collection(firestore, "notes"), where("userId", "==", user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedNote));
-      setSavedNotes(notes);
-      
-      // Se ci sono note locali e sono loggato, proponi migrazione una volta
-      if (localParsed.length > 0) {
-        setIsMigrationDialogOpen(true);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
+        setSavedNotes(notes);
+        if (localParsed.length > 0) {
+          setIsMigrationDialogOpen(true);
+        }
+      },
+      (err) => {
+        console.error("Firestore sync error:", err);
+        toast({
+          title: "Errore di sincronizzazione",
+          description: "Impossibile caricare le note dal cloud. Controlla la tua connessione e le autorizzazioni di Firebase.",
+          variant: "destructive",
+        });
       }
-    }, (err) => {
-      console.error("Firestore sync error:", err);
-    });
+    );
 
     return () => unsubscribe();
-  }, [user, firestore]);
+  }, [user, userLoading, firestore, toast]);
 
   const handleMigrateNotes = async () => {
     if (!user) return;
@@ -219,6 +233,11 @@ export default function NotesPage() {
       return;
     }
 
+    if (!user) {
+        toast({ title: "Utente non autenticato", description: "Devi effettuare il login per salvare le note nel cloud.", variant: "destructive" });
+        return;
+    }
+
     const noteData = {
       title,
       band: band || 'Senza Band',
@@ -227,12 +246,10 @@ export default function NotesPage() {
       generalNotes,
       sections,
       updatedAt: serverTimestamp(),
-      userId: user?.uid || null
+      userId: user.uid
     };
 
     try {
-      if (user) {
-        // Se l'ID selezionato non è un ID Firestore (es. è un numero casuale locale), creiamo un nuovo documento
         const isFirestoreId = selectedNoteId && selectedNoteId.length > 10;
         if (isFirestoreId) {
           await updateDoc(doc(firestore, "notes", selectedNoteId!), noteData);
@@ -240,24 +257,12 @@ export default function NotesPage() {
           const docRef = await addDoc(collection(firestore, "notes"), noteData);
           setSelectedNoteId(docRef.id);
         }
-      } else {
-        const newId = selectedNoteId || Math.random().toString();
-        const newNote: SavedNote = { ...noteData, id: newId, date: new Date().toISOString() };
-        let updatedList: SavedNote[];
-        if (selectedNoteId) {
-          updatedList = savedNotes.map(n => n.id === selectedNoteId ? newNote : n);
-        } else {
-          updatedList = [newNote, ...savedNotes];
-          setSelectedNoteId(newId);
-        }
-        setSavedNotes(updatedList);
-        localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedList));
-      }
       setEditMode(false);
       setIsAddingNewBand(false);
       setIsAddingNewSetlist(false);
-      toast({ title: "Nota Salvata", description: user ? "Sincronizzata nel cloud." : "Salvata localmente." });
+      toast({ title: "Nota Salvata", description: "Sincronizzata nel cloud." });
     } catch (err) {
+      console.error("Save error:", err);
       toast({ title: "Errore durante il salvataggio", variant: "destructive" });
     }
   };
@@ -295,14 +300,9 @@ export default function NotesPage() {
 
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user) return;
     try {
-      if (user && id.length > 10) {
-        await deleteDoc(doc(firestore, "notes", id));
-      } else {
-        const newList = savedNotes.filter(n => n.id !== id);
-        setSavedNotes(newList);
-        if (!user) localStorage.setItem('mg30_studio_notes', JSON.stringify(newList));
-      }
+      await deleteDoc(doc(firestore, "notes", id));
       if (selectedNoteId === id) handleNewNote();
       toast({ title: "Nota eliminata" });
     } catch (err) {
@@ -311,36 +311,24 @@ export default function NotesPage() {
   };
 
   const handleRenameGroup = async () => {
-    if (!renameNewValue.trim()) return;
+    if (!renameNewValue.trim() || !user) return;
 
     try {
-      const batch = user ? writeBatch(firestore) : null;
-      const updatedNotes = [...savedNotes];
-
-      savedNotes.forEach((note, index) => {
-        let shouldUpdate = false;
-        if (renameType === 'band' && note.band === renameOldValue) {
-          updatedNotes[index] = { ...note, band: renameNewValue };
-          shouldUpdate = true;
-        } else if (renameType === 'setlist' && note.band === renameParentBand && note.setlist === renameOldValue) {
-          updatedNotes[index] = { ...note, setlist: renameNewValue };
-          shouldUpdate = true;
-        }
-
-        if (shouldUpdate && batch && user) {
-          batch.update(doc(firestore, "notes", note.id), {
-            [renameType === 'band' ? 'band' : 'setlist']: renameNewValue,
-            updatedAt: serverTimestamp()
-          });
-        }
+      const batch = writeBatch(firestore);
+      const notesToUpdateQuery = query(
+        collection(firestore, "notes"),
+        where("userId", "==", user.uid),
+        where(renameType, "==", renameOldValue),
+        ...(renameType === 'setlist' ? [where("band", "==", renameParentBand)] : [])
+      );
+      
+      const querySnapshot = await getDocs(notesToUpdateQuery);
+      
+      querySnapshot.forEach((doc) => {
+        batch.update(doc.ref, { [renameType]: renameNewValue });
       });
 
-      if (batch && user) {
-        await batch.commit();
-      } else {
-        setSavedNotes(updatedNotes);
-        if (!user) localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedNotes));
-      }
+      await batch.commit();
 
       if (renameType === 'band' && band === renameOldValue) setBand(renameNewValue);
       if (renameType === 'setlist' && band === renameParentBand && setlist === renameOldValue) setSetlist(renameNewValue);
@@ -351,6 +339,48 @@ export default function NotesPage() {
     } catch (err) {
       console.error(err);
       toast({ title: "Errore ridenominazione", variant: "destructive" });
+    }
+  };
+
+  const handleApplyPasteJson = () => {
+    if (!jsonToPaste.trim()) {
+      toast({ title: "JSON vuoto", description: "Nessun contenuto da applicare.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const parsedData = JSON.parse(jsonToPaste);
+
+      if (!parsedData.title || !Array.isArray(parsedData.sections)) {
+        throw new Error("Formato JSON non valido. 'title' e 'sections' sono obbligatori.");
+      }
+
+      setTitle(parsedData.title || '');
+      setBand(parsedData.band || 'Senza Band');
+      setSetlist(parsedData.setlist || 'Senza Scaletta');
+      setSelectedPresetSlot(parsedData.presetSlot || '');
+      setGeneralNotes(parsedData.generalNotes || '');
+      
+      const sanitizedSections = parsedData.sections.map((s: any, index: number) => ({
+        id: s.id || Math.random().toString(),
+        type: s.type || 'Verse',
+        text: s.text || '',
+        chords: s.chords || []
+      }));
+      setSections(sanitizedSections);
+
+      setIsPasteJsonDialogOpen(false);
+      setJsonToPaste('');
+      setEditMode(true);
+      setIsDetailsOpen(true);
+      toast({ title: "JSON Applicato", description: `Brano "${parsedData.title}" caricato con successo.` });
+
+    } catch (error: any) {
+      toast({
+        title: "Errore nel parsing del JSON",
+        description: error.message || "Controlla la sintassi del JSON inserito.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -420,6 +450,11 @@ export default function NotesPage() {
       </div>
       <ScrollArea className="flex-1">
         <div className="pr-2 pb-8">
+            {userLoading ? (
+                <p className="text-xs text-muted-foreground">Caricamento utente...</p>
+            ) : !user ? (
+                 <p className="text-xs text-muted-foreground">Nessuna nota locale trovata.</p>
+            ) : (
           <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-2">
@@ -466,6 +501,7 @@ export default function NotesPage() {
               </AccordionItem>
             ))}
           </Accordion>
+          )}
         </div>
       </ScrollArea>
     </div>
