@@ -10,15 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Users, Layers, Pencil, X, FileJson, Check, RotateCcw, CloudUpload, Info, ListMusic, UserSquare2 } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, Check, UserSquare2, ListMusic } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -88,7 +88,7 @@ export default function NotesPage() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = false;
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: '1', type: 'Intro', text: '', chords: [] }
@@ -96,10 +96,8 @@ export default function NotesPage() {
 
   const [isAddingNewBand, setIsAddingNewBand] = useState(false);
   const [isAddingNewSetlist, setIsAddingNewSetlist] = useState(false);
-
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
   const [jsonToPaste, setJsonToPaste] = useState('');
-
   const [chordPickerStep, setChordPickerStep] = useState<'letter' | 'accidental' | 'quality'>('letter');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
@@ -245,9 +243,8 @@ export default function NotesPage() {
     };
 
     try {
-      const isFirestoreId = selectedNoteId && selectedNoteId.length > 10;
-      if (isFirestoreId) {
-        await updateDoc(doc(firestore, "notes", selectedNoteId!), noteData);
+      if (selectedNoteId) {
+        await updateDoc(doc(firestore, "notes", selectedNoteId), noteData);
       } else {
         const docRef = await addDoc(collection(firestore, "notes"), noteData);
         setSelectedNoteId(docRef.id);
