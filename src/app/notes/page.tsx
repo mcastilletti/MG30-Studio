@@ -100,12 +100,6 @@ export default function NotesPage() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [renameType, setRenameType] = useState<'band' | 'setlist'>('band');
-  const [renameOldValue, setRenameOldValue] = useState('');
-  const [renameNewValue, setRenameNewValue] = useState('');
-  const [renameParentBand, setRenameParentBand] = useState('');
-
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
@@ -292,23 +286,17 @@ export default function NotesPage() {
     }
   };
 
-  const handleRenameGroup = async () => {
-    if (!renameNewValue.trim() || !user) return;
+  const handleImportJson = () => {
     try {
-      const batch = writeBatch(firestore);
-      const qNotes = query(
-        collection(firestore, "notes"),
-        where("userId", "==", user.uid),
-        where(renameType, "==", renameOldValue),
-        ...(renameType === 'setlist' ? [where("band", "==", renameParentBand)] : [])
-      );
-      const snap = await getDocs(qNotes);
-      snap.forEach((doc) => batch.update(doc.ref, { [renameType]: renameNewValue }));
-      await batch.commit();
-      setRenameDialogOpen(false);
-      toast({ title: "Ridenominazione completata" });
-    } catch (err) {
-      toast({ title: "Errore ridenominazione", variant: "destructive" });
+      const data = JSON.parse(jsonToPaste);
+      if (data.title) setTitle(data.title);
+      if (data.generalNotes) setGeneralNotes(data.generalNotes);
+      if (data.sections) setSections(data.sections);
+      setIsPasteJsonDialogOpen(false);
+      setJsonToPaste('');
+      toast({ title: "JSON Importato" });
+    } catch (e) {
+      toast({ title: "JSON non valido", variant: "destructive" });
     }
   };
 
@@ -357,13 +345,11 @@ export default function NotesPage() {
         <Accordion type="multiple" className="w-full">
           {Object.entries(groupedNotes).map(([bandName, setlists]) => (
             <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
-              <div className="flex items-center group/band pr-2">
-                <AccordionTrigger hideIcon className="hover:no-underline py-2.5 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                  <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-tight text-primary text-left">
-                    <Users className="w-4 h-4 shrink-0" /> <span>{bandName}</span>
-                  </div>
-                </AccordionTrigger>
-              </div>
+              <AccordionTrigger hideIcon className="hover:no-underline py-2.5 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
+                <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-tight text-primary text-left">
+                  <Users className="w-4 h-4 shrink-0" /> <span>{bandName}</span>
+                </div>
+              </AccordionTrigger>
               <AccordionContent className="pt-2">
                 <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-1">
                   {Object.entries(setlists).map(([setName, notes]) => (
@@ -376,8 +362,9 @@ export default function NotesPage() {
                       <AccordionContent className="pt-1">
                         <div className="space-y-1.5">
                           {notes.map((note) => (
-                            <div key={note.id} onClick={() => loadNote(note)} className={cn("flex flex-col p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                            <div key={note.id} onClick={() => loadNote(note)} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
                               <span className="text-[12px] font-bold truncate">{note.title}</span>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-3.5 h-3.5" /></Button>
                             </div>
                           ))}
                         </div>
@@ -417,11 +404,12 @@ export default function NotesPage() {
                 {editMode ? (
                   <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-lg font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" />
                 ) : (
-                  <h2 onClick={() => setEditMode(true)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity">
+                  <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
                     {title || "Scegli un brano..."}
+                    {selectedNoteId && (isDetailsOpen ? <ChevronUp className="w-4 h-4 opacity-40" /> : <ChevronDown className="w-4 h-4 opacity-40" />)}
                   </h2>
                 )}
-                {(!editMode && selectedNoteId) && (
+                {(!editMode && selectedNoteId && !isDetailsOpen) && (
                    <span className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground opacity-60">
                     {band} • {setlist}
                    </span>
@@ -429,6 +417,16 @@ export default function NotesPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON"><FileJson className="w-5 h-5" /></Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON per importare il brano.</DialogDescription></DialogHeader>
+                  <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-xs" />
+                  <DialogFooter><Button onClick={handleImportJson}>Importa Ora</Button></DialogFooter>
+                </DialogContent>
+              </Dialog>
               {!editMode && selectedNoteId && (
                 <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-10 w-10 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary"><Pencil className="w-5 h-5" /></Button>
               )}
@@ -439,11 +437,11 @@ export default function NotesPage() {
           </header>
 
           <div className="space-y-6">
-            {editMode && (
-              <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50">
+            {(editMode || isDetailsOpen) && (
+              <div className="space-y-4 p-4 rounded-xl bg-secondary/20 border border-border/50 animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-muted-foreground tracking-tighter ml-1">Hardware Preset</label>
-                  <Select value={selectedPresetSlot} onValueChange={handlePresetChange}>
+                  <Select value={selectedPresetSlot} onValueChange={handlePresetChange} disabled={!editMode}>
                     <SelectTrigger className="w-full h-10 bg-background/50 border-border font-mono text-xs"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
                     <SelectContent>
                       {devicePresets.map((p) => (
@@ -458,11 +456,11 @@ export default function NotesPage() {
                     {isAddingNewBand ? (
                       <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
                     ) : (
-                      <Select value={band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewBand(true) : setBand(val)}>
+                      <Select value={band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewBand(true) : setBand(val)} disabled={!editMode}>
                         <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scegli Band" /></SelectTrigger>
                         <SelectContent>
                           {existingBands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                          <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>
+                          {editMode && <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>}
                         </SelectContent>
                       </Select>
                     )}
@@ -472,11 +470,11 @@ export default function NotesPage() {
                     {isAddingNewSetlist ? (
                       <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-10 text-sm bg-background/50" autoFocus />
                     ) : (
-                      <Select value={setlist} disabled={!band} onValueChange={(val) => val === 'NEW' ? setIsAddingNewSetlist(true) : setSetlist(val)}>
+                      <Select value={setlist} disabled={!band || !editMode} onValueChange={(val) => val === 'NEW' ? setIsAddingNewSetlist(true) : setSetlist(val)}>
                         <SelectTrigger className="h-10 text-sm bg-background/50"><SelectValue placeholder="Scaletta" /></SelectTrigger>
                         <SelectContent>
                           {existingSetlists.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>
+                          {editMode && <SelectItem value="NEW" className="font-bold text-primary">+ Nuova...</SelectItem>}
                         </SelectContent>
                       </Select>
                     )}
@@ -569,4 +567,3 @@ export default function NotesPage() {
     </AppShell>
   );
 }
-

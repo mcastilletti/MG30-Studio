@@ -819,6 +819,10 @@ body {
   min-height: 44px;
 }
 
+.min-h-\[200px\] {
+  min-height: 200px;
+}
+
 .w-0 {
   width: 0;
 }
@@ -2395,8 +2399,16 @@ body {
   --tw-enter-opacity: 0;
 }
 
+.fade-in {
+  --tw-enter-opacity: 0;
+}
+
 .zoom-in-95 {
   --tw-enter-scale: .95;
+}
+
+.slide-in-from-top-1 {
+  --tw-enter-translate-y: -.25rem;
 }
 
 .duration-200 {
