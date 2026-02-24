@@ -6757,8 +6757,6 @@ function NoteEditorContent() {
             chords: []
         }
     ]);
-    const [isAddingNewBand, setIsAddingNewBand] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    const [isAddingNewSetlist, setIsAddingNewSetlist] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [jsonToPaste, setJsonToPaste] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [chordPickerStep, setChordPickerStep] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('letter');
@@ -6847,24 +6845,6 @@ function NoteEditorContent() {
         }
     }["NoteEditorContent.useMemo[setlistOnlyNotes]"], [
         savedNotes
-    ]);
-    const existingBands = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
-        "NoteEditorContent.useMemo[existingBands]": ()=>Object.keys(groupedNotes).filter({
-                "NoteEditorContent.useMemo[existingBands]": (b)=>b !== 'Senza Band'
-            }["NoteEditorContent.useMemo[existingBands]"])
-    }["NoteEditorContent.useMemo[existingBands]"], [
-        groupedNotes
-    ]);
-    const existingSetlists = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
-        "NoteEditorContent.useMemo[existingSetlists]": ()=>{
-            if (!band || !groupedNotes[band]) return [];
-            return Object.keys(groupedNotes[band]).filter({
-                "NoteEditorContent.useMemo[existingSetlists]": (s)=>s !== 'Senza Scaletta'
-            }["NoteEditorContent.useMemo[existingSetlists]"]);
-        }
-    }["NoteEditorContent.useMemo[existingSetlists]"], [
-        band,
-        groupedNotes
     ]);
     const loadNote = (note)=>{
         setSelectedNoteId(note.id);
@@ -6997,14 +6977,14 @@ function NoteEditorContent() {
                                     className: "w-6 h-6"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 272,
+                                    lineNumber: 264,
                                     columnNumber: 11
                                 }, this),
                                 " Archivio"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                            lineNumber: 271,
+                            lineNumber: 263,
                             columnNumber: 9
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7016,18 +6996,18 @@ function NoteEditorContent() {
                                 className: "w-7 h-7"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                lineNumber: 274,
+                                lineNumber: 266,
                                 columnNumber: 124
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                            lineNumber: 274,
+                            lineNumber: 266,
                             columnNumber: 9
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 270,
+                    lineNumber: 262,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tabs"], {
@@ -7045,14 +7025,14 @@ function NoteEditorContent() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 279,
+                                        lineNumber: 271,
                                         columnNumber: 78
                                     }, this),
                                     " Band"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                lineNumber: 279,
+                                lineNumber: 271,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tabs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TabsTrigger"], {
@@ -7063,25 +7043,25 @@ function NoteEditorContent() {
                                         className: "w-5 h-5"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 280,
+                                        lineNumber: 272,
                                         columnNumber: 81
                                     }, this),
                                     " Scalette"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                lineNumber: 280,
+                                lineNumber: 272,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                        lineNumber: 278,
+                        lineNumber: 270,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 277,
+                    lineNumber: 269,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$scroll$2d$area$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ScrollArea"], {
@@ -7106,7 +7086,7 @@ function NoteEditorContent() {
                                                     className: "w-7 h-7 shrink-0 opacity-70"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 291,
+                                                    lineNumber: 283,
                                                     columnNumber: 21
                                                 }, this),
                                                 " ",
@@ -7114,18 +7094,18 @@ function NoteEditorContent() {
                                                     children: bandName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 291,
+                                                    lineNumber: 283,
                                                     columnNumber: 77
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 290,
+                                            lineNumber: 282,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 289,
+                                        lineNumber: 281,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$accordion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AccordionContent"], {
@@ -7150,7 +7130,7 @@ function NoteEditorContent() {
                                                                         className: "w-6 h-6 opacity-60"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                        lineNumber: 300,
+                                                                        lineNumber: 292,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     " ",
@@ -7158,18 +7138,18 @@ function NoteEditorContent() {
                                                                         children: setName
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                        lineNumber: 300,
+                                                                        lineNumber: 292,
                                                                         columnNumber: 71
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                lineNumber: 299,
+                                                                lineNumber: 291,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 298,
+                                                            lineNumber: 290,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$accordion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AccordionContent"], {
@@ -7188,7 +7168,7 @@ function NoteEditorContent() {
                                                                                 children: note.title
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 307,
+                                                                                lineNumber: 299,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7200,55 +7180,55 @@ function NoteEditorContent() {
                                                                                     className: "w-4 h-4"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                    lineNumber: 308,
+                                                                                    lineNumber: 300,
                                                                                     columnNumber: 180
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 308,
+                                                                                lineNumber: 300,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, note.id, true, {
                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                        lineNumber: 306,
+                                                                        lineNumber: 298,
                                                                         columnNumber: 31
                                                                     }, this))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                lineNumber: 304,
+                                                                lineNumber: 296,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 303,
+                                                            lineNumber: 295,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, setName, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 297,
+                                                    lineNumber: 289,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 295,
+                                            lineNumber: 287,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 294,
+                                        lineNumber: 286,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, bandName, true, {
                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                lineNumber: 288,
+                                lineNumber: 280,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                        lineNumber: 286,
+                        lineNumber: 278,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$accordion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Accordion"], {
                         type: "multiple",
@@ -7270,7 +7250,7 @@ function NoteEditorContent() {
                                                     className: "w-7 h-7 shrink-0 opacity-70"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 326,
+                                                    lineNumber: 318,
                                                     columnNumber: 21
                                                 }, this),
                                                 " ",
@@ -7278,18 +7258,18 @@ function NoteEditorContent() {
                                                     children: setName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 326,
+                                                    lineNumber: 318,
                                                     columnNumber: 75
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 325,
+                                            lineNumber: 317,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 324,
+                                        lineNumber: 316,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$accordion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AccordionContent"], {
@@ -7311,7 +7291,7 @@ function NoteEditorContent() {
                                                                     children: note.title
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 334,
+                                                                    lineNumber: 326,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7319,13 +7299,13 @@ function NoteEditorContent() {
                                                                     children: note.band
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 335,
+                                                                    lineNumber: 327,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 333,
+                                                            lineNumber: 325,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7337,50 +7317,50 @@ function NoteEditorContent() {
                                                                 className: "w-4 h-4"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                lineNumber: 337,
+                                                                lineNumber: 329,
                                                                 columnNumber: 172
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 337,
+                                                            lineNumber: 329,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, note.id, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 332,
+                                                    lineNumber: 324,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 330,
+                                            lineNumber: 322,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                        lineNumber: 329,
+                                        lineNumber: 321,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, setName, true, {
                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                lineNumber: 323,
+                                lineNumber: 315,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                        lineNumber: 321,
+                        lineNumber: 313,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 284,
+                    lineNumber: 276,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 269,
+            lineNumber: 261,
             columnNumber: 5
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$layout$2f$app$2d$shell$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppShell"], {
@@ -7391,12 +7371,12 @@ function NoteEditorContent() {
                     className: "hidden md:flex w-72 flex-col border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(NoteList, {}, void 0, false, {
                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                        lineNumber: 354,
+                        lineNumber: 346,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 353,
+                    lineNumber: 345,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -7417,12 +7397,12 @@ function NoteEditorContent() {
                                                 className: "w-6 h-6"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 361,
+                                                lineNumber: 353,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 360,
+                                            lineNumber: 352,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Sheet"], {
@@ -7439,17 +7419,17 @@ function NoteEditorContent() {
                                                             className: "w-8 h-8"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 366,
+                                                            lineNumber: 358,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 365,
+                                                        lineNumber: 357,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 364,
+                                                    lineNumber: 356,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SheetContent"], {
@@ -7457,18 +7437,18 @@ function NoteEditorContent() {
                                                     className: "p-0 border-none",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(NoteList, {}, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 370,
+                                                        lineNumber: 362,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 369,
+                                                    lineNumber: 361,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 363,
+                                            lineNumber: 355,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7480,7 +7460,7 @@ function NoteEditorContent() {
                                                 className: "text-xl font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 375,
+                                                lineNumber: 367,
                                                 columnNumber: 19
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                                 onClick: ()=>setIsDetailsOpen(!isDetailsOpen),
@@ -7491,30 +7471,30 @@ function NoteEditorContent() {
                                                         className: "w-5 h-5 opacity-40"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 379,
+                                                        lineNumber: 371,
                                                         columnNumber: 57
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                         className: "w-5 h-5 opacity-40"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 379,
+                                                        lineNumber: 371,
                                                         columnNumber: 104
                                                     }, this))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 377,
+                                                lineNumber: 369,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 373,
+                                            lineNumber: 365,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 359,
+                                    lineNumber: 351,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7535,17 +7515,17 @@ function NoteEditorContent() {
                                                             className: "w-7 h-7"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 388,
+                                                            lineNumber: 380,
                                                             columnNumber: 21
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 387,
+                                                        lineNumber: 379,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 386,
+                                                    lineNumber: 378,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogContent"], {
@@ -7556,20 +7536,20 @@ function NoteEditorContent() {
                                                                     children: "Importa Nota da JSON"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 392,
+                                                                    lineNumber: 384,
                                                                     columnNumber: 33
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                                                                     children: "Incolla qui il codice JSON."
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 392,
+                                                                    lineNumber: 384,
                                                                     columnNumber: 80
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 392,
+                                                            lineNumber: 384,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -7579,7 +7559,7 @@ function NoteEditorContent() {
                                                             className: "min-h-[200px] font-mono text-[13px]"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 393,
+                                                            lineNumber: 385,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -7588,8 +7568,12 @@ function NoteEditorContent() {
                                                                     try {
                                                                         const data = JSON.parse(jsonToPaste);
                                                                         setTitle(data.title || '');
+                                                                        setBand(data.band || '');
+                                                                        setSetlist(data.setlist || '');
                                                                         setGeneralNotes(data.generalNotes || '');
                                                                         setSections(data.sections || []);
+                                                                        setEditMode(true);
+                                                                        setIsDetailsOpen(true);
                                                                         setIsPasteJsonDialogOpen(false);
                                                                         setJsonToPaste('');
                                                                         toast({
@@ -7605,24 +7589,24 @@ function NoteEditorContent() {
                                                                 children: "Importa"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                lineNumber: 394,
+                                                                lineNumber: 386,
                                                                 columnNumber: 33
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 394,
+                                                            lineNumber: 386,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 391,
+                                                    lineNumber: 383,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 385,
+                                            lineNumber: 377,
                                             columnNumber: 15
                                         }, this),
                                         !editMode && selectedNoteId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7635,12 +7619,12 @@ function NoteEditorContent() {
                                                 className: "w-7 h-7"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 409,
+                                                lineNumber: 405,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 408,
+                                            lineNumber: 404,
                                             columnNumber: 17
                                         }, this),
                                         editMode && selectedNoteId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7653,12 +7637,12 @@ function NoteEditorContent() {
                                                 className: "w-7 h-7"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 414,
+                                                lineNumber: 410,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 413,
+                                            lineNumber: 409,
                                             columnNumber: 17
                                         }, this),
                                         editMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7670,24 +7654,24 @@ function NoteEditorContent() {
                                                 className: "w-7 h-7"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 419,
+                                                lineNumber: 415,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 418,
+                                            lineNumber: 414,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 384,
+                                    lineNumber: 376,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                            lineNumber: 358,
+                            lineNumber: 350,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7704,7 +7688,7 @@ function NoteEditorContent() {
                                                     children: "Hardware Preset"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 429,
+                                                    lineNumber: 425,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -7721,12 +7705,12 @@ function NoteEditorContent() {
                                                                 placeholder: "Collega a Slot MG-30"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                lineNumber: 431,
+                                                                lineNumber: 427,
                                                                 columnNumber: 106
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 431,
+                                                            lineNumber: 427,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -7739,24 +7723,24 @@ function NoteEditorContent() {
                                                                     ]
                                                                 }, p.slot, true, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 432,
+                                                                    lineNumber: 428,
                                                                     columnNumber: 63
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 432,
+                                                            lineNumber: 428,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 430,
+                                                    lineNumber: 426,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 428,
+                                            lineNumber: 424,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7770,13 +7754,41 @@ function NoteEditorContent() {
                                                             children: "Band"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 437,
+                                                            lineNumber: 433,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
                                                             placeholder: "Nome Band...",
                                                             value: band,
                                                             onChange: (e)=>setBand(e.target.value),
+                                                            className: "h-11 text-[14px] bg-background/50",
+                                                            readOnly: !editMode
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/notes/editor/page.tsx",
+                                                            lineNumber: 434,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/app/notes/editor/page.tsx",
+                                                    lineNumber: 432,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "space-y-2",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                            className: "text-[11px] uppercase font-black text-muted-foreground tracking-tighter",
+                                                            children: "Scaletta"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/notes/editor/page.tsx",
+                                                            lineNumber: 437,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
+                                                            placeholder: "Nome Scaletta...",
+                                                            value: setlist,
+                                                            onChange: (e)=>setSetlist(e.target.value),
                                                             className: "h-11 text-[14px] bg-background/50",
                                                             readOnly: !editMode
                                                         }, void 0, false, {
@@ -7789,45 +7801,17 @@ function NoteEditorContent() {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
                                                     lineNumber: 436,
                                                     columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "space-y-2",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                            className: "text-[11px] uppercase font-black text-muted-foreground tracking-tighter",
-                                                            children: "Scaletta"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 441,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
-                                                            placeholder: "Nome Scaletta...",
-                                                            value: setlist,
-                                                            onChange: (e)=>setSetlist(e.target.value),
-                                                            className: "h-11 text-[14px] bg-background/50",
-                                                            readOnly: !editMode
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 442,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 440,
-                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 435,
+                                            lineNumber: 431,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 427,
+                                    lineNumber: 423,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$collapsible$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Collapsible"], {
@@ -7846,31 +7830,31 @@ function NoteEditorContent() {
                                                         children: "Note Generali"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 451,
+                                                        lineNumber: 447,
                                                         columnNumber: 19
                                                     }, this),
                                                     isNotesOpen ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                                         className: "w-5 h-5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 452,
+                                                        lineNumber: 448,
                                                         columnNumber: 34
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                         className: "w-5 h-5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                        lineNumber: 452,
+                                                        lineNumber: 448,
                                                         columnNumber: 70
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 450,
+                                                lineNumber: 446,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 449,
+                                            lineNumber: 445,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$collapsible$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CollapsibleContent"], {
@@ -7882,18 +7866,18 @@ function NoteEditorContent() {
                                                 readOnly: !editMode
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 456,
+                                                lineNumber: 452,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 455,
+                                            lineNumber: 451,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 448,
+                                    lineNumber: 444,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Card"], {
@@ -7909,14 +7893,14 @@ function NoteEditorContent() {
                                                             className: "w-5 h-5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 462,
+                                                            lineNumber: 458,
                                                             columnNumber: 126
                                                         }, this),
                                                         " Struttura Brano"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 462,
+                                                    lineNumber: 458,
                                                     columnNumber: 17
                                                 }, this),
                                                 editMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7937,20 +7921,20 @@ function NoteEditorContent() {
                                                             className: "w-4 h-4 mr-1"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 464,
+                                                            lineNumber: 460,
                                                             columnNumber: 224
                                                         }, this),
                                                         " Sezione"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 464,
+                                                    lineNumber: 460,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 461,
+                                            lineNumber: 457,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -7968,12 +7952,12 @@ function NoteEditorContent() {
                                                                         children: section.type
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                        lineNumber: 473,
+                                                                        lineNumber: 469,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 472,
+                                                                    lineNumber: 468,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -8002,18 +7986,18 @@ function NoteEditorContent() {
                                                                                                             }
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                            lineNumber: 483,
+                                                                                                            lineNumber: 479,
                                                                                                             columnNumber: 52
                                                                                                         }, this)
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                    lineNumber: 481,
+                                                                                                    lineNumber: 477,
                                                                                                     columnNumber: 37
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                lineNumber: 480,
+                                                                                                lineNumber: 476,
                                                                                                 columnNumber: 35
                                                                                             }, this),
                                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -8026,7 +8010,7 @@ function NoteEditorContent() {
                                                                                                             children: "Posizioni Chitarra"
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                            lineNumber: 490,
+                                                                                                            lineNumber: 486,
                                                                                                             columnNumber: 39
                                                                                                         }, this),
                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8042,7 +8026,7 @@ function NoteEditorContent() {
                                                                                                                             ]
                                                                                                                         }, void 0, true, {
                                                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                                            lineNumber: 494,
+                                                                                                                            lineNumber: 490,
                                                                                                                             columnNumber: 45
                                                                                                                         }, this),
                                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8050,47 +8034,47 @@ function NoteEditorContent() {
                                                                                                                             children: pos
                                                                                                                         }, void 0, false, {
                                                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                                            lineNumber: 495,
+                                                                                                                            lineNumber: 491,
                                                                                                                             columnNumber: 45
                                                                                                                         }, this)
                                                                                                                     ]
                                                                                                                 }, idx, true, {
                                                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                                    lineNumber: 493,
+                                                                                                                    lineNumber: 489,
                                                                                                                     columnNumber: 43
                                                                                                                 }, this)) || /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                                                                 className: "text-[11px] italic opacity-60",
                                                                                                                 children: "Posizioni non trovate"
                                                                                                             }, void 0, false, {
                                                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                                lineNumber: 497,
+                                                                                                                lineNumber: 493,
                                                                                                                 columnNumber: 47
                                                                                                             }, this)
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                            lineNumber: 491,
+                                                                                                            lineNumber: 487,
                                                                                                             columnNumber: 39
                                                                                                         }, this)
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                    lineNumber: 489,
+                                                                                                    lineNumber: 485,
                                                                                                     columnNumber: 37
                                                                                                 }, this)
                                                                                             }, void 0, false, {
                                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                                lineNumber: 488,
+                                                                                                lineNumber: 484,
                                                                                                 columnNumber: 35
                                                                                             }, this)
                                                                                         ]
                                                                                     }, i, true, {
                                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                        lineNumber: 479,
+                                                                                        lineNumber: 475,
                                                                                         columnNumber: 33
                                                                                     }, this))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 477,
+                                                                                lineNumber: 473,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             editMode ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -8103,25 +8087,25 @@ function NoteEditorContent() {
                                                                                 className: "h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 505,
+                                                                                lineNumber: 501,
                                                                                 columnNumber: 31
                                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                                                 className: "text-[20px] font-black leading-tight whitespace-pre-wrap",
                                                                                 children: section.text
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 507,
+                                                                                lineNumber: 503,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                        lineNumber: 476,
+                                                                        lineNumber: 472,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 475,
+                                                                    lineNumber: 471,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 editMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$table$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TableCell"], {
@@ -8144,17 +8128,17 @@ function NoteEditorContent() {
                                                                                             className: "w-6 h-6"
                                                                                         }, void 0, false, {
                                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                            lineNumber: 514,
+                                                                                            lineNumber: 510,
                                                                                             columnNumber: 159
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                        lineNumber: 514,
+                                                                                        lineNumber: 510,
                                                                                         columnNumber: 55
                                                                                     }, this)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                    lineNumber: 514,
+                                                                                    lineNumber: 510,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$popover$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["PopoverContent"], {
@@ -8179,18 +8163,18 @@ function NoteEditorContent() {
                                                                                         setSelectedRoot: setSelectedRoot
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                        lineNumber: 516,
+                                                                                        lineNumber: 512,
                                                                                         columnNumber: 33
                                                                                     }, this)
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                    lineNumber: 515,
+                                                                                    lineNumber: 511,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                            lineNumber: 513,
+                                                                            lineNumber: 509,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -8202,72 +8186,72 @@ function NoteEditorContent() {
                                                                                 className: "w-6 h-6"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                                lineNumber: 521,
+                                                                                lineNumber: 517,
                                                                                 columnNumber: 206
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                            lineNumber: 521,
+                                                                            lineNumber: 517,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                                    lineNumber: 512,
+                                                                    lineNumber: 508,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, section.id, true, {
                                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                            lineNumber: 471,
+                                                            lineNumber: 467,
                                                             columnNumber: 23
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                    lineNumber: 469,
+                                                    lineNumber: 465,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                                                lineNumber: 468,
+                                                lineNumber: 464,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                                            lineNumber: 467,
+                                            lineNumber: 463,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                                    lineNumber: 460,
+                                    lineNumber: 456,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/notes/editor/page.tsx",
-                            lineNumber: 425,
+                            lineNumber: 421,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 357,
+                    lineNumber: 349,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 352,
+            lineNumber: 344,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/notes/editor/page.tsx",
-        lineNumber: 351,
+        lineNumber: 343,
         columnNumber: 5
     }, this);
 }
-_s(NoteEditorContent, "5wVDuytKXZ9Qc+BHMhETlQB0i2Q=", false, function() {
+_s(NoteEditorContent, "qvVnXtJAwSMrFmtY2X/1Zfq0ECc=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
@@ -8300,12 +8284,12 @@ function ChordPicker({ sectionId, onSelect, step, setStep, selectedLetter, setSe
                     children: l
                 }, l, false, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 542,
+                    lineNumber: 538,
                     columnNumber: 11
                 }, this))
         }, void 0, false, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 540,
+            lineNumber: 536,
             columnNumber: 7
         }, this);
     }
@@ -8322,12 +8306,12 @@ function ChordPicker({ sectionId, onSelect, step, setStep, selectedLetter, setSe
                     children: r
                 }, r, false, {
                     fileName: "[project]/src/app/notes/editor/page.tsx",
-                    lineNumber: 551,
+                    lineNumber: 547,
                     columnNumber: 11
                 }, this))
         }, void 0, false, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 549,
+            lineNumber: 545,
             columnNumber: 7
         }, this);
     }
@@ -8343,12 +8327,12 @@ function ChordPicker({ sectionId, onSelect, step, setStep, selectedLetter, setSe
                 children: chord
             }, i, false, {
                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                lineNumber: 559,
+                lineNumber: 555,
                 columnNumber: 9
             }, this))
     }, void 0, false, {
         fileName: "[project]/src/app/notes/editor/page.tsx",
-        lineNumber: 557,
+        lineNumber: 553,
         columnNumber: 5
     }, this);
 }
@@ -8361,22 +8345,22 @@ function NotesEditorPage() {
                 className: "w-10 h-10 animate-spin text-primary"
             }, void 0, false, {
                 fileName: "[project]/src/app/notes/editor/page.tsx",
-                lineNumber: 567,
+                lineNumber: 563,
                 columnNumber: 84
             }, void 0)
         }, void 0, false, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 567,
+            lineNumber: 563,
             columnNumber: 25
         }, void 0),
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(NoteEditorContent, {}, void 0, false, {
             fileName: "[project]/src/app/notes/editor/page.tsx",
-            lineNumber: 568,
+            lineNumber: 564,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/notes/editor/page.tsx",
-        lineNumber: 567,
+        lineNumber: 563,
         columnNumber: 5
     }, this);
 }

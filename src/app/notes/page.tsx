@@ -12,6 +12,14 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from '@/components/ui/dialog';
+import { 
   NotebookPen, 
   Search, 
   Plus, 
@@ -21,10 +29,12 @@ import {
   ChevronRight, 
   Trash2,
   Calendar,
-  Layers
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, onSnapshot, query, where, doc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +55,11 @@ export default function NotesLibraryPage() {
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'bands' | 'setlists'>('bands');
+
+  // Rename states
+  const [renameData, setRenameData] = useState<{ type: 'band' | 'setlist', oldName: string, parentBand?: string } | null>(null);
+  const [newName, setNewName] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   useEffect(() => {
     if (userLoading) return;
@@ -75,8 +90,8 @@ export default function NotesLibraryPage() {
   const filteredNotes = useMemo(() => {
     return savedNotes.filter(n => 
       n.title.toLowerCase().includes(search.toLowerCase()) ||
-      n.band.toLowerCase().includes(search.toLowerCase()) ||
-      n.setlist.toLowerCase().includes(search.toLowerCase())
+      (n.band || '').toLowerCase().includes(search.toLowerCase()) ||
+      (n.setlist || '').toLowerCase().includes(search.toLowerCase())
     );
   }, [savedNotes, search]);
 
@@ -88,16 +103,6 @@ export default function NotesLibraryPage() {
       if (!groups[b]) groups[b] = {};
       if (!groups[b][s]) groups[b][s] = [];
       groups[b][s].push(note);
-    });
-    return groups;
-  }, [filteredNotes]);
-
-  const groupedBySetlist = useMemo(() => {
-    const groups: Record<string, SavedNote[]> = {};
-    filteredNotes.forEach(note => {
-      const s = note.setlist || 'Senza Scaletta';
-      if (!groups[s]) groups[s] = [];
-      groups[s].push(note);
     });
     return groups;
   }, [filteredNotes]);
@@ -116,6 +121,55 @@ export default function NotesLibraryPage() {
       toast({ title: "Nota eliminata dal cloud" });
     } catch (err) {
       toast({ title: "Errore eliminazione", variant: "destructive" });
+    }
+  };
+
+  const handleRenameGroup = async () => {
+    if (!renameData || !newName.trim()) return;
+    setIsRenaming(true);
+
+    const isMockUser = user?.uid === 'dev-user-123';
+    const notesToUpdate = savedNotes.filter(n => {
+      if (renameData.type === 'band') return n.band === renameData.oldName;
+      if (renameData.type === 'setlist') return n.band === renameData.parentBand && n.setlist === renameData.oldName;
+      return false;
+    });
+
+    try {
+      if (user && !isMockUser) {
+        const batch = writeBatch(firestore);
+        notesToUpdate.forEach(note => {
+          const noteRef = doc(firestore, "notes", note.id);
+          batch.update(noteRef, {
+            [renameData.type]: newName.trim()
+          });
+        });
+        await batch.commit();
+      } else {
+        const updated = savedNotes.map(n => {
+          const match = renameData.type === 'band' 
+            ? n.band === renameData.oldName
+            : (n.band === renameData.parentBand && n.setlist === renameData.oldName);
+          
+          if (match) {
+            return { ...n, [renameData.type]: newName.trim() };
+          }
+          return n;
+        });
+        setSavedNotes(updated);
+        localStorage.setItem('mg30_studio_notes', JSON.stringify(updated));
+      }
+
+      toast({ 
+        title: "Rinominato con successo", 
+        description: `${renameData.oldName} -> ${newName}` 
+      });
+      setRenameData(null);
+      setNewName('');
+    } catch (err) {
+      toast({ title: "Errore durante la rinomina", variant: "destructive" });
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -147,42 +201,64 @@ export default function NotesLibraryPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full md:w-auto">
-            <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-12 p-1">
-              <TabsTrigger value="bands" className="text-sm font-bold gap-2"><UserSquare2 className="w-4 h-4" /> Per Band</TabsTrigger>
-              <TabsTrigger value="setlists" className="text-sm font-bold gap-2"><ListMusic className="w-4 h-4" /> Per Scaletta</TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-350px)] rounded-2xl">
+        <ScrollArea className="h-[calc(100vh-300px)] rounded-2xl">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-40">
               <Music2 className="w-16 h-16" />
               <h3 className="text-xl font-bold uppercase">Nessun brano trovato</h3>
             </div>
-          ) : viewMode === 'bands' ? (
+          ) : (
             <Accordion type="multiple" defaultValue={Object.keys(groupedByBand)} className="space-y-4">
               {Object.entries(groupedByBand).map(([bandName, setlists]) => (
                 <AccordionItem key={bandName} value={bandName} className="border-none bg-secondary/10 rounded-2xl overflow-hidden">
-                  <AccordionTrigger className="px-6 py-5 hover:no-underline hover:bg-secondary/20 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <UserSquare2 className="w-6 h-6" />
+                  <div className="flex items-center group/band">
+                    <AccordionTrigger className="flex-1 px-6 py-5 hover:no-underline hover:bg-secondary/20 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <UserSquare2 className="w-6 h-6" />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-xl font-black uppercase tracking-tight">{bandName}</h4>
+                          <p className="text-sm text-muted-foreground">{Object.keys(setlists).length} Scalette caricate</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <h4 className="text-xl font-black uppercase tracking-tight">{bandName}</h4>
-                        <p className="text-sm text-muted-foreground">{Object.keys(setlists).length} Scalette caricate</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
+                    </AccordionTrigger>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="mx-4 opacity-0 group-hover/band:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRenameData({ type: 'band', oldName: bandName });
+                        setNewName(bandName);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </div>
                   <AccordionContent className="px-6 pb-6 pt-2">
                     <div className="space-y-6 ml-4 border-l-2 border-primary/20 pl-6">
                       {Object.entries(setlists).map(([setName, notes]) => (
                         <div key={setName} className="space-y-3">
-                          <h5 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-muted-foreground">
-                            <ListMusic className="w-4 h-4" /> {setName}
-                          </h5>
+                          <div className="flex items-center gap-4 group/setlist">
+                            <h5 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-muted-foreground">
+                              <ListMusic className="w-4 h-4" /> {setName}
+                            </h5>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 opacity-0 group-hover/setlist:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRenameData({ type: 'setlist', oldName: setName, parentBand: bandName });
+                                setNewName(setName);
+                              }}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                          </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {notes.map(note => (
                               <NoteCard key={note.id} note={note} onDelete={(e) => handleDelete(e, note.id)} onClick={() => router.push(`/notes/editor?id=${note.id}`)} />
@@ -195,24 +271,36 @@ export default function NotesLibraryPage() {
                 </AccordionItem>
               ))}
             </Accordion>
-          ) : (
-            <div className="space-y-8">
-              {Object.entries(groupedBySetlist).map(([setName, notes]) => (
-                <div key={setName} className="space-y-4">
-                  <h4 className="flex items-center gap-3 text-xl font-black uppercase tracking-tighter text-primary">
-                    <ListMusic className="w-6 h-6 opacity-70" /> {setName}
-                    <Badge variant="outline" className="ml-2 font-mono">{notes.length}</Badge>
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {notes.map(note => (
-                      <NoteCard key={note.id} note={note} onDelete={(e) => handleDelete(e, note.id)} onClick={() => router.push(`/notes/editor?id=${note.id}`)} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
         </ScrollArea>
+
+        {/* Rename Dialog */}
+        <Dialog open={!!renameData} onOpenChange={(open) => !open && setRenameData(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="uppercase font-black">
+                Rinomina {renameData?.type === 'band' ? 'Band' : 'Scaletta'}
+              </DialogTitle>
+              <DialogDescription>
+                Stai rinominando "{renameData?.oldName}". Tutti i brani associati verranno aggiornati.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Input 
+                value={newName} 
+                onChange={(e) => setNewName(e.target.value)} 
+                placeholder="Nuovo nome..."
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRenameData(null)}>Annulla</Button>
+              <Button onClick={handleRenameGroup} disabled={isRenaming}>
+                {isRenaming ? "Rinomina in corso..." : "Conferma"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppShell>
   );
