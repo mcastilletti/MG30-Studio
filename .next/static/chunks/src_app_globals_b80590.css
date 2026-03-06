@@ -908,8 +908,8 @@ body {
   width: var(--sidebar-width);
 }
 
-.w-\[100px\] {
-  width: 100px;
+.w-\[120px\] {
+  width: 120px;
 }
 
 .w-\[1px\] {
@@ -930,10 +930,6 @@ body {
 
 .w-full {
   width: 100%;
-}
-
-.w-\[120px\] {
-  width: 120px;
 }
 
 .min-w-0 {
@@ -2157,6 +2153,14 @@ body {
   color: hsl(var(--primary-foreground));
 }
 
+.text-primary\/20 {
+  color: hsl(var(--primary) / .2);
+}
+
+.text-primary\/40 {
+  color: hsl(var(--primary) / .4);
+}
+
 .text-red-500 {
   --tw-text-opacity: 1;
   color: rgb(239 68 68 / var(--tw-text-opacity, 1));
@@ -2188,14 +2192,6 @@ body {
   color: rgb(234 179 8 / var(--tw-text-opacity, 1));
 }
 
-.text-primary\/20 {
-  color: hsl(var(--primary) / .2);
-}
-
-.text-primary\/40 {
-  color: hsl(var(--primary) / .4);
-}
-
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -2211,6 +2207,10 @@ body {
 
 .opacity-100 {
   opacity: 1;
+}
+
+.opacity-30 {
+  opacity: .3;
 }
 
 .opacity-40 {
@@ -2231,10 +2231,6 @@ body {
 
 .opacity-90 {
   opacity: .9;
-}
-
-.opacity-30 {
-  opacity: .3;
 }
 
 .shadow-2xl {
@@ -2634,6 +2630,10 @@ body {
   background-color: hsl(var(--secondary) / .4);
 }
 
+.hover\:bg-secondary\/5:hover {
+  background-color: hsl(var(--secondary) / .05);
+}
+
 .hover\:bg-secondary\/80:hover {
   background-color: hsl(var(--secondary) / .8);
 }
@@ -2642,17 +2642,9 @@ body {
   background-color: hsl(var(--sidebar-accent));
 }
 
-.hover\:bg-transparent:hover {
-  background-color: #0000;
-}
-
 .hover\:bg-yellow-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(161 98 7 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-secondary\/5:hover {
-  background-color: hsl(var(--secondary) / .05);
 }
 
 .hover\:text-accent-foreground:hover {
@@ -2812,6 +2804,10 @@ body {
   opacity: 1;
 }
 
+.group\/insert:hover .group-hover\/insert\:opacity-100 {
+  opacity: 1;
+}
+
 .group\/menu-item:hover .group-hover\/menu-item\:opacity-100 {
   opacity: 1;
 }
@@ -2821,10 +2817,6 @@ body {
 }
 
 .group:hover .group-hover\:opacity-100 {
-  opacity: 1;
-}
-
-.group\/insert:hover .group-hover\/insert\:opacity-100 {
   opacity: 1;
 }
 

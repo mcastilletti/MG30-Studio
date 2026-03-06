@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle, CornerDownLeft } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -91,7 +91,7 @@ function NoteEditorContent() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = false;
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: 'initial-1', type: 'Intro', text: '', chords: [] }
@@ -191,7 +191,6 @@ function NoteEditorContent() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
-    // Garantiamo che ogni sezione abbia un ID unico
     setSections((note.sections || []).map((s, idx) => ({ 
       ...s, 
       id: s.id || `loaded-${idx}-${Date.now()}`,
@@ -468,7 +467,6 @@ function NoteEditorContent() {
                       setBand(data.band || '');
                       setSetlist(data.setlist || '');
                       setGeneralNotes(data.generalNotes || '');
-                      // Garantiamo ID univoci per le sezioni importate
                       setSections((data.sections || []).map((s: any, idx: number) => ({ 
                         ...s, 
                         id: s.id || `imported-${idx}-${Date.now()}`,
@@ -636,37 +634,54 @@ function NoteEditorContent() {
 
                             {(section.chords || []).map((chord, cIdx) => (
                               <React.Fragment key={`chord-frag-${section.id}-${cIdx}`}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
-                                      {chord}
-                                      {editMode && (
-                                        <button 
-                                          className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                          }}
-                                        >
-                                          <X className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="p-3 bg-card border-primary/40">
-                                    <div className="space-y-2">
-                                      <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Posizioni Chitarra</p>
-                                      <div className="space-y-1">
-                                        {getChordPositions(chord)?.map((pos, pIdx) => (
-                                          <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
-                                            <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
-                                            <span className="text-foreground font-bold">{pos}</span>
-                                          </div>
-                                        )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                {chord === "NEWLINE" ? (
+                                  <div className="w-full h-2 flex items-center group/newline relative my-1">
+                                    <div className="flex-1 h-[1px] bg-primary/10 border-dashed border-t" />
+                                    {editMode && (
+                                      <button 
+                                        className="absolute right-0 opacity-30 hover:opacity-100 text-destructive transition-opacity bg-background p-0.5 rounded-full"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
+                                        }}
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
+                                        {chord}
+                                        {editMode && (
+                                          <button 
+                                            className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
+                                            }}
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="p-3 bg-card border-primary/40">
+                                      <div className="space-y-2">
+                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Posizioni Chitarra</p>
+                                        <div className="space-y-1">
+                                          {getChordPositions(chord)?.map((pos, pIdx) => (
+                                            <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                              <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
+                                              <span className="text-foreground font-bold">{pos}</span>
+                                            </div>
+                                          )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                        </div>
                                       </div>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
                                 {editMode && (
                                   <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
                                     <PopoverTrigger asChild>
@@ -746,10 +761,15 @@ function NoteEditorContent() {
 function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
   if (step === 'letter') {
     return (
-      <div className="grid grid-cols-4 gap-2">
-        {["A", "B", "C", "D", "E", "F", "G"].map(l => (
-          <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
-        ))}
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-4 gap-2">
+          {["A", "B", "C", "D", "E", "F", "G"].map(l => (
+            <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
+          ))}
+        </div>
+        <Button variant="secondary" className="w-full gap-2 font-bold uppercase text-[11px]" onClick={() => onSelect("NEWLINE")}>
+          <CornerDownLeft className="w-4 h-4" /> A capo (Nuova riga)
+        </Button>
       </div>
     );
   }
