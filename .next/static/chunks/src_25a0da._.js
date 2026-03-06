@@ -8080,7 +8080,7 @@ function NoteEditorContent() {
                                                                         className: "flex items-start border-b border-border/20 last:border-0 hover:bg-secondary/5 transition-colors",
                                                                         children: [
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                className: "p-3 w-[120px] shrink-0 align-top",
+                                                                                className: "p-3 w-[85px] shrink-0 align-top",
                                                                                 children: editMode ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
                                                                                     value: section.type,
                                                                                     onValueChange: (val)=>setSections(sections.map((s)=>s.id === section.id ? {
@@ -8089,7 +8089,7 @@ function NoteEditorContent() {
                                                                                             } : s)),
                                                                                     children: [
                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectTrigger"], {
-                                                                                            className: "w-full h-9 text-[11px] font-black uppercase bg-primary/5 border-primary/20 text-primary",
+                                                                                            className: "w-full h-9 text-[10px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1",
                                                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                                 fileName: "[project]/src/app/notes/editor/page.tsx",
                                                                                                 lineNumber: 621,
@@ -8130,7 +8130,7 @@ function NoteEditorContent() {
                                                                                     columnNumber: 29
                                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                                                     variant: "secondary",
-                                                                                    className: "w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20",
+                                                                                    className: "w-full justify-center h-9 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20",
                                                                                     children: section.type
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/notes/editor/page.tsx",

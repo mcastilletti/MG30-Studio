@@ -729,10 +729,10 @@ function NoteEditorContent() {
                               value={section.text} 
                               onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
                               placeholder="Note blocco..." 
-                              className="h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
+                              className="h-9 text-[11px] font-bold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
                             />
                           ) : (
-                            <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
+                            <p className="text-[11px] font-bold leading-tight whitespace-pre-wrap">{section.text}</p>
                           )}
                         </div>
                         {editMode && (
