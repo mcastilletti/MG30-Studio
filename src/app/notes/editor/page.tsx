@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, Check, UserSquare2, ListMusic, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, Check, UserSquare2, ListMusic, ArrowLeft, PlusCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -104,12 +104,10 @@ function NoteEditorContent() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
-  // States for new Band/Setlist entry
   const [isNewEntryDialogOpen, setIsNewEntryDialogOpen] = useState(false);
   const [newEntryType, setNewEntryType] = useState<'band' | 'setlist'>('band');
   const [newEntryValue, setNewEntryValue] = useState('');
 
-  // Caricamento dati
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
@@ -146,7 +144,7 @@ function NoteEditorContent() {
     });
 
     return () => unsubscribe();
-  }, [user, userLoading, firestore, noteIdFromUrl, editMode]);
+  }, [user, userLoading, firestore, noteIdFromUrl]);
 
   const uniqueBands = useMemo(() => {
     const bands = new Set(savedNotes.map(n => n.band).filter(Boolean));
@@ -191,6 +189,7 @@ function NoteEditorContent() {
     setSelectedNoteId(note.id);
     setTitle(note.title);
     setBand(note.band);
+    setlist || 'Senza Scaletta';
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
@@ -248,6 +247,17 @@ function NoteEditorContent() {
     }
   };
 
+  const handleCancel = () => {
+    if (selectedNoteId) {
+      const original = savedNotes.find(n => n.id === selectedNoteId);
+      if (original) loadNote(original);
+    } else {
+      handleNewNote();
+    }
+    setEditMode(false);
+    toast({ title: "Modifiche Annullate", variant: "default" });
+  };
+
   const deleteNote = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (id.startsWith('local-')) {
@@ -291,6 +301,28 @@ function NoteEditorContent() {
     }
     setIsNewEntryDialogOpen(false);
     setNewEntryValue('');
+  };
+
+  const handleAddSection = (index: number) => {
+    const newSection: NoteSection = { id: Math.random().toString(), type: 'Verse', text: '', chords: [] };
+    const newSections = [...sections];
+    newSections.splice(index, 0, newSection);
+    setSections(newSections);
+  };
+
+  const handleDeleteSection = (id: string) => {
+    setSections(sections.filter(s => s.id !== id));
+  };
+
+  const handleAddChordAt = (sectionId: string, chordIndex: number, chord: string) => {
+    setSections(sections.map(s => {
+      if (s.id === sectionId) {
+        const newChords = [...(s.chords || [])];
+        newChords.splice(chordIndex, 0, chord);
+        return { ...s, chords: newChords };
+      }
+      return s;
+    }));
   };
 
   const NoteList = () => (
@@ -417,11 +449,11 @@ function NoteEditorContent() {
             </div>
             <div className="flex items-center gap-2">
               <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON" onClick={() => setIsPasteJsonDialogOpen(true)}>
                     <FileJson className="w-7 h-7" />
                   </Button>
-                </DialogTrigger>
+                </PopoverTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON.</DialogDescription></DialogHeader>
                   <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-[13px]" />
@@ -450,7 +482,7 @@ function NoteEditorContent() {
               )}
               {editMode && (
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
+                  <Button variant="ghost" size="icon" onClick={handleCancel} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
                     <X className="w-7 h-7" />
                   </Button>
                   <Button onClick={handleSaveNote} size="icon" className="h-11 w-11 bg-primary shadow-lg rounded-full" title="Salva">
@@ -544,15 +576,22 @@ function NoteEditorContent() {
               <CardHeader className="py-3 bg-secondary/40 flex flex-row items-center justify-between px-5 border-b border-border/40">
                 <CardTitle className="text-[12px] uppercase tracking-widest font-black text-primary flex items-center gap-2"><Layers className="w-5 h-5" /> Struttura Brano</CardTitle>
                 {editMode && (
-                  <Button variant="outline" size="sm" onClick={() => setSections([...sections, { id: Math.random().toString(), type: 'Verse', text: '', chords: [] }])} className="h-9 text-[11px] font-bold bg-background/50"><Plus className="w-4 h-4 mr-1" /> Sezione</Button>
+                  <Button variant="outline" size="sm" onClick={() => handleAddSection(sections.length)} className="h-9 text-[11px] font-bold bg-background/50"><Plus className="w-4 h-4 mr-1" /> Sezione</Button>
                 )}
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableBody>
-                    {sections.map((section) => (
-                      <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 last:border-0">
-                        <TableCell className="p-3 w-[100px] align-top">
+                <div className="flex flex-col">
+                  {sections.map((section, sIdx) => (
+                    <React.Fragment key={section.id}>
+                      {editMode && sIdx === 0 && (
+                        <div className="flex items-center justify-center h-8 group/insert">
+                          <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
+                            <PlusCircle className="w-4 h-4" /> Inserisci Sezione
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex items-start border-b border-border/20 last:border-0 hover:bg-secondary/5 transition-colors">
+                        <div className="p-3 w-[120px] shrink-0 align-top">
                           {editMode ? (
                             <Select 
                               value={section.type} 
@@ -570,12 +609,25 @@ function NoteEditorContent() {
                           ) : (
                             <Badge variant="secondary" className="w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
                           )}
-                        </TableCell>
-                        <TableCell className="p-3 flex-1">
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-wrap gap-2">
-                              {section.chords?.map((chord, i) => (
-                                <Tooltip key={i}>
+                        </div>
+                        <div className="p-3 flex-1 flex flex-col gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {editMode && (
+                              <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-dashed border-primary/20 text-primary/40 hover:text-primary hover:border-primary/50" title="Inserisci accordo all'inizio">
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-72 p-4" align="start">
+                                  <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, 0, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
+                                </PopoverContent>
+                              </Popover>
+                            )}
+
+                            {section.chords?.map((chord, cIdx) => (
+                              <React.Fragment key={`${section.id}-${cIdx}`}>
+                                <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
                                       {chord}
@@ -584,7 +636,7 @@ function NoteEditorContent() {
                                           className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: s.chords?.filter((_, idx) => idx !== i) } : s));
+                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: s.chords?.filter((_, idx) => idx !== cIdx) } : s));
                                           }}
                                         >
                                           <X className="w-3.5 h-3.5" />
@@ -606,37 +658,51 @@ function NoteEditorContent() {
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>
-                              ))}
-                            </div>
-                            {editMode ? (
-                              <Input 
-                                value={section.text} 
-                                onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
-                                placeholder="Note blocco..." 
-                                className="h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
-                              />
-                            ) : (
-                              <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
-                            )}
+                                {editMode && (
+                                  <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-dashed border-primary/10 text-primary/20 hover:text-primary hover:border-primary/50 transition-all opacity-0 hover:opacity-100">
+                                        <Plus className="w-3 h-3" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-72 p-4" align="center">
+                                      <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, cIdx + 1, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
+                                    </PopoverContent>
+                                  </Popover>
+                                )}
+                              </React.Fragment>
+                            ))}
                           </div>
-                        </TableCell>
+                          {editMode ? (
+                            <Input 
+                              value={section.text} 
+                              onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
+                              placeholder="Note blocco..." 
+                              className="h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
+                            />
+                          ) : (
+                            <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
+                          )}
+                        </div>
                         {editMode && (
-                          <TableCell className="p-3 w-auto flex items-center gap-2 align-top">
-                            <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
-                              <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-primary/20 text-primary"><Plus className="w-6 h-6" /></Button></PopoverTrigger>
-                              <PopoverContent className="w-72 p-4" align="end">
-                                <ChordPicker sectionId={section.id} onSelect={(chord: string) => {
-                                  setSections(sections.map(s => s.id === section.id ? { ...s, chords: [...(s.chords || []), chord] } : s));
-                                }} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
-                              </PopoverContent>
-                            </Popover>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground/30 hover:text-destructive" onClick={() => setSections(sections.filter(s => s.id !== section.id))}><Trash2 className="w-6 h-6" /></Button>
-                          </TableCell>
+                          <div className="p-3 w-auto flex items-center justify-center align-top">
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground/30 hover:text-destructive transition-colors" onClick={() => handleDeleteSection(section.id)} title="Elimina sezione">
+                              <Trash2 className="w-6 h-6" />
+                            </Button>
+                          </div>
                         )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </div>
+                      {editMode && (
+                        <div className="flex items-center justify-center h-8 group/insert relative">
+                          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
+                          <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
+                            <PlusCircle className="w-3.5 h-3.5" /> Inserisci Sezione Qui
+                          </button>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -667,7 +733,7 @@ function NoteEditorContent() {
   );
 }
 
-function ChordPicker({ sectionId, onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
+function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLetter, selectedRoot, setSelectedRoot }: any) {
   if (step === 'letter') {
     return (
       <div className="grid grid-cols-4 gap-2">
@@ -702,3 +768,4 @@ export default function NotesEditorPage() {
     </Suspense>
   );
 }
+

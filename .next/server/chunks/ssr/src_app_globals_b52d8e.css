@@ -932,6 +932,10 @@ body {
   width: 100%;
 }
 
+.w-\[120px\] {
+  width: 120px;
+}
+
 .min-w-0 {
   min-width: 0;
 }
@@ -2184,6 +2188,14 @@ body {
   color: rgb(234 179 8 / var(--tw-text-opacity, 1));
 }
 
+.text-primary\/20 {
+  color: hsl(var(--primary) / .2);
+}
+
+.text-primary\/40 {
+  color: hsl(var(--primary) / .4);
+}
+
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -2639,6 +2651,10 @@ body {
   background-color: rgb(161 98 7 / var(--tw-bg-opacity, 1));
 }
 
+.hover\:bg-secondary\/5:hover {
+  background-color: hsl(var(--secondary) / .05);
+}
+
 .hover\:text-accent-foreground:hover {
   color: hsl(var(--accent-foreground));
 }
@@ -2805,6 +2821,10 @@ body {
 }
 
 .group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.group\/insert:hover .group-hover\/insert\:opacity-100 {
   opacity: 1;
 }
 
