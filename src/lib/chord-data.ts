@@ -1,6 +1,6 @@
 /**
  * @fileOverview Tabella posizioni accordi per chitarra (MG-30 Studio).
- * Contiene le 3 posizioni principali per ogni accordo supportato.
+ * Contiene le posizioni principali per ogni accordo supportato, inclusi gli Slash Chords.
  */
 
 export interface ChordPositionEntry {
@@ -15,6 +15,7 @@ export interface ChordPositionEntry {
   sus4: string[];
   sus2: string[];
   add9: string[];
+  [key: string]: any; // Permette Slash Chords e altre varianti
 }
 
 export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
@@ -29,7 +30,11 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["xx1212", "x3424x", "89-10-8xx"],
     sus4: ["x33011", "8-10-10-10-88", "xx-10-10-88"],
     sus2: ["x3001x", "x35533", "8-10-12-xxx"],
-    add9: ["x32030", "x-15-14-12-15-12", "8-10-10-9-8-10"]
+    add9: ["x32030", "x-15-14-12-15-12", "8-10-10-9-8-10"],
+    "/B": ["x22010", "x2555x"],
+    "/Bb": ["x12010", "x1555x"],
+    "/G": ["332010", "3x2010"],
+    "/E": ["032010", "x7-10-9-8-x"]
   },
   "C#": {
     root: "C#",
@@ -42,7 +47,8 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["xx2323", "x4535x", "9-10-11-9xx"],
     sus4: ["x44122", "9-11-11-11-99", "xx-11-11-99"],
     sus2: ["x4112x", "x46644", "9-11-13-xxx"],
-    add9: ["x43141", "x-16-15-13-16-13", "9-11-11-10-9-11"]
+    add9: ["x43141", "x-16-15-13-16-13", "9-11-11-10-9-11"],
+    "m/B": ["x22120", "x26654"]
   },
   "Db": {
     root: "Db",
@@ -68,7 +74,13 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["xx3434", "x5646x", "10-11-12-10xx"],
     sus4: ["xx0233", "x57785", "10-12-12-12-10-10"],
     sus2: ["xx0230", "x57755", "xx09-10-10"],
-    add9: ["xx0252", "x54252", "x57750"]
+    add9: ["xx0252", "x54252", "x57750"],
+    "/C": ["x3x232", "x30232"],
+    "/B": ["x20232", "x2x232"],
+    "/A": ["x00232", "557775"],
+    "/F#": ["2x0232", "244232"],
+    "m/C": ["x3x231", "x30231"],
+    "m/Bb": ["x1x231", "x13231"]
   },
   "D#": {
     root: "D#",
@@ -107,7 +119,10 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["0121xx", "xx5656", "x7868x"],
     sus4: ["022200", "x799-10-7", "12-14-14-14-12-12"],
     sus2: ["024xxx", "x79977", "xx2452"],
-    add9: ["024100", "x7647x", "076470"]
+    add9: ["024100", "x7647x", "076470"],
+    "/D": ["x5645x", "020100"],
+    "/G#": ["4x2100", "476454"],
+    "/F#": ["2x2100", "222100"]
   },
   "F": {
     root: "F",
@@ -120,7 +135,9 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["1231xx", "xx3434", "x8979x"],
     sus4: ["133311", "x8-10-10-11-8", "xx3311"],
     sus2: ["135xxx", "x8-10-10-88", "xx3563"],
-    add9: ["133213", "x-8-10-10-8-10", "103211"]
+    add9: ["133213", "x-8-10-10-8-10", "103211"],
+    "/E": ["033211", "x7-10-10-10-x"],
+    "/G": ["3x3211", "333211"]
   },
   "F#": {
     root: "F#",
@@ -133,7 +150,8 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["2342xx", "xx4545", "x9-10-8-10x"],
     sus4: ["244422", "x9-11-11-12-9", "xx4422"],
     sus2: ["246xxx", "x9-11-11-99", "xx4674"],
-    add9: ["244324", "x-9-11-11-9-11", "2x4300"]
+    add9: ["244324", "x-9-11-11-9-11", "2x4300"],
+    "m/E": ["044222", "x7767x"]
   },
   "Gb": {
     root: "Gb",
@@ -159,7 +177,12 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["3453xx", "xx5656", "x-10-11-9-11x"],
     sus4: ["355533", "330013", "x-10-12-12-13-10"],
     sus2: ["3x023x", "x-10-12-12-10-10", "300033"],
-    add9: ["320203", "x-10-9-7-10-7", "300203"]
+    add9: ["320203", "x-10-9-7-10-7", "300203"],
+    "/F#": ["2x0003", "2x0033"],
+    "/F": ["1x0003", "1x0033"],
+    "/E": ["020003", "0x0033"],
+    "/D": ["xx0003", "x55433"],
+    "/B": ["200033", "x20033"]
   },
   "G#": {
     root: "G#",
@@ -198,7 +221,14 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["x0121x", "5675xx", "xx7878"],
     sus4: ["x02230", "577755", "x-12-14-14-15-12"],
     sus2: ["x02200", "579xxx", "x0245x"],
-    add9: ["x02420", "54242x", "x07600"]
+    add9: ["x02420", "54242x", "x07600"],
+    "/G": ["3x2220", "302220"],
+    "/F#": ["2x2220", "2x222x"],
+    "/E": ["002220", "042220"],
+    "/C#": ["x42220", "x4765x"],
+    "m/G": ["3x2210", "302210"],
+    "m/F#": ["2x2210", "2x221x"],
+    "m/F": ["1x2210", "13x210"]
   },
   "A#": {
     root: "A#",
@@ -237,7 +267,9 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["x2343x", "7897xx", "xx9-10-9-10"],
     sus4: ["x24452", "799977", "xx4452"],
     sus2: ["x24422", "x246xxx", "79-11-xxx"],
-    add9: ["x24422", "76464x", "x21x22"]
+    add9: ["x24422", "76464x", "x21x22"],
+    "/A": ["x04442", "x01202"],
+    "7/A": ["x04442", "x01202"]
   }
 };
 
@@ -260,8 +292,16 @@ export function getChordPositions(chordName: string): string[] | null {
   const quality = chordName.slice(matchedRoot.length).trim();
   const entry = CHORD_POSITIONS_DATA[matchedRoot];
 
+  // Se non c'è qualità, è un accordo maggiore
+  if (quality === "") return entry.major;
+
+  // Cerca la qualità specifica (inclusi Slash Chords come /B o m/G)
+  if (entry[quality]) {
+    return entry[quality];
+  }
+
+  // Mappature classiche come fallback se non trovato sopra
   switch (quality) {
-    case "": return entry.major;
     case "m": return entry.m;
     case "7": return entry["7"];
     case "maj7": return entry.maj7;
@@ -271,6 +311,6 @@ export function getChordPositions(chordName: string): string[] | null {
     case "sus4": return entry.sus4;
     case "sus2": return entry.sus2;
     case "add9": return entry.add9;
-    default: return entry.major; // Default al maggiore se non trovato
+    default: return entry.major; 
   }
 }
