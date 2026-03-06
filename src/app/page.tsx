@@ -5,9 +5,8 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { Button } from '@/components/ui/button';
-import { Sliders, Library, Zap, Download, RotateCw, Usb, Sparkles, NotebookPen } from 'lucide-react';
+import { Sliders, Library, Zap, Download, RotateCw, Usb, NotebookPen } from 'lucide-react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const { status, refreshDevices, availableDevices } = useMidiStore();
@@ -20,12 +19,9 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
             <p className="text-muted-foreground">Gestisci il tuo NUX MG-30 e la tua libreria di preset.</p>
           </div>
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 gap-1 py-1 px-3">
-            <Sparkles className="w-3 h-3" /> AI Features Always Online
-          </Badge>
         </header>
 
-        {/* Navigation Buttons - Now at the Top */}
+        {/* Navigation Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <Link href="/library" className="group">
             <Card className="h-full border-border hover:border-accent/50 transition-colors bg-card/50">
@@ -96,7 +92,7 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Connection Status and AI Smart Studio - Now at the Bottom */}
+        {/* Connection Status */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 border-primary/20 bg-primary/5">
             <CardHeader>
@@ -150,25 +146,6 @@ export default function HomePage() {
               )}
             </CardContent>
           </Card>
-
-          <div className="space-y-6">
-            <Card className="border-accent/20 bg-accent/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-accent" />
-                  AI Smart Studio
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Usa l'**AI Mode** e l'**Analisi Preset** anche senza pedaliera. Progetta i tuoi suoni ovunque.
-                </p>
-                <Button asChild className="w-full mt-2 bg-accent hover:bg-accent/90">
-                  <Link href="/editor">Apri Editor AI</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </AppShell>

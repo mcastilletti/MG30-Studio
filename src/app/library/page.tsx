@@ -6,16 +6,14 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Info, Sparkles, Settings2 } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Check, MoreVertical, LayoutGrid, List, Info, Settings2 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { useMidiStore } from '@/stores/use-midi-store';
 import { usePresetStore } from '@/stores/use-preset-store';
 import { useToast } from '@/hooks/use-toast';
-import { summarizePreset } from '@/ai/flows/preset-summary-flow';
 import { Preset } from '@/types/preset';
 
 const formatSlotLabel = (slot: number) => {
@@ -30,11 +28,6 @@ export default function LibraryPage() {
   const [search, setSearch] = useState('');
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
-  
-  // Summary states
-  const [summaryPreset, setSummaryPreset] = useState<Preset | null>(null);
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [summaryText, setSummaryText] = useState<string | null>(null);
   
   const { sendProgramChange, status, devicePresets, syncPresets, isSyncing, syncProgress, updatePresetName } = useMidiStore();
   const { setActivePreset } = usePresetStore();
@@ -63,27 +56,6 @@ export default function LibraryPage() {
     }
     setActivePreset(preset);
     router.push('/editor');
-  };
-
-  const handleShowInfo = (e: React.MouseEvent, preset: Preset) => {
-    e.stopPropagation();
-    const cleanPreset = JSON.parse(JSON.stringify(preset));
-    setSummaryPreset(preset);
-    setIsSummarizing(true);
-    setSummaryText(null);
-    
-    summarizePreset({ preset: cleanPreset })
-      .then((result) => setSummaryText(result.summary))
-      .catch((err) => {
-        console.error(err);
-        toast({
-          title: "Errore AI",
-          description: "Impossibile generare il riassunto.",
-          variant: "destructive"
-        });
-        setSummaryPreset(null);
-      })
-      .finally(() => setIsSummarizing(false));
   };
 
   const startEditingName = (e: React.MouseEvent, preset: Preset) => {
@@ -168,7 +140,6 @@ export default function LibraryPage() {
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-[10px] border-primary/20 text-primary bg-primary/5">{formatSlotLabel(preset.slot)}</Badge>
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={(e) => handleShowInfo(e, preset)}><Info className="w-4 h-4" /></Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -222,7 +193,6 @@ export default function LibraryPage() {
                         <td className="p-4"><Badge variant="secondary" className="text-[10px] bg-secondary/50">{preset.ampModel}</Badge></td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={(e) => handleShowInfo(e, preset)}><Info className="w-4 h-4" /></Button>
                             <Button variant="ghost" size="sm" className="h-8 text-xs font-bold uppercase gap-1" onClick={(e) => handleConfigurePreset(e, preset)}><Settings2 className="w-3 h-3" /> Modifica</Button>
                           </div>
                         </td>
@@ -234,32 +204,6 @@ export default function LibraryPage() {
             </Card>
           )
         )}
-
-        <Dialog open={!!summaryPreset} onOpenChange={(open) => !open && setSummaryPreset(null)}>
-          <DialogContent className="sm:max-w-[450px]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" /> Analisi Preset: {summaryPreset?.name}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-6 min-h-[150px] flex flex-col items-center justify-center">
-              {isSummarizing ? (
-                <div className="flex flex-col items-center gap-4 py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground animate-pulse">L'AI sta analizzando il segnale...</p>
-                </div>
-              ) : (
-                <div className="w-full p-4 rounded-lg bg-secondary/20 border border-border text-sm leading-relaxed whitespace-pre-wrap">
-                  {summaryText || "Nessuna analisi disponibile."}
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSummaryPreset(null)}>Chiudi</Button>
-              <Button onClick={(e) => summaryPreset && handleConfigurePreset(e as any, summaryPreset)}>Apri Editor</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </AppShell>
   );
