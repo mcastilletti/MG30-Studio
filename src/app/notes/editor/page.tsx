@@ -91,10 +91,10 @@ function NoteEditorContent() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = false;
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false); // FIXED TYPO HERE
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
-    { id: 'initial-1', type: 'Intro', text: '', chords: [] }
+    { id: `initial-${Date.now()}`, type: 'Intro', text: '', chords: [] }
   ]);
 
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
@@ -191,9 +191,10 @@ function NoteEditorContent() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
+    // Ensure unique IDs for sections to avoid key errors
     setSections((note.sections || []).map((s, idx) => ({ 
       ...s, 
-      id: s.id || `loaded-${idx}-${Date.now()}`,
+      id: s.id || `loaded-${idx}-${Date.now()}-${Math.random()}`,
       chords: s.chords || [] 
     })));
     setIsMobileSheetOpen(false);
@@ -287,7 +288,7 @@ function NoteEditorContent() {
     setSetlist('');
     setSelectedPresetSlot('');
     setGeneralNotes('');
-    setSections([{ id: `new-${Date.now()}`, type: 'Verse', text: '', chords: [] }]);
+    setSections([{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }]);
     setEditMode(true);
     setIsDetailsOpen(true);
     setIsMobileSheetOpen(false);
@@ -469,7 +470,7 @@ function NoteEditorContent() {
                       setGeneralNotes(data.generalNotes || '');
                       setSections((data.sections || []).map((s: any, idx: number) => ({ 
                         ...s, 
-                        id: s.id || `imported-${idx}-${Date.now()}`,
+                        id: s.id || `imported-${idx}-${Date.now()}-${Math.random()}`,
                         chords: s.chords || [] 
                       })));
                       setEditMode(true);
@@ -591,7 +592,7 @@ function NoteEditorContent() {
                   {sections.map((section, sIdx) => (
                     <React.Fragment key={`section-wrapper-${section.id || sIdx}`}>
                       {editMode && sIdx === 0 && (
-                        <div key={`insert-section-before-${section.id || sIdx}`} className="flex items-center justify-center h-8 group/insert">
+                        <div className="flex items-center justify-center h-8 group/insert">
                           <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
                             <PlusCircle className="w-4 h-4" /> Inserisci Sezione
                           </button>
@@ -717,7 +718,7 @@ function NoteEditorContent() {
                         )}
                       </div>
                       {editMode && (
-                        <div key={`insert-section-after-${section.id || sIdx}`} className="flex items-center justify-center h-8 group/insert relative">
+                        <div className="flex items-center justify-center h-8 group/insert relative">
                           <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
                           <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
                             <PlusCircle className="w-3.5 h-3.5" /> Inserisci Sezione Qui
