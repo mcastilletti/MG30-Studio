@@ -69,6 +69,7 @@ const metadata = {
         title: 'MG30 Studio'
     },
     icons: {
+        icon: '/icon.png',
         apple: '/icon.png'
     },
     formatDetection: {

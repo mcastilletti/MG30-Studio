@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -30,11 +29,11 @@ import {
   Trash2,
   Calendar,
   Pencil,
-  Check,
-  X
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +42,7 @@ interface SavedNote {
   title: string;
   band: string;
   setlist: string;
+  order?: number;
   updatedAt?: any;
 }
 
@@ -54,7 +54,6 @@ export default function NotesLibraryPage() {
   
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<'bands' | 'setlists'>('bands');
 
   // Rename states
   const [renameData, setRenameData] = useState<{ type: 'band' | 'setlist', oldName: string, parentBand?: string } | null>(null);
@@ -97,7 +96,10 @@ export default function NotesLibraryPage() {
 
   const groupedByBand = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
-    filteredNotes.forEach(note => {
+    // Sort all notes by order before grouping
+    const sorted = [...filteredNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    
+    sorted.forEach(note => {
       const b = note.band || 'Senza Band';
       const s = note.setlist || 'Senza Scaletta';
       if (!groups[b]) groups[b] = {};
@@ -170,6 +172,53 @@ export default function NotesLibraryPage() {
       toast({ title: "Errore durante la rinomina", variant: "destructive" });
     } finally {
       setIsRenaming(false);
+    }
+  };
+
+  const handleMoveNote = async (noteId: string, direction: 'up' | 'down', bandName: string, setName: string) => {
+    // 1. Get all notes in this specific setlist, sorted by current order
+    const setNotes = savedNotes
+      .filter(n => n.band === bandName && n.setlist === setName)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    const index = setNotes.findIndex(n => n.id === noteId);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= setNotes.length) return;
+
+    // 2. Perform swap
+    const updatedNotesList = [...setNotes];
+    const temp = updatedNotesList[index];
+    updatedNotesList[index] = updatedNotesList[targetIndex];
+    updatedNotesList[targetIndex] = temp;
+
+    // 3. Re-assign order values to all notes in this set to be safe
+    const reorderedSet = updatedNotesList.map((note, i) => ({
+      ...note,
+      order: i
+    }));
+
+    // 4. Update the global state and storage
+    const isMockUser = user?.uid === 'dev-user-123';
+    if (user && !isMockUser) {
+      try {
+        const batch = writeBatch(firestore);
+        reorderedSet.forEach(note => {
+          batch.update(doc(firestore, "notes", note.id), { order: note.order });
+        });
+        await batch.commit();
+      } catch (err) {
+        toast({ title: "Errore durante lo spostamento cloud", variant: "destructive" });
+        return;
+      }
+    } else {
+      const allUpdated = savedNotes.map(n => {
+        const found = reorderedSet.find(rn => rn.id === n.id);
+        return found ? found : n;
+      });
+      setSavedNotes(allUpdated);
+      localStorage.setItem('mg30_studio_notes', JSON.stringify(allUpdated));
     }
   };
 
@@ -260,8 +309,17 @@ export default function NotesLibraryPage() {
                             </Button>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {notes.map(note => (
-                              <NoteCard key={note.id} note={note} onDelete={(e) => handleDelete(e, note.id)} onClick={() => router.push(`/notes/editor?id=${note.id}`)} />
+                            {notes.map((note, noteIndex) => (
+                              <NoteCard 
+                                key={note.id} 
+                                note={note} 
+                                onDelete={(e) => handleDelete(e, note.id)} 
+                                onClick={() => router.push(`/notes/editor?id=${note.id}`)}
+                                onMoveUp={() => handleMoveNote(note.id, 'up', bandName, setName)}
+                                onMoveDown={() => handleMoveNote(note.id, 'down', bandName, setName)}
+                                isFirst={noteIndex === 0}
+                                isLast={noteIndex === notes.length - 1}
+                              />
                             ))}
                           </div>
                         </div>
@@ -306,7 +364,23 @@ export default function NotesLibraryPage() {
   );
 }
 
-function NoteCard({ note, onDelete, onClick }: { note: SavedNote, onDelete: (e: React.MouseEvent) => void, onClick: () => void }) {
+function NoteCard({ 
+  note, 
+  onDelete, 
+  onClick, 
+  onMoveUp, 
+  onMoveDown, 
+  isFirst, 
+  isLast 
+}: { 
+  note: SavedNote, 
+  onDelete: (e: React.MouseEvent) => void, 
+  onClick: () => void,
+  onMoveUp: () => void,
+  onMoveDown: () => void,
+  isFirst: boolean,
+  isLast: boolean
+}) {
   return (
     <Card 
       onClick={onClick}
@@ -317,9 +391,29 @@ function NoteCard({ note, onDelete, onClick }: { note: SavedNote, onDelete: (e: 
           <Badge variant="secondary" className="text-[10px] font-bold tracking-widest uppercase bg-orange-500/10 text-orange-500">
             {note.id.startsWith('local-') ? 'LOCALE' : 'CLOUD'}
           </Badge>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+             <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground hover:text-primary disabled:opacity-20" 
+              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+              disabled={isFirst}
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-muted-foreground hover:text-primary disabled:opacity-20" 
+              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+              disabled={isLast}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <CardTitle className="text-lg font-black uppercase truncate">{note.title}</CardTitle>
       </CardHeader>

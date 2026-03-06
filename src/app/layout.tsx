@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -20,6 +19,7 @@ export const metadata: Metadata = {
     title: 'MG30 Studio',
   },
   icons: {
+    icon: '/icon.png',
     apple: '/icon.png',
   },
   formatDetection: {

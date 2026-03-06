@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle, CornerDownLeft, Repeat } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle, CornerDownLeft } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -43,6 +43,7 @@ interface SavedNote {
   presetSlot: string;
   generalNotes: string;
   sections: NoteSection[];
+  order?: number;
   date?: any;
   userId?: string;
   updatedAt?: any;
@@ -93,9 +94,8 @@ function NoteEditorContent() {
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false); 
   const [editMode, setEditMode] = useState(false);
-  const [sections, setSections] = useState<NoteSection[]>([
-    { id: `initial-${Date.now()}`, type: 'Intro', text: '', chords: [] }
-  ]);
+  const [sections, setSections] = useState<NoteSection[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<number>(0);
 
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
   const [jsonToPaste, setJsonToPaste] = useState('');
@@ -164,7 +164,8 @@ function NoteEditorContent() {
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
-    savedNotes.forEach(note => {
+    const sorted = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    sorted.forEach(note => {
       const b = note.band || 'Senza Band';
       const s = note.setlist || 'Senza Scaletta';
       if (!groups[b]) groups[b] = {};
@@ -176,7 +177,8 @@ function NoteEditorContent() {
 
   const setlistOnlyNotes = useMemo(() => {
     const groups: Record<string, SavedNote[]> = {};
-    savedNotes.forEach(note => {
+    const sorted = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    sorted.forEach(note => {
       const s = note.setlist || 'Senza Scaletta';
       if (!groups[s]) groups[s] = [];
       groups[s].push(note);
@@ -191,6 +193,7 @@ function NoteEditorContent() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
+    setCurrentOrder(note.order ?? 0);
     setSections((note.sections || []).map((s, idx) => ({ 
       ...s, 
       id: s.id || `loaded-${idx}-${Date.now()}-${Math.random()}`,
@@ -209,6 +212,14 @@ function NoteEditorContent() {
     }
 
     const isMockUser = user?.uid === 'dev-user-123';
+    
+    // Calculate order if new
+    let orderToSave = currentOrder;
+    if (!selectedNoteId) {
+      const sameSetNotes = savedNotes.filter(n => n.band === band && n.setlist === setlist);
+      orderToSave = sameSetNotes.length > 0 ? Math.max(...sameSetNotes.map(n => n.order ?? 0)) + 1 : 0;
+    }
+
     const noteData = {
       title,
       band: band || 'Senza Band',
@@ -216,6 +227,7 @@ function NoteEditorContent() {
       presetSlot: selectedPresetSlot,
       generalNotes,
       sections,
+      order: orderToSave,
       updatedAt: (user && !isMockUser) ? serverTimestamp() : new Date().toISOString(),
       userId: user?.uid || 'local-dev-user'
     };
@@ -291,6 +303,7 @@ function NoteEditorContent() {
     setEditMode(true);
     setIsDetailsOpen(true);
     setIsMobileSheetOpen(false);
+    setCurrentOrder(0);
     router.push('/notes/editor');
   };
 
