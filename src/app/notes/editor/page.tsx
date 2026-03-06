@@ -66,7 +66,7 @@ const CHORD_TABLE: Record<string, string[]> = {
   "Ab": ["Ab", "Abm", "Ab7", "Abmaj7", "Abm7", "Ab aum", "Abdim", "Absus4", "Absus2", "Abadd9"],
   "A": ["A", "Am", "A7", "Amaj7", "Am7", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
   "A#": ["A#", "A#m", "A#7", "A#maj7", "A#m7", "A# aum", "A#dim", "A#sus4", "A#sus2", "A#add9"],
-  "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbadd9"],
+  "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbmadd9"],
   "B": ["B", "Bm", "B7", "Bmaj7", "Bm7", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
 };
 
@@ -104,6 +104,11 @@ function NoteEditorContent() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
+  // States for new Band/Setlist entry
+  const [isNewEntryDialogOpen, setIsNewEntryDialogOpen] = useState(false);
+  const [newEntryType, setNewEntryType] = useState<'band' | 'setlist'>('band');
+  const [newEntryValue, setNewEntryValue] = useState('');
+
   // Caricamento dati
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
@@ -134,7 +139,6 @@ function NoteEditorContent() {
       const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
       
-      // Carichiamo la nota solo se non siamo già in modalità modifica per non perdere dati non salvati
       if (noteIdFromUrl && !editMode) {
         const note = notes.find(n => n.id === noteIdFromUrl);
         if (note) loadNote(note);
@@ -143,6 +147,23 @@ function NoteEditorContent() {
 
     return () => unsubscribe();
   }, [user, userLoading, firestore, noteIdFromUrl, editMode]);
+
+  const uniqueBands = useMemo(() => {
+    const bands = new Set(savedNotes.map(n => n.band).filter(Boolean));
+    if (band && !bands.has(band)) bands.add(band);
+    return Array.from(bands).sort();
+  }, [savedNotes, band]);
+
+  const uniqueSetlists = useMemo(() => {
+    const setlists = new Set(
+      savedNotes
+        .filter(n => n.band === band)
+        .map(n => n.setlist)
+        .filter(Boolean)
+    );
+    if (setlist && !setlists.has(setlist)) setlists.add(setlist);
+    return Array.from(setlists).sort();
+  }, [savedNotes, band, setlist]);
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
@@ -259,6 +280,17 @@ function NoteEditorContent() {
     setIsDetailsOpen(true);
     setIsMobileSheetOpen(false);
     router.push('/notes/editor');
+  };
+
+  const handleAddNewEntry = () => {
+    if (!newEntryValue.trim()) return;
+    if (newEntryType === 'band') {
+      setBand(newEntryValue.trim());
+    } else {
+      setSetlist(newEntryValue.trim());
+    }
+    setIsNewEntryDialogOpen(false);
+    setNewEntryValue('');
   };
 
   const NoteList = () => (
@@ -442,11 +474,49 @@ function NoteEditorContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Band</label>
-                    <Input placeholder="Nome Band..." value={band} onChange={(e) => setBand(e.target.value)} className="h-11 text-[14px] bg-background/50" readOnly={!editMode} />
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Select value={band} onValueChange={setBand} disabled={!editMode}>
+                          <SelectTrigger className="h-11 text-[14px] bg-background/50 border-border">
+                            <SelectValue placeholder="Scegli Band" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Senza Band">Senza Band</SelectItem>
+                            {uniqueBands.filter(b => b !== 'Senza Band').map(b => (
+                              <SelectItem key={b} value={b}>{b}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {editMode && (
+                        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 bg-background/50" onClick={() => { setNewEntryType('band'); setIsNewEntryDialogOpen(true); }}>
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Scaletta</label>
-                    <Input placeholder="Nome Scaletta..." value={setlist} onChange={(e) => setSetlist(e.target.value)} className="h-11 text-[14px] bg-background/50" readOnly={!editMode} />
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Select value={setlist} onValueChange={setSetlist} disabled={!editMode}>
+                          <SelectTrigger className="h-11 text-[14px] bg-background/50 border-border">
+                            <SelectValue placeholder="Scegli Scaletta" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Senza Scaletta">Senza Scaletta</SelectItem>
+                            {uniqueSetlists.filter(s => s !== 'Senza Scaletta').map(s => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {editMode && (
+                        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 bg-background/50" onClick={() => { setNewEntryType('setlist'); setIsNewEntryDialogOpen(true); }}>
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -572,6 +642,27 @@ function NoteEditorContent() {
           </div>
         </main>
       </div>
+
+      <Dialog open={isNewEntryDialogOpen} onOpenChange={setIsNewEntryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="uppercase font-black">Aggiungi Nuova {newEntryType === 'band' ? 'Band' : 'Scaletta'}</DialogTitle>
+            <DialogDescription>Inserisci il nome per aggiungerlo all'elenco delle selezioni.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              placeholder={`Nome ${newEntryType === 'band' ? 'Band' : 'Scaletta'}...`} 
+              value={newEntryValue} 
+              onChange={(e) => setNewEntryValue(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewEntryDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleAddNewEntry}>Aggiungi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
