@@ -2,5 +2,6 @@
   "/notes/editor/page": "app/notes/editor/page.js",
   "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/editor/page": "app/editor/page.js"
+  "/editor/page": "app/editor/page.js",
+  "/notes/page": "app/notes/page.js"
 }

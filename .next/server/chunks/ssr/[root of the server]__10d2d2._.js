@@ -4882,7 +4882,7 @@ var { r: __turbopack_require__, f: __turbopack_module_context__, i: __turbopack_
 {
 /**
  * @fileOverview Tabella posizioni accordi per chitarra (MG-30 Studio).
- * Contiene le 3 posizioni principali per ogni accordo supportato.
+ * Contiene le posizioni principali per ogni accordo supportato, inclusi gli Slash Chords.
  */ __turbopack_esm__({
     "CHORD_POSITIONS_DATA": (()=>CHORD_POSITIONS_DATA),
     "getChordPositions": (()=>getChordPositions)
@@ -4939,6 +4939,22 @@ const CHORD_POSITIONS_DATA = {
             "x32030",
             "x-15-14-12-15-12",
             "8-10-10-9-8-10"
+        ],
+        "/B": [
+            "x22010",
+            "x2555x"
+        ],
+        "/Bb": [
+            "x12010",
+            "x1555x"
+        ],
+        "/G": [
+            "332010",
+            "3x2010"
+        ],
+        "/E": [
+            "032010",
+            "x7-10-9-8-x"
         ]
     },
     "C#": {
@@ -4992,6 +5008,10 @@ const CHORD_POSITIONS_DATA = {
             "x43141",
             "x-16-15-13-16-13",
             "9-11-11-10-9-11"
+        ],
+        "m/B": [
+            "x22120",
+            "x26654"
         ]
     },
     "Db": {
@@ -5098,6 +5118,30 @@ const CHORD_POSITIONS_DATA = {
             "xx0252",
             "x54252",
             "x57750"
+        ],
+        "/C": [
+            "x3x232",
+            "x30232"
+        ],
+        "/B": [
+            "x20232",
+            "x2x232"
+        ],
+        "/A": [
+            "x00232",
+            "557775"
+        ],
+        "/F#": [
+            "2x0232",
+            "244232"
+        ],
+        "m/C": [
+            "x3x231",
+            "x30231"
+        ],
+        "m/Bb": [
+            "x1x231",
+            "x13231"
         ]
     },
     "D#": {
@@ -5257,6 +5301,18 @@ const CHORD_POSITIONS_DATA = {
             "024100",
             "x7647x",
             "076470"
+        ],
+        "/D": [
+            "x5645x",
+            "020100"
+        ],
+        "/G#": [
+            "4x2100",
+            "476454"
+        ],
+        "/F#": [
+            "2x2100",
+            "222100"
         ]
     },
     "F": {
@@ -5310,6 +5366,14 @@ const CHORD_POSITIONS_DATA = {
             "133213",
             "x-8-10-10-8-10",
             "103211"
+        ],
+        "/E": [
+            "033211",
+            "x7-10-10-10-x"
+        ],
+        "/G": [
+            "3x3211",
+            "333211"
         ]
     },
     "F#": {
@@ -5363,6 +5427,10 @@ const CHORD_POSITIONS_DATA = {
             "244324",
             "x-9-11-11-9-11",
             "2x4300"
+        ],
+        "m/E": [
+            "044222",
+            "x7767x"
         ]
     },
     "Gb": {
@@ -5469,6 +5537,26 @@ const CHORD_POSITIONS_DATA = {
             "320203",
             "x-10-9-7-10-7",
             "300203"
+        ],
+        "/F#": [
+            "2x0003",
+            "2x0033"
+        ],
+        "/F": [
+            "1x0003",
+            "1x0033"
+        ],
+        "/E": [
+            "020003",
+            "0x0033"
+        ],
+        "/D": [
+            "xx0003",
+            "x55433"
+        ],
+        "/B": [
+            "200033",
+            "x20033"
         ]
     },
     "G#": {
@@ -5628,6 +5716,34 @@ const CHORD_POSITIONS_DATA = {
             "x02420",
             "54242x",
             "x07600"
+        ],
+        "/G": [
+            "3x2220",
+            "302220"
+        ],
+        "/F#": [
+            "2x2220",
+            "2x222x"
+        ],
+        "/E": [
+            "002220",
+            "042220"
+        ],
+        "/C#": [
+            "x42220",
+            "x4765x"
+        ],
+        "m/G": [
+            "3x2210",
+            "302210"
+        ],
+        "m/F#": [
+            "2x2210",
+            "2x221x"
+        ],
+        "m/F": [
+            "1x2210",
+            "13x210"
         ]
     },
     "A#": {
@@ -5787,6 +5903,14 @@ const CHORD_POSITIONS_DATA = {
             "x24422",
             "76464x",
             "x21x22"
+        ],
+        "/A": [
+            "x04442",
+            "x01202"
+        ],
+        "7/A": [
+            "x04442",
+            "x01202"
         ]
     }
 };
@@ -5805,9 +5929,14 @@ function getChordPositions(chordName) {
     if (!matchedRoot) return null;
     const quality = chordName.slice(matchedRoot.length).trim();
     const entry = CHORD_POSITIONS_DATA[matchedRoot];
+    // Se non c'è qualità, è un accordo maggiore
+    if (quality === "") return entry.major;
+    // Cerca la qualità specifica (inclusi Slash Chords come /B o m/G)
+    if (entry[quality]) {
+        return entry[quality];
+    }
+    // Mappature classiche come fallback se non trovato sopra
     switch(quality){
-        case "":
-            return entry.major;
         case "m":
             return entry.m;
         case "7":
@@ -5827,7 +5956,7 @@ function getChordPositions(chordName) {
         case "add9":
             return entry.add9;
         default:
-            return entry.major; // Default al maggiore se non trovato
+            return entry.major;
     }
 }
 }}),
@@ -5934,6 +6063,10 @@ const CHORD_TABLE = {
         "C7",
         "Cmaj7",
         "Cm7",
+        "C/B",
+        "C/Bb",
+        "C/G",
+        "C/E",
         "C aum",
         "Cdim",
         "Csus4",
@@ -5943,6 +6076,7 @@ const CHORD_TABLE = {
     "C#": [
         "C#",
         "C#m",
+        "C#m/B",
         "C#7",
         "C#maj7",
         "C#m7",
@@ -5970,6 +6104,12 @@ const CHORD_TABLE = {
         "D7",
         "Dmaj7",
         "Dm7",
+        "D/C",
+        "D/B",
+        "D/A",
+        "D/F#",
+        "Dm/C",
+        "Dm/Bb",
         "D aum",
         "Ddim",
         "Dsus4",
@@ -6006,6 +6146,9 @@ const CHORD_TABLE = {
         "E7",
         "Emaj7",
         "Em7",
+        "E/D",
+        "E/G#",
+        "E/F#",
         "E aum",
         "Edim",
         "Esus4",
@@ -6018,6 +6161,8 @@ const CHORD_TABLE = {
         "F7",
         "Fmaj7",
         "Fm7",
+        "F/E",
+        "F/G",
         "F aum",
         "Fdim",
         "Fsus4",
@@ -6027,6 +6172,7 @@ const CHORD_TABLE = {
     "F#": [
         "F#",
         "F#m",
+        "F#m/E",
         "F#7",
         "F#maj7",
         "F#m7",
@@ -6054,6 +6200,11 @@ const CHORD_TABLE = {
         "G7",
         "Gmaj7",
         "Gm7",
+        "G/F#",
+        "G/F",
+        "G/E",
+        "G/D",
+        "G/B",
         "G aum",
         "Gdim",
         "Gsus4",
@@ -6090,6 +6241,13 @@ const CHORD_TABLE = {
         "A7",
         "Amaj7",
         "Am7",
+        "A/G",
+        "A/F#",
+        "A/E",
+        "A/C#",
+        "Am/G",
+        "Am/F#",
+        "Am/F",
         "A aum",
         "Adim",
         "Asus4",
@@ -6124,8 +6282,10 @@ const CHORD_TABLE = {
         "B",
         "Bm",
         "B7",
+        "B7/A",
         "Bmaj7",
         "Bm7",
+        "B/A",
         "B aum",
         "Bdim",
         "Bsus4",
@@ -6349,7 +6509,7 @@ function NoteEditorContent() {
     const deleteNote = async (id, e)=>{
         e.stopPropagation();
         if (id.startsWith('local-')) {
-            const updated = localNotes.filter((n)=>n.id !== id);
+            const updated = savedNotes.filter((n)=>n.id !== id);
             setLocalNotes(updated);
             localStorage.setItem('mg30_studio_notes', JSON.stringify(updated));
             setSavedNotes(updated);
