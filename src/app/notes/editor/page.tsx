@@ -611,13 +611,13 @@ function NoteEditorContent() {
                         </div>
                       )}
                       <div className="flex items-start border-b border-border/20 last:border-0 hover:bg-secondary/5 transition-colors">
-                        <div className="p-3 w-[120px] shrink-0 align-top">
+                        <div className="p-3 w-[85px] shrink-0 align-top">
                           {editMode ? (
                             <Select 
                               value={section.type} 
                               onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
                             >
-                              <SelectTrigger className="w-full h-9 text-[11px] font-black uppercase bg-primary/5 border-primary/20 text-primary">
+                              <SelectTrigger className="w-full h-9 text-[10px] font-black uppercase bg-primary/5 border-primary/20 text-primary p-1">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -627,7 +627,7 @@ function NoteEditorContent() {
                               </SelectContent>
                             </Select>
                           ) : (
-                            <Badge variant="secondary" className="w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                            <Badge variant="secondary" className="w-full justify-center h-9 text-[11px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
                           )}
                         </div>
                         <div className="p-3 flex-1 flex flex-col gap-3">
