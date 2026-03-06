@@ -16,7 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -189,7 +189,6 @@ function NoteEditorContent() {
     setSelectedNoteId(note.id);
     setTitle(note.title);
     setBand(note.band);
-    setlist || 'Senza Scaletta';
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
@@ -449,11 +448,11 @@ function NoteEditorContent() {
             </div>
             <div className="flex items-center gap-2">
               <Dialog open={isPasteJsonDialogOpen} onOpenChange={setIsPasteJsonDialogOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON" onClick={() => setIsPasteJsonDialogOpen(true)}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-11 w-11 text-muted-foreground rounded-full hover:bg-secondary/40" title="Importa JSON">
                     <FileJson className="w-7 h-7" />
                   </Button>
-                </PopoverTrigger>
+                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Importa Nota da JSON</DialogTitle><DialogDescription>Incolla qui il codice JSON.</DialogDescription></DialogHeader>
                   <Textarea value={jsonToPaste} onChange={(e) => setJsonToPaste(e.target.value)} placeholder='{"title": "...", "sections": [...]}' className="min-h-[200px] font-mono text-[13px]" />
@@ -768,4 +767,3 @@ export default function NotesEditorPage() {
     </Suspense>
   );
 }
-
