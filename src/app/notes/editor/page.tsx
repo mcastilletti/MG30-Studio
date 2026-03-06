@@ -191,7 +191,12 @@ function NoteEditorContent() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
-    setSections(note.sections.map(s => ({ ...s, chords: s.chords || [] })));
+    // Garantiamo che ogni sezione abbia un ID unico
+    setSections((note.sections || []).map((s, idx) => ({ 
+      ...s, 
+      id: s.id || `loaded-${idx}-${Date.now()}`,
+      chords: s.chords || [] 
+    })));
     setIsMobileSheetOpen(false);
     setEditMode(false);
     setIsNotesOpen(true);
@@ -463,7 +468,12 @@ function NoteEditorContent() {
                       setBand(data.band || '');
                       setSetlist(data.setlist || '');
                       setGeneralNotes(data.generalNotes || '');
-                      setSections(data.sections || []);
+                      // Garantiamo ID univoci per le sezioni importate
+                      setSections((data.sections || []).map((s: any, idx: number) => ({ 
+                        ...s, 
+                        id: s.id || `imported-${idx}-${Date.now()}`,
+                        chords: s.chords || [] 
+                      })));
                       setEditMode(true);
                       setIsDetailsOpen(true);
                       setIsPasteJsonDialogOpen(false);
@@ -581,9 +591,9 @@ function NoteEditorContent() {
               <CardContent className="p-0">
                 <div className="flex flex-col">
                   {sections.map((section, sIdx) => (
-                    <React.Fragment key={`section-wrapper-${section.id}`}>
+                    <React.Fragment key={`section-wrapper-${section.id || sIdx}`}>
                       {editMode && sIdx === 0 && (
-                        <div key={`insert-section-before-${section.id}`} className="flex items-center justify-center h-8 group/insert">
+                        <div key={`insert-section-before-${section.id || sIdx}`} className="flex items-center justify-center h-8 group/insert">
                           <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
                             <PlusCircle className="w-4 h-4" /> Inserisci Sezione
                           </button>
@@ -624,7 +634,7 @@ function NoteEditorContent() {
                               </Popover>
                             )}
 
-                            {section.chords?.map((chord, cIdx) => (
+                            {(section.chords || []).map((chord, cIdx) => (
                               <React.Fragment key={`chord-frag-${section.id}-${cIdx}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -635,7 +645,7 @@ function NoteEditorContent() {
                                           className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: s.chords?.filter((_, idx) => idx !== cIdx) } : s));
+                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
                                           }}
                                         >
                                           <X className="w-3.5 h-3.5" />
@@ -692,7 +702,7 @@ function NoteEditorContent() {
                         )}
                       </div>
                       {editMode && (
-                        <div key={`insert-section-after-${section.id}`} className="flex items-center justify-center h-8 group/insert relative">
+                        <div key={`insert-section-after-${section.id || sIdx}`} className="flex items-center justify-center h-8 group/insert relative">
                           <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
                           <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
                             <PlusCircle className="w-3.5 h-3.5" /> Inserisci Sezione Qui
