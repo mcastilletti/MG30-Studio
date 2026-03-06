@@ -1,9 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview SysEx analysis AI agent per NUX MG-30.
- * Reverse engineering MIDI SysEx con Gemini 2.0 Flash Lite.
+ * Reverse engineering MIDI SysEx con Gemini 1.5 Flash.
  */
 
 import { ai } from '@/ai/genkit';
@@ -23,7 +22,7 @@ export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 
 const analyzeSysExPrompt = ai.definePrompt({
   name: 'analyzeSysExPrompt',
-  model: 'googleai/gemini-2.0-flash-lite',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeSysExInputSchema },
   output: { schema: AnalyzeSysExOutputSchema },
   system: "Sei un ingegnere MIDI esperto nel reverse engineering dei protocolli NUX. Analizza i dati SysEx per identificare parametri, range di valori e offset.",

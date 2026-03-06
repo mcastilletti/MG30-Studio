@@ -908,16 +908,16 @@ body {
   width: var(--sidebar-width);
 }
 
-.w-\[120px\] {
-  width: 120px;
-}
-
 .w-\[1px\] {
   width: 1px;
 }
 
 .w-\[200px\] {
   width: 200px;
+}
+
+.w-\[85px\] {
+  width: 85px;
 }
 
 .w-\[90\%\] {
@@ -930,10 +930,6 @@ body {
 
 .w-full {
   width: 100%;
-}
-
-.w-\[85px\] {
-  width: 85px;
 }
 
 .min-w-0 {
@@ -1435,6 +1431,10 @@ body {
   border-color: #f9731633;
 }
 
+.border-orange-500\/30 {
+  border-color: #f973164d;
+}
+
 .border-primary {
   border-color: hsl(var(--primary));
 }
@@ -1473,10 +1473,6 @@ body {
 
 .border-yellow-500\/20 {
   border-color: #eab30833;
-}
-
-.border-orange-500\/30 {
-  border-color: #f973164d;
 }
 
 .border-l-transparent {
@@ -2794,12 +2790,12 @@ body {
   cursor: not-allowed;
 }
 
-.disabled\:opacity-50:disabled {
-  opacity: .5;
-}
-
 .disabled\:opacity-20:disabled {
   opacity: .2;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: .5;
 }
 
 .group\/menu-item:focus-within .group-focus-within\/menu-item\:opacity-100 {

@@ -1,4 +1,3 @@
-
 'use server';
 
 import { ai } from '@/ai/genkit';
@@ -31,11 +30,11 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 const mg30PresetPrompt = ai.definePrompt(
   {
     name: 'mg30PresetPrompt',
-    model: 'googleai/gemini-2.0-flash-lite', 
+    model: 'googleai/gemini-1.5-flash', 
     input: { schema: MG30PresetInputSchema },
     output: { schema: MG30PresetOutputSchema },
     config: {
-      temperature: 0.1, // Bassissima per massima fedeltà ai dati tecnici
+      temperature: 0.1, 
       responseMimeType: 'application/json',
     },
     system: `Sei un traduttore tecnico rigoroso per NUX MG-30. 
