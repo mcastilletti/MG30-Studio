@@ -9,9 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, Check, UserSquare2, ListMusic, ArrowLeft, PlusCircle } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -19,7 +18,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -95,7 +94,7 @@ function NoteEditorContent() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
-    { id: '1', type: 'Intro', text: '', chords: [] }
+    { id: 'initial-1', type: 'Intro', text: '', chords: [] }
   ]);
 
   const [isPasteJsonDialogOpen, setIsPasteJsonDialogOpen] = useState(false);
@@ -284,7 +283,7 @@ function NoteEditorContent() {
     setSetlist('');
     setSelectedPresetSlot('');
     setGeneralNotes('');
-    setSections([{ id: Math.random().toString(), type: 'Verse', text: '', chords: [] }]);
+    setSections([{ id: `new-${Date.now()}`, type: 'Verse', text: '', chords: [] }]);
     setEditMode(true);
     setIsDetailsOpen(true);
     setIsMobileSheetOpen(false);
@@ -303,7 +302,7 @@ function NoteEditorContent() {
   };
 
   const handleAddSection = (index: number) => {
-    const newSection: NoteSection = { id: Math.random().toString(), type: 'Verse', text: '', chords: [] };
+    const newSection: NoteSection = { id: `section-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] };
     const newSections = [...sections];
     newSections.splice(index, 0, newSection);
     setSections(newSections);
@@ -344,7 +343,7 @@ function NoteEditorContent() {
         {noteListViewMode === 'bands' ? (
           <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
-              <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
+              <AccordionItem key={`band-group-${bandName}`} value={`band-${bandName}`} className="border-none mb-3">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
                   <div className="flex items-center gap-3 text-lg font-bold uppercase tracking-tight text-primary text-left">
                     <UserSquare2 className="w-7 h-7 shrink-0 opacity-70" /> <span>{bandName}</span>
@@ -353,7 +352,7 @@ function NoteEditorContent() {
                 <AccordionContent className="pt-2">
                   <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-2">
                     {Object.entries(setlists).map(([setName, notes]) => (
-                      <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
+                      <AccordionItem key={`set-group-${bandName}-${setName}`} value={`set-${bandName}-${setName}`} className="border-none">
                         <AccordionTrigger hideIcon className="hover:no-underline py-2">
                           <div className="flex items-center gap-2 text-[16px] font-bold uppercase tracking-widest text-muted-foreground text-left">
                             <Music2 className="w-6 h-6 opacity-60" /> <span>{setName}</span>
@@ -362,7 +361,7 @@ function NoteEditorContent() {
                         <AccordionContent className="pt-1">
                           <div className="space-y-1.5">
                             {notes.map((note) => (
-                              <div key={note.id} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                              <div key={`note-item-${note.id}`} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
                                 <span className="text-[17px] font-bold truncate">{note.title}</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
                               </div>
@@ -379,7 +378,7 @@ function NoteEditorContent() {
         ) : (
           <Accordion type="multiple" className="w-full space-y-3">
             {Object.entries(setlistOnlyNotes).map(([setName, notes]) => (
-              <AccordionItem key={setName} value={`setlist-only-${setName}`} className="border-none">
+              <AccordionItem key={`setlist-only-item-${setName}`} value={`setlist-only-${setName}`} className="border-none">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
                   <div className="flex items-center gap-3 text-lg font-bold uppercase tracking-tight text-primary text-left">
                     <ListMusic className="w-7 h-7 shrink-0 opacity-70" /> <span>{setName}</span>
@@ -388,7 +387,7 @@ function NoteEditorContent() {
                 <AccordionContent className="pt-3 ml-4 border-l-2 border-primary/10 pl-4">
                   <div className="space-y-1.5">
                     {notes.map((note) => (
-                      <div key={note.id} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
+                      <div key={`note-list-item-${note.id}`} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
                         <div className="flex flex-col min-w-0">
                           <span className="text-[17px] font-bold truncate">{note.title}</span>
                           <span className="text-[14px] opacity-60 truncate">{note.band}</span>
@@ -408,6 +407,7 @@ function NoteEditorContent() {
 
   return (
     <AppShell>
+      <TooltipProvider>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
         <aside className="hidden md:flex w-72 flex-col border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
           <NoteList />
@@ -499,7 +499,7 @@ function NoteEditorContent() {
                   <label className="text-[11px] uppercase font-black text-muted-foreground tracking-tighter">Hardware Preset</label>
                   <Select value={selectedPresetSlot} onValueChange={(val) => { setSelectedPresetSlot(val); if (status === 'connected') sendProgramChange(parseInt(val)-1); }} disabled={!editMode}>
                     <SelectTrigger className="h-11 bg-background/50 border-border font-mono text-[13px]"><SelectValue placeholder="Collega a Slot MG-30" /></SelectTrigger>
-                    <SelectContent>{devicePresets.map((p) => (<SelectItem key={p.slot} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>))}</SelectContent>
+                    <SelectContent>{devicePresets.map((p) => (<SelectItem key={`preset-opt-${p.slot}`} value={p.slot.toString()}>{p.slot}: {p.name}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -512,9 +512,9 @@ function NoteEditorContent() {
                             <SelectValue placeholder="Scegli Band" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Senza Band">Senza Band</SelectItem>
+                            <SelectItem key="band-empty" value="Senza Band">Senza Band</SelectItem>
                             {uniqueBands.filter(b => b !== 'Senza Band').map(b => (
-                              <SelectItem key={b} value={b}>{b}</SelectItem>
+                              <SelectItem key={`band-opt-${b}`} value={b}>{b}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -535,9 +535,9 @@ function NoteEditorContent() {
                             <SelectValue placeholder="Scegli Scaletta" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Senza Scaletta">Senza Scaletta</SelectItem>
+                            <SelectItem key="setlist-empty" value="Senza Scaletta">Senza Scaletta</SelectItem>
                             {uniqueSetlists.filter(s => s !== 'Senza Scaletta').map(s => (
-                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                              <SelectItem key={`set-opt-${s}`} value={s}>{s}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -581,9 +581,9 @@ function NoteEditorContent() {
               <CardContent className="p-0">
                 <div className="flex flex-col">
                   {sections.map((section, sIdx) => (
-                    <React.Fragment key={section.id}>
+                    <React.Fragment key={`section-wrapper-${section.id}`}>
                       {editMode && sIdx === 0 && (
-                        <div className="flex items-center justify-center h-8 group/insert">
+                        <div key={`insert-section-before-${section.id}`} className="flex items-center justify-center h-8 group/insert">
                           <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
                             <PlusCircle className="w-4 h-4" /> Inserisci Sezione
                           </button>
@@ -601,7 +601,7 @@ function NoteEditorContent() {
                               </SelectTrigger>
                               <SelectContent>
                                 {["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"].map(t => (
-                                  <SelectItem key={t} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
+                                  <SelectItem key={`type-opt-${t}`} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -625,7 +625,7 @@ function NoteEditorContent() {
                             )}
 
                             {section.chords?.map((chord, cIdx) => (
-                              <React.Fragment key={`${section.id}-${cIdx}`}>
+                              <React.Fragment key={`chord-frag-${section.id}-${cIdx}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
@@ -647,9 +647,9 @@ function NoteEditorContent() {
                                     <div className="space-y-2">
                                       <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Posizioni Chitarra</p>
                                       <div className="space-y-1">
-                                        {getChordPositions(chord)?.map((pos, idx) => (
-                                          <div key={idx} className="flex items-center gap-2 font-mono text-[12px]">
-                                            <span className="text-muted-foreground w-4">{idx + 1}.</span>
+                                        {getChordPositions(chord)?.map((pos, pIdx) => (
+                                          <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                            <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
                                             <span className="text-foreground font-bold">{pos}</span>
                                           </div>
                                         )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
@@ -692,7 +692,7 @@ function NoteEditorContent() {
                         )}
                       </div>
                       {editMode && (
-                        <div className="flex items-center justify-center h-8 group/insert relative">
+                        <div key={`insert-section-after-${section.id}`} className="flex items-center justify-center h-8 group/insert relative">
                           <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-primary/5 -translate-y-1/2" />
                           <button onClick={() => handleAddSection(sIdx + 1)} className="relative z-10 opacity-0 group-hover/insert:opacity-100 bg-background px-3 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity border border-primary/20 rounded-full py-1">
                             <PlusCircle className="w-3.5 h-3.5" /> Inserisci Sezione Qui
@@ -728,6 +728,7 @@ function NoteEditorContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </TooltipProvider>
     </AppShell>
   );
 }
@@ -737,7 +738,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="grid grid-cols-4 gap-2">
         {["A", "B", "C", "D", "E", "F", "G"].map(l => (
-          <Button key={l} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
+          <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
         ))}
       </div>
     );
@@ -746,7 +747,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
     return (
       <div className="grid grid-cols-3 gap-2">
         {CHORD_ROOTS.filter(r => r.startsWith(selectedLetter!)).map(r => (
-          <Button key={r} variant="outline" onClick={() => { setSelectedRoot(r); setStep('quality'); }} className="font-bold">{r}</Button>
+          <Button key={`acc-${r}`} variant="outline" onClick={() => { setSelectedRoot(r); setStep('quality'); }} className="font-bold">{r}</Button>
         ))}
       </div>
     );
@@ -754,7 +755,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   return (
     <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
       {CHORD_TABLE[selectedRoot!]?.map((chord, i) => (
-        <Button key={i} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
+        <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
       ))}
     </div>
   );
