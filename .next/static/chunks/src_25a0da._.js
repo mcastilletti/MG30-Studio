@@ -8444,13 +8444,13 @@ function NoteEditorContent() {
                                                                                                     text: e.target.value
                                                                                                 } : s)),
                                                                                         placeholder: "Note blocco...",
-                                                                                        className: "h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none"
+                                                                                        className: "h-9 text-[11px] font-bold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",
                                                                                         lineNumber: 728,
                                                                                         columnNumber: 29
                                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                                        className: "text-[20px] font-black leading-tight whitespace-pre-wrap",
+                                                                                        className: "text-[11px] font-bold leading-tight whitespace-pre-wrap",
                                                                                         children: section.text
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/notes/editor/page.tsx",

@@ -68,7 +68,7 @@ export default function EditorPage() {
     if (status === 'connected' && !isEditorSyncing) {
       syncActivePreset();
     }
-  }, [status, syncActivePreset]);
+  }, [status, syncActivePreset, isEditorSyncing]);
 
   const handleParamChange = (effectType: string, paramId: string, value: number, index: number) => {
     updateParameter(selectedBlockId, paramId, value);
@@ -130,7 +130,12 @@ export default function EditorPage() {
       const result = await generateMG30Preset({ description: aiPrompt });
       setProposedPreset(result);
     } catch (error: any) {
-      toast({ title: "AI Error", description: error.message, variant: "destructive" });
+      const isRateLimit = error.message?.includes('429') || error.message?.toLowerCase().includes('rate');
+      toast({ 
+        title: isRateLimit ? "Limite AI raggiunto" : "Errore AI", 
+        description: isRateLimit ? "Attendi un minuto prima di generare un altro suono." : error.message, 
+        variant: "destructive" 
+      });
     } finally {
       setIsGenerating(false);
     }

@@ -17,7 +17,6 @@
     "@genkit-ai/core": "1.28.0",
     "@genkit-ai/firebase": "1.28.0",
     "@genkit-ai/google-genai": "1.28.0",
-    "@genkit-ai/googleai": "1.28.0",
     "@genkit-ai/next": "1.28.0",
     "@genkit-ai/vertexai": "1.28.0",
     "@google/generative-ai": "^0.21.0",

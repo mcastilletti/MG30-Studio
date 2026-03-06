@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Editor professionale web per la pedaliera NUX MG-30.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FFD500',
-    theme_color: '#FFD500',
+    background_color: '#121212',
+    theme_color: '#673AB7',
     icons: [
       {
         src: '/icon.png',
@@ -21,6 +21,12 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
+      },
+      {
+        src: '/icon.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
     ],
   }
