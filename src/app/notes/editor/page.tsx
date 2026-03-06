@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,6 +104,7 @@ function NoteEditorContent() {
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
 
+  // Caricamento dati
   useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
@@ -121,7 +122,7 @@ function NoteEditorContent() {
     const isMockUser = user?.uid === 'dev-user-123';
     if (!user || isMockUser) {
       setSavedNotes(localParsed);
-      if (noteIdFromUrl) {
+      if (noteIdFromUrl && !editMode) {
         const note = localParsed.find(n => n.id === noteIdFromUrl);
         if (note) loadNote(note);
       }
@@ -132,14 +133,16 @@ function NoteEditorContent() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
-      if (noteIdFromUrl) {
+      
+      // Carichiamo la nota solo se non siamo già in modalità modifica per non perdere dati non salvati
+      if (noteIdFromUrl && !editMode) {
         const note = notes.find(n => n.id === noteIdFromUrl);
         if (note) loadNote(note);
       }
     });
 
     return () => unsubscribe();
-  }, [user, userLoading, firestore, noteIdFromUrl]);
+  }, [user, userLoading, firestore, noteIdFromUrl, editMode]);
 
   const groupedNotes = useMemo(() => {
     const groups: Record<string, Record<string, SavedNote[]>> = {};
@@ -168,8 +171,8 @@ function NoteEditorContent() {
     setTitle(note.title);
     setBand(note.band);
     setSetlist(note.setlist);
-    setSelectedPresetSlot(note.presetSlot);
-    setGeneralNotes(note.generalNotes);
+    setSelectedPresetSlot(note.presetSlot || '');
+    setGeneralNotes(note.generalNotes || '');
     setSections(note.sections.map(s => ({ ...s, chords: s.chords || [] })));
     setIsMobileSheetOpen(false);
     setEditMode(false);
@@ -251,8 +254,9 @@ function NoteEditorContent() {
     setSetlist('');
     setSelectedPresetSlot('');
     setGeneralNotes('');
-    setSections([{ id: '1', type: 'Intro', text: '', chords: [] }]);
+    setSections([{ id: Math.random().toString(), type: 'Verse', text: '', chords: [] }]);
     setEditMode(true);
+    setIsDetailsOpen(true);
     setIsMobileSheetOpen(false);
     router.push('/notes/editor');
   };
@@ -275,7 +279,7 @@ function NoteEditorContent() {
 
       <ScrollArea className="flex-1">
         {noteListViewMode === 'bands' ? (
-          <Accordion type="multiple" defaultValue={band ? [`band-${band}`] : []} className="w-full">
+          <Accordion type="multiple" className="w-full">
             {Object.entries(groupedNotes).map(([bandName, setlists]) => (
               <AccordionItem key={bandName} value={`band-${bandName}`} className="border-none mb-3">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
@@ -284,7 +288,7 @@ function NoteEditorContent() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
-                  <Accordion type="multiple" defaultValue={setlist ? [`set-${bandName}-${setlist}`] : []} className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-2">
+                  <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-2">
                     {Object.entries(setlists).map(([setName, notes]) => (
                       <AccordionItem key={setName} value={`set-${bandName}-${setName}`} className="border-none">
                         <AccordionTrigger hideIcon className="hover:no-underline py-2">
@@ -310,7 +314,7 @@ function NoteEditorContent() {
             ))}
           </Accordion>
         ) : (
-          <Accordion type="multiple" defaultValue={setlist ? [`setlist-only-${setlist}`] : []} className="w-full space-y-3">
+          <Accordion type="multiple" className="w-full space-y-3">
             {Object.entries(setlistOnlyNotes).map(([setName, notes]) => (
               <AccordionItem key={setName} value={`setlist-only-${setName}`} className="border-none">
                 <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
@@ -364,7 +368,13 @@ function NoteEditorContent() {
               </Sheet>
               <div className="flex flex-col flex-1 min-w-0">
                 {editMode ? (
-                  <Input placeholder="Titolo Brano..." value={title} onChange={(e) => setTitle(e.target.value)} className="text-xl font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" />
+                  <Input 
+                    placeholder="Titolo Brano..." 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)} 
+                    className="text-xl font-black h-10 bg-transparent border-none shadow-none focus-visible:ring-0 p-0 text-primary" 
+                    autoFocus
+                  />
                 ) : (
                   <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
                     {title || "Scegli un brano..."}
@@ -400,20 +410,21 @@ function NoteEditorContent() {
                   }}>Importa</Button></DialogFooter>
                 </DialogContent>
               </Dialog>
+              
               {!editMode && selectedNoteId && (
                 <Button variant="ghost" size="icon" onClick={() => setEditMode(true)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-primary/10 hover:text-primary" title="Modifica">
                   <Pencil className="w-7 h-7" />
                 </Button>
               )}
-              {editMode && selectedNoteId && (
-                <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
-                  <X className="w-7 h-7" />
-                </Button>
-              )}
               {editMode && (
-                <Button onClick={handleSaveNote} size="icon" className="h-11 w-11 bg-primary shadow-lg rounded-full" title="Salva">
-                  <Save className="w-7 h-7" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => setEditMode(false)} className="h-11 w-11 text-muted-foreground rounded-full hover:bg-destructive/10 hover:text-destructive" title="Annulla">
+                    <X className="w-7 h-7" />
+                  </Button>
+                  <Button onClick={handleSaveNote} size="icon" className="h-11 w-11 bg-primary shadow-lg rounded-full" title="Salva">
+                    <Save className="w-7 h-7" />
+                  </Button>
+                </div>
               )}
             </div>
           </header>
@@ -449,7 +460,13 @@ function NoteEditorContent() {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <Textarea placeholder="..." className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" value={generalNotes} onChange={(e) => setGeneralNotes(e.target.value)} readOnly={!editMode} />
+                <Textarea 
+                  placeholder="..." 
+                  className="min-h-[140px] text-[16px] bg-card/30 border-border/50 resize-none leading-relaxed p-4" 
+                  value={generalNotes} 
+                  onChange={(e) => setGeneralNotes(e.target.value)} 
+                  readOnly={!editMode} 
+                />
               </CollapsibleContent>
             </Collapsible>
 
@@ -466,7 +483,23 @@ function NoteEditorContent() {
                     {sections.map((section) => (
                       <TableRow key={section.id} className="hover:bg-transparent border-b border-border/20 last:border-0">
                         <TableCell className="p-3 w-[100px] align-top">
-                          <Badge variant="secondary" className="w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                          {editMode ? (
+                            <Select 
+                              value={section.type} 
+                              onValueChange={(val: SectionType) => setSections(sections.map(s => s.id === section.id ? { ...s, type: val } : s))}
+                            >
+                              <SelectTrigger className="w-full h-9 text-[11px] font-black uppercase bg-primary/5 border-primary/20 text-primary">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"].map(t => (
+                                  <SelectItem key={t} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant="secondary" className="w-full justify-center h-9 text-[12px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20">{section.type}</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="p-3 flex-1">
                           <div className="flex flex-col gap-3">
@@ -474,11 +507,19 @@ function NoteEditorContent() {
                               {section.chords?.map((chord, i) => (
                                 <Tooltip key={i}>
                                   <TooltipTrigger asChild>
-                                    <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help">
+                                    <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
                                       {chord}
-                                      {editMode && <X className="w-4 h-4 ml-2 opacity-40 cursor-pointer" onClick={() => {
-                                        setSections(sections.map(s => s.id === section.id ? { ...s, chords: s.chords?.filter((_, idx) => idx !== i) } : s));
-                                      }} />}
+                                      {editMode && (
+                                        <button 
+                                          className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: s.chords?.filter((_, idx) => idx !== i) } : s));
+                                          }}
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent className="p-3 bg-card border-primary/40">
@@ -498,7 +539,12 @@ function NoteEditorContent() {
                               ))}
                             </div>
                             {editMode ? (
-                              <Input value={section.text} onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} placeholder="Note blocco..." className="h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0" />
+                              <Input 
+                                value={section.text} 
+                                onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
+                                placeholder="Note blocco..." 
+                                className="h-9 text-[20px] border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
+                              />
                             ) : (
                               <p className="text-[20px] font-black leading-tight whitespace-pre-wrap">{section.text}</p>
                             )}
@@ -509,7 +555,7 @@ function NoteEditorContent() {
                             <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
                               <PopoverTrigger asChild><Button variant="outline" size="icon" className="h-10 w-10 rounded-full border-primary/20 text-primary"><Plus className="w-6 h-6" /></Button></PopoverTrigger>
                               <PopoverContent className="w-72 p-4" align="end">
-                                <ChordPicker sectionId={section.id} onSelect={(chord) => {
+                                <ChordPicker sectionId={section.id} onSelect={(chord: string) => {
                                   setSections(sections.map(s => s.id === section.id ? { ...s, chords: [...(s.chords || []), chord] } : s));
                                 }} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
                               </PopoverContent>
