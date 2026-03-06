@@ -176,7 +176,6 @@ export default function NotesLibraryPage() {
   };
 
   const handleMoveNote = async (noteId: string, direction: 'up' | 'down', bandName: string, setName: string) => {
-    // 1. Get all notes in this specific setlist, sorted by current order
     const setNotes = savedNotes
       .filter(n => n.band === bandName && n.setlist === setName)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -187,19 +186,16 @@ export default function NotesLibraryPage() {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= setNotes.length) return;
 
-    // 2. Perform swap
     const updatedNotesList = [...setNotes];
     const temp = updatedNotesList[index];
     updatedNotesList[index] = updatedNotesList[targetIndex];
     updatedNotesList[targetIndex] = temp;
 
-    // 3. Re-assign order values to all notes in this set to be safe
     const reorderedSet = updatedNotesList.map((note, i) => ({
       ...note,
       order: i
     }));
 
-    // 4. Update the global state and storage
     const isMockUser = user?.uid === 'dev-user-123';
     if (user && !isMockUser) {
       try {
@@ -224,7 +220,7 @@ export default function NotesLibraryPage() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl mx-auto space-y-8 pb-20">
+      <div className="max-w-7xl mx-auto space-y-8 pb-20">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/20">
@@ -252,7 +248,7 @@ export default function NotesLibraryPage() {
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-300px)] rounded-2xl">
+        <ScrollArea className="h-[calc(100vh-300px)] rounded-2xl pr-4">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-40">
               <Music2 className="w-16 h-16" />
@@ -287,8 +283,8 @@ export default function NotesLibraryPage() {
                       <Pencil className="w-4 h-4" />
                     </Button>
                   </div>
-                  <AccordionContent className="px-6 pb-6 pt-2">
-                    <div className="space-y-6 ml-4 border-l-2 border-primary/20 pl-6">
+                  <AccordionContent className="px-3 md:px-6 pb-6 pt-2">
+                    <div className="space-y-6 ml-2 md:ml-4 border-l-2 border-primary/20 pl-3 md:pl-6">
                       {Object.entries(setlists).map(([setName, notes]) => (
                         <div key={setName} className="space-y-3">
                           <div className="flex items-center gap-4 group/setlist">
@@ -387,35 +383,42 @@ function NoteCard({
       className="group relative hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden"
     >
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-4">
           <Badge variant="secondary" className="text-[10px] font-bold tracking-widest uppercase bg-orange-500/10 text-orange-500">
             {note.id.startsWith('local-') ? 'LOCALE' : 'CLOUD'}
           </Badge>
-          <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div className="flex items-start gap-3">
+          {/* Frecce a sinistra */}
+          <div className="flex flex-col gap-1.5 shrink-0">
              <Button 
-              variant="ghost" 
+              variant="secondary" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground hover:text-primary disabled:opacity-20" 
+              className="h-8 w-8 text-muted-foreground hover:text-primary bg-background/40 disabled:opacity-20 shadow-sm" 
               onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
               disabled={isFirst}
             >
               <ChevronUp className="w-4 h-4" />
             </Button>
             <Button 
-              variant="ghost" 
+              variant="secondary" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground hover:text-primary disabled:opacity-20" 
+              className="h-8 w-8 text-muted-foreground hover:text-primary bg-background/40 disabled:opacity-20 shadow-sm" 
               onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
               disabled={isLast}
             >
               <ChevronDown className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
           </div>
+          
+          <CardTitle className="text-lg font-black uppercase leading-tight pt-1 whitespace-normal">
+            {note.title}
+          </CardTitle>
         </div>
-        <CardTitle className="text-lg font-black uppercase truncate">{note.title}</CardTitle>
       </CardHeader>
       <CardContent className="pb-4 space-y-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
