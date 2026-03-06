@@ -1471,6 +1471,10 @@ body {
   border-color: #eab30833;
 }
 
+.border-orange-500\/30 {
+  border-color: #f973164d;
+}
+
 .border-l-transparent {
   border-left-color: #0000;
 }

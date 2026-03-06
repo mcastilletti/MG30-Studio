@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useMidiStore } from '@/stores/use-midi-store';
-import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle, CornerDownLeft } from 'lucide-react';
+import { Plus, Trash2, NotebookPen, ChevronDown, ChevronUp, Save, Music2, Layers, Pencil, X, FileJson, UserSquare2, ListMusic, ArrowLeft, PlusCircle, CornerDownLeft, Repeat } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -91,7 +91,7 @@ function NoteEditorContent() {
   const [selectedPresetSlot, setSelectedPresetSlot] = useState<string>('');
   const [generalNotes, setGeneralNotes] = useState('');
   const [isNotesOpen, setIsNotesOpen] = useState(true); 
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false); // FIXED TYPO HERE
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false); 
   const [editMode, setEditMode] = useState(false);
   const [sections, setSections] = useState<NoteSection[]>([
     { id: `initial-${Date.now()}`, type: 'Intro', text: '', chords: [] }
@@ -191,7 +191,6 @@ function NoteEditorContent() {
     setSetlist(note.setlist);
     setSelectedPresetSlot(note.presetSlot || '');
     setGeneralNotes(note.generalNotes || '');
-    // Ensure unique IDs for sections to avoid key errors
     setSections((note.sections || []).map((s, idx) => ({ 
       ...s, 
       id: s.id || `loaded-${idx}-${Date.now()}-${Math.random()}`,
@@ -331,7 +330,7 @@ function NoteEditorContent() {
   const NoteList = () => (
     <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <h3 className="text-[17px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Layers className="w-6 h-6" /> Archivio
         </h3>
         <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-7 h-7" /></Button>
@@ -590,7 +589,7 @@ function NoteEditorContent() {
               <CardContent className="p-0">
                 <div className="flex flex-col">
                   {sections.map((section, sIdx) => (
-                    <React.Fragment key={`section-wrapper-${section.id || sIdx}`}>
+                    <React.Fragment key={`section-wrapper-${section.id}`}>
                       {editMode && sIdx === 0 && (
                         <div className="flex items-center justify-center h-8 group/insert">
                           <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
@@ -653,7 +652,15 @@ function NoteEditorContent() {
                                 ) : (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Badge variant="outline" className="h-9 px-3 text-[20px] font-black bg-background border-primary/30 text-primary shadow-sm cursor-help relative group/badge">
+                                      <Badge 
+                                        variant="outline" 
+                                        className={cn(
+                                          "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
+                                          chord.startsWith('x') && chord.length <= 3 
+                                            ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
+                                            : "bg-background border-primary/30 text-primary"
+                                        )}
+                                      >
                                         {chord}
                                         {editMode && (
                                           <button 
@@ -670,15 +677,21 @@ function NoteEditorContent() {
                                     </TooltipTrigger>
                                     <TooltipContent className="p-3 bg-card border-primary/40">
                                       <div className="space-y-2">
-                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">Posizioni Chitarra</p>
-                                        <div className="space-y-1">
-                                          {getChordPositions(chord)?.map((pos, pIdx) => (
-                                            <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
-                                              <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
-                                              <span className="text-foreground font-bold">{pos}</span>
-                                            </div>
-                                          )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
-                                        </div>
+                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                          {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
+                                        </p>
+                                        {chord.startsWith('x') ? (
+                                          <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
+                                        ) : (
+                                          <div className="space-y-1">
+                                            {getChordPositions(chord)?.map((pos, pIdx) => (
+                                              <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                                <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
+                                                <span className="text-foreground font-bold">{pos}</span>
+                                              </div>
+                                            )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                          </div>
+                                        )}
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
@@ -763,12 +776,25 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   if (step === 'letter') {
     return (
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-4 gap-2">
-          {["A", "B", "C", "D", "E", "F", "G"].map(l => (
-            <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
-          ))}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground">Accordi (Radice)</label>
+          <div className="grid grid-cols-4 gap-2">
+            {["A", "B", "C", "D", "E", "F", "G"].map(l => (
+              <Button key={`root-${l}`} variant="outline" onClick={() => { setSelectedLetter(l); setStep('accidental'); }} className="font-bold">{l}</Button>
+            ))}
+          </div>
         </div>
-        <Button variant="secondary" className="w-full gap-2 font-bold uppercase text-[11px]" onClick={() => onSelect("NEWLINE")}>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground">Ripetizioni</label>
+          <div className="grid grid-cols-4 gap-2">
+            {["x2", "x3", "x4", "x8"].map(mult => (
+              <Button key={`mult-${mult}`} variant="secondary" onClick={() => onSelect(mult)} className="font-black text-orange-500">{mult}</Button>
+            ))}
+          </div>
+        </div>
+
+        <Button variant="ghost" className="w-full gap-2 font-bold uppercase text-[11px] border border-dashed border-border" onClick={() => onSelect("NEWLINE")}>
           <CornerDownLeft className="w-4 h-4" /> A capo (Nuova riga)
         </Button>
       </div>
@@ -776,18 +802,26 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
   }
   if (step === 'accidental') {
     return (
-      <div className="grid grid-cols-3 gap-2">
-        {CHORD_ROOTS.filter(r => r.startsWith(selectedLetter!)).map(r => (
-          <Button key={`acc-${r}`} variant="outline" onClick={() => { setSelectedRoot(r); setStep('quality'); }} className="font-bold">{r}</Button>
-        ))}
+      <div className="flex flex-col gap-3">
+        <label className="text-[10px] font-bold uppercase text-muted-foreground">Alterazione per {selectedLetter}</label>
+        <div className="grid grid-cols-3 gap-2">
+          {CHORD_ROOTS.filter(r => r.startsWith(selectedLetter!)).map(r => (
+            <Button key={`acc-${r}`} variant="outline" onClick={() => { setSelectedRoot(r); setStep('quality'); }} className="font-bold">{r}</Button>
+          ))}
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setStep('letter')} className="text-[10px] uppercase font-bold">Indietro</Button>
       </div>
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
-      {CHORD_TABLE[selectedRoot!]?.map((chord, i) => (
-        <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
-      ))}
+    <div className="flex flex-col gap-3">
+      <label className="text-[10px] font-bold uppercase text-muted-foreground">Qualità per {selectedRoot}</label>
+      <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
+        {CHORD_TABLE[selectedRoot!]?.map((chord, i) => (
+          <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
+        ))}
+      </div>
+      <Button variant="ghost" size="sm" onClick={() => setStep('accidental')} className="text-[10px] uppercase font-bold">Indietro</Button>
     </div>
   );
 }
