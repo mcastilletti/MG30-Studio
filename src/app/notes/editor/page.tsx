@@ -455,7 +455,7 @@ function NoteEditorContent() {
                     autoFocus
                   />
                 ) : (
-                  <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
+                  <h2 onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="text-xl font-black text-primary cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2">
                     {title || "Scegli un brano..."}
                     {selectedNoteId && (isDetailsOpen ? <ChevronUp className="w-5 h-5 opacity-40" /> : <ChevronDown className="w-5 h-5 opacity-40" />)}
                   </h2>

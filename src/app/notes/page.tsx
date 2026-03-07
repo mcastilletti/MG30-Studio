@@ -30,7 +30,8 @@ import {
   Pencil,
   GripVertical,
   Music2,
-  FilterX
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
@@ -183,52 +184,37 @@ export default function NotesLibraryPage() {
     }
   };
 
-  const handleRenameGroup = async () => {
-    if (!renameData || !newName.trim()) return;
-    setIsRenaming(true);
+  const handleMove = async (e: React.MouseEvent, noteId: string, direction: 'up' | 'down') => {
+    e.stopPropagation();
+    const index = filteredNotes.findIndex(n => n.id === noteId);
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === filteredNotes.length - 1) return;
 
-    const isMockUser = user?.uid === 'dev-user-123';
-    const notesToUpdate = savedNotes.filter(n => {
-      if (renameData.type === 'band') return n.band === renameData.oldName;
-      if (renameData.type === 'setlist') return n.band === renameData.parentBand && n.setlist === renameData.oldName;
-      return false;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentNote = filteredNotes[index];
+    const targetNote = filteredNotes[targetIndex];
+
+    const updatedNotes = savedNotes.map(n => {
+      if (n.id === currentNote.id) return { ...n, order: targetNote.order };
+      if (n.id === targetNote.id) return { ...n, order: currentNote.order };
+      return n;
     });
 
-    try {
-      if (user && !isMockUser) {
-        const batch = writeBatch(firestore);
-        notesToUpdate.forEach(note => {
-          const noteRef = doc(firestore, "notes", note.id);
-          batch.update(noteRef, {
-            [renameData.type]: newName.trim()
-          });
-        });
-        await batch.commit();
-      } else {
-        const updated = savedNotes.map(n => {
-          const match = renameData.type === 'band' 
-            ? n.band === renameData.oldName
-            : (n.band === renameData.parentBand && n.setlist === renameData.oldName);
-          
-          if (match) {
-            return { ...n, [renameData.type]: newName.trim() };
-          }
-          return n;
-        });
-        setSavedNotes(updated);
-        localStorage.setItem('mg30_studio_notes', JSON.stringify(updated));
-      }
+    const sorted = updatedNotes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    setSavedNotes(sorted);
 
-      toast({ 
-        title: "Rinominato con successo", 
-        description: `${renameData.oldName} -> ${newName}` 
-      });
-      setRenameData(null);
-      setNewName('');
-    } catch (err) {
-      toast({ title: "Errore durante la rinomina", variant: "destructive" });
-    } finally {
-      setIsRenaming(false);
+    const isMockUser = user?.uid === 'dev-user-123';
+    if (user && !isMockUser) {
+      const batch = writeBatch(firestore);
+      if (!currentNote.id.startsWith('local-')) {
+        batch.update(doc(firestore, "notes", currentNote.id), { order: targetNote.order });
+      }
+      if (!targetNote.id.startsWith('local-')) {
+        batch.update(doc(firestore, "notes", targetNote.id), { order: currentNote.order });
+      }
+      await batch.commit();
+    } else {
+      localStorage.setItem('mg30_studio_notes', JSON.stringify(sorted));
     }
   };
 
@@ -240,7 +226,6 @@ export default function NotesLibraryPage() {
         
         const newFilteredOrdered = arrayMove(filteredNotes, activeIndex, overIndex);
         
-        // Aggiorniamo l'ordine globale mantenendo la posizione relativa nel setlist
         const updatedNotes = [...savedNotes];
         newFilteredOrdered.forEach((note, index) => {
             const globalIdx = updatedNotes.findIndex(n => n.id === note.id);
@@ -269,14 +254,9 @@ export default function NotesLibraryPage() {
     }
   }
 
-  const resetFilters = () => {
-    setSelectedBand(null);
-    setSelectedSetlist(null);
-  };
-
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto space-y-6 pb-20 px-2 md:px-0">
+      <div className="max-w-7xl mx-auto space-y-6 pb-20 px-2 md:px-0">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
@@ -310,11 +290,6 @@ export default function NotesLibraryPage() {
               </SelectContent>
             </Select>
           </div>
-          {(selectedBand || selectedSetlist) && (
-            <Button variant="ghost" size="icon" onClick={resetFilters} title="Reset filtri" className="shrink-0 h-11 w-11 text-muted-foreground">
-              <FilterX className="w-5 h-5" />
-            </Button>
-          )}
         </div>
 
         <ScrollArea className="h-[calc(100vh-280px)] rounded-2xl">
@@ -332,15 +307,14 @@ export default function NotesLibraryPage() {
             >
               <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
                 <div className="grid grid-cols-1 gap-2.5">
-                  {filteredNotes.map((note) => (
+                  {filteredNotes.map((note, index) => (
                     <SortableNoteCard 
                       key={note.id} 
                       note={note} 
                       onDelete={(e) => handleDelete(e, note.id)} 
-                      onRename={() => {
-                        setRenameData({ type: 'band', oldName: note.band });
-                        setNewName(note.band);
-                      }}
+                      onMove={(e, dir) => handleMove(e, note.id, dir)}
+                      isFirst={index === 0}
+                      isLast={index === filteredNotes.length - 1}
                       onClick={() => router.push(`/notes/editor?id=${note.id}`)}
                     />
                   ))}
@@ -368,7 +342,14 @@ export default function NotesLibraryPage() {
   );
 }
 
-function SortableNoteCard({ note, onDelete, onClick }: { note: SavedNote; onDelete: (e: React.MouseEvent) => void; onRename: () => void; onClick: () => void; }) {
+function SortableNoteCard({ note, onDelete, onMove, isFirst, isLast, onClick }: { 
+  note: SavedNote; 
+  onDelete: (e: React.MouseEvent) => void; 
+  onMove: (e: React.MouseEvent, dir: 'up' | 'down') => void;
+  isFirst: boolean;
+  isLast: boolean;
+  onClick: () => void; 
+}) {
   const { 
     attributes,
     listeners,
@@ -394,6 +375,27 @@ function SortableNoteCard({ note, onDelete, onClick }: { note: SavedNote; onDele
           isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50"
         )}
        >
+        <div className="flex flex-col gap-1 shrink-0">
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            className="h-8 w-8" 
+            disabled={isFirst} 
+            onClick={(e) => onMove(e, 'up')}
+          >
+            <ChevronUp className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            className="h-8 w-8" 
+            disabled={isLast} 
+            onClick={(e) => onMove(e, 'down')}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
+
         <div 
           {...attributes} 
           {...listeners} 
