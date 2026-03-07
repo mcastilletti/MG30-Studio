@@ -14,6 +14,7 @@ import { signInWithPopup, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useWakeLock } from '@/hooks/use-wake-lock';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, initialize, syncActivePreset } = useMidiStore();
@@ -21,6 +22,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const { auth, googleProvider } = useFirebase();
   const { user } = useUser();
   const { toast } = useToast();
+  useWakeLock();
 
   useEffect(() => {
     initialize();

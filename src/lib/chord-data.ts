@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Tabella posizioni accordi per chitarra (MG-30 Studio).
  * Contiene le posizioni principali per ogni accordo supportato, inclusi gli Slash Chords.
@@ -241,7 +242,7 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["x1232x", "6786xx", "xx8989"],
     sus4: ["x13341", "688866", "xx8866"],
     sus2: ["x13311", "68-10-xxx", "x1356x"],
-    add9: ["x13333", "688768", "x1355x"]
+    add9: ["x13333", "688766", "x1355x"]
   },
   "Bb": {
     root: "Bb",
@@ -254,7 +255,7 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     dim: ["x1232x", "6786xx", "xx8989"],
     sus4: ["x13341", "688866", "xx8866"],
     sus2: ["x13311", "68-10-xxx", "x1356x"],
-    add9: ["x13333", "688768", "x1355x"]
+    add9: ["x13333", "688766", "x1355x"]
   },
   "B": {
     root: "B",
@@ -276,8 +277,6 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
 export function getChordPositions(chordName: string): string[] | null {
   if (!chordName) return null;
 
-  // Estrai la radice (es. C, C#, Db) e la qualità (m, 7, maj7, etc.)
-  // Cerchiamo radici composte prima (es. C#)
   const roots = Object.keys(CHORD_POSITIONS_DATA).sort((a, b) => b.length - a.length);
   let matchedRoot = "";
   for (const root of roots) {
@@ -292,15 +291,12 @@ export function getChordPositions(chordName: string): string[] | null {
   const quality = chordName.slice(matchedRoot.length).trim();
   const entry = CHORD_POSITIONS_DATA[matchedRoot];
 
-  // Se non c'è qualità, è un accordo maggiore
   if (quality === "") return entry.major;
 
-  // Cerca la qualità specifica (inclusi Slash Chords come /B o m/G)
   if (entry[quality]) {
     return entry[quality];
   }
 
-  // Mappature classiche come fallback se non trovato sopra
   switch (quality) {
     case "m": return entry.m;
     case "7": return entry["7"];

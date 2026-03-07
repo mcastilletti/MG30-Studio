@@ -213,7 +213,6 @@ function NoteEditorContent() {
 
     const isMockUser = user?.uid === 'dev-user-123';
     
-    // Calculate order if new
     let orderToSave = currentOrder;
     if (!selectedNoteId) {
       const sameSetNotes = savedNotes.filter(n => n.band === band && n.setlist === setlist);
@@ -602,7 +601,7 @@ function NoteEditorContent() {
               <CardContent className="p-0">
                 <div className="flex flex-col">
                   {sections.map((section, sIdx) => (
-                    <React.Fragment key={`section-wrapper-${section.id}`}>
+                    <React.Fragment key={section.id}>
                       {editMode && sIdx === 0 && (
                         <div className="flex items-center justify-center h-8 group/insert">
                           <button onClick={() => handleAddSection(0)} className="opacity-0 group-hover/insert:opacity-100 flex items-center gap-2 text-[10px] font-bold uppercase text-primary transition-opacity">
@@ -622,7 +621,7 @@ function NoteEditorContent() {
                               </SelectTrigger>
                               <SelectContent>
                                 {["Intro", "Verse", "Chorus", "Bridge", "Strum", "Out", "Solo"].map(t => (
-                                  <SelectItem key={`type-opt-${t}`} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
+                                  <SelectItem key={t} value={t} className="text-[11px] font-bold uppercase">{t}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -646,7 +645,7 @@ function NoteEditorContent() {
                             )}
 
                             {(section.chords || []).map((chord, cIdx) => (
-                              <React.Fragment key={`chord-frag-${section.id}-${cIdx}`}>
+                              <React.Fragment key={`${section.id}-${cIdx}`}>
                                 {chord === "NEWLINE" ? (
                                   <div className="w-full h-2 flex items-center group/newline relative my-1">
                                     <div className="flex-1 h-[1px] bg-primary/10 border-dashed border-t" />
@@ -698,7 +697,7 @@ function NoteEditorContent() {
                                         ) : (
                                           <div className="space-y-1">
                                             {getChordPositions(chord)?.map((pos, pIdx) => (
-                                              <div key={`pos-${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                              <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
                                                 <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
                                                 <span className="text-foreground font-bold">{pos}</span>
                                               </div>
