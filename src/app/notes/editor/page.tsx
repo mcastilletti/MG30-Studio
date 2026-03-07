@@ -83,8 +83,6 @@ function NoteEditorContent() {
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [localNotes, setLocalNotes] = useState<SavedNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(noteIdFromUrl);
-  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
-  const [noteListViewMode, setNoteListViewMode] = useState<'bands' | 'setlists'>('bands');
   
   const [title, setTitle] = useState('');
   const [band, setBand] = useState('');
@@ -108,6 +106,12 @@ function NoteEditorContent() {
   const [newEntryValue, setNewEntryValue] = useState('');
 
   useEffect(() => {
+    if (!noteIdFromUrl) {
+      handleNewNote();
+    }
+  }, [noteIdFromUrl]);
+
+  useEffect(() => {
     const stored = localStorage.getItem('mg30_studio_notes');
     let localParsed: SavedNote[] = [];
     if (stored) {
@@ -124,7 +128,7 @@ function NoteEditorContent() {
     const isMockUser = user?.uid === 'dev-user-123';
     if (!user || isMockUser) {
       setSavedNotes(localParsed);
-      if (noteIdFromUrl && !editMode) {
+      if (noteIdFromUrl) {
         const note = localParsed.find(n => n.id === noteIdFromUrl);
         if (note) loadNote(note);
       }
@@ -136,7 +140,7 @@ function NoteEditorContent() {
       const notes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as SavedNote));
       setSavedNotes(notes);
       
-      if (noteIdFromUrl && !editMode) {
+      if (noteIdFromUrl) {
         const note = notes.find(n => n.id === noteIdFromUrl);
         if (note) loadNote(note);
       }
@@ -162,30 +166,6 @@ function NoteEditorContent() {
     return Array.from(setlists).sort();
   }, [savedNotes, band, setlist]);
 
-  const groupedNotes = useMemo(() => {
-    const groups: Record<string, Record<string, SavedNote[]>> = {};
-    const sorted = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    sorted.forEach(note => {
-      const b = note.band || 'Senza Band';
-      const s = note.setlist || 'Senza Scaletta';
-      if (!groups[b]) groups[b] = {};
-      if (!groups[b][s]) groups[b][s] = [];
-      groups[b][s].push(note);
-    });
-    return groups;
-  }, [savedNotes]);
-
-  const setlistOnlyNotes = useMemo(() => {
-    const groups: Record<string, SavedNote[]> = {};
-    const sorted = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    sorted.forEach(note => {
-      const s = note.setlist || 'Senza Scaletta';
-      if (!groups[s]) groups[s] = [];
-      groups[s].push(note);
-    });
-    return groups;
-  }, [savedNotes]);
-
   const loadNote = (note: SavedNote) => {
     setSelectedNoteId(note.id);
     setTitle(note.title);
@@ -199,7 +179,6 @@ function NoteEditorContent() {
       id: s.id || `loaded-${idx}-${Date.now()}-${Math.random()}`,
       chords: s.chords || [] 
     })));
-    setIsMobileSheetOpen(false);
     setEditMode(false);
     setIsNotesOpen(true);
     if (note.presetSlot && status === 'connected') sendProgramChange(parseInt(note.presetSlot) - 1);
@@ -263,31 +242,13 @@ function NoteEditorContent() {
   const handleCancel = () => {
     if (selectedNoteId) {
       const original = savedNotes.find(n => n.id === selectedNoteId);
-      if (original) loadNote(original);
+      if (original) {
+        loadNote(original);
+        setEditMode(false);
+        toast({ title: "Modifiche Annullate", variant: "default" });
+      }
     } else {
-      handleNewNote();
-    }
-    setEditMode(false);
-    toast({ title: "Modifiche Annullate", variant: "default" });
-  };
-
-  const deleteNote = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (id.startsWith('local-')) {
-      const updated = savedNotes.filter(n => n.id !== id);
-      setLocalNotes(updated);
-      localStorage.setItem('mg30_studio_notes', JSON.stringify(updated));
-      setSavedNotes(updated);
-      if (selectedNoteId === id) handleNewNote();
-      toast({ title: "Nota eliminata" });
-      return;
-    }
-    try {
-      await deleteDoc(doc(firestore, "notes", id));
-      if (selectedNoteId === id) handleNewNote();
-      toast({ title: "Nota eliminata" });
-    } catch (err) {
-      toast({ title: "Errore eliminazione", variant: "destructive" });
+      router.push('/notes');
     }
   };
 
@@ -301,9 +262,7 @@ function NoteEditorContent() {
     setSections([{ id: `new-${Date.now()}-${Math.random()}`, type: 'Verse', text: '', chords: [] }]);
     setEditMode(true);
     setIsDetailsOpen(true);
-    setIsMobileSheetOpen(false);
     setCurrentOrder(0);
-    router.push('/notes/editor');
   };
 
   const handleAddNewEntry = () => {
@@ -339,112 +298,16 @@ function NoteEditorContent() {
     }));
   };
 
-  const NoteList = () => (
-    <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[17px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Layers className="w-6 h-6" /> Archivio
-        </h3>
-        <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-primary/20" onClick={handleNewNote}><Plus className="w-7 h-7" /></Button>
-      </div>
-
-      <Tabs value={noteListViewMode} onValueChange={(v) => setNoteListViewMode(v as any)} className="mb-6">
-        <TabsList className="grid w-full grid-cols-2 bg-secondary/30 h-13 p-1">
-          <TabsTrigger value="bands" className="text-[15px] font-bold gap-2"><UserSquare2 className="w-5 h-5" /> Band</TabsTrigger>
-          <TabsTrigger value="setlists" className="text-[15px] font-bold gap-2"><ListMusic className="w-5 h-5" /> Scalette</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <ScrollArea className="flex-1">
-        {noteListViewMode === 'bands' ? (
-          <Accordion type="multiple" className="w-full">
-            {Object.entries(groupedNotes).map(([bandName, setlists]) => (
-              <AccordionItem key={`band-group-${bandName}`} value={`band-${bandName}`} className="border-none mb-3">
-                <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                  <div className="flex items-center gap-3 text-lg font-bold uppercase tracking-tight text-primary text-left">
-                    <UserSquare2 className="w-7 h-7 shrink-0 opacity-70" /> <span>{bandName}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2">
-                  <Accordion type="multiple" className="w-full ml-4 border-l-2 border-primary/10 pl-4 space-y-2">
-                    {Object.entries(setlists).map(([setName, notes]) => (
-                      <AccordionItem key={`set-group-${bandName}-${setName}`} value={`set-${bandName}-${setName}`} className="border-none">
-                        <AccordionTrigger hideIcon className="hover:no-underline py-2">
-                          <div className="flex items-center gap-2 text-[16px] font-bold uppercase tracking-widest text-muted-foreground text-left">
-                            <Music2 className="w-6 h-6 opacity-60" /> <span>{setName}</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-1">
-                          <div className="space-y-1.5">
-                            {notes.map((note) => (
-                              <div key={`note-item-${note.id}`} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
-                                <span className="text-[17px] font-bold truncate">{note.title}</span>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
-                              </div>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : (
-          <Accordion type="multiple" className="w-full space-y-3">
-            {Object.entries(setlistOnlyNotes).map(([setName, notes]) => (
-              <AccordionItem key={`setlist-only-item-${setName}`} value={`setlist-only-${setName}`} className="border-none">
-                <AccordionTrigger hideIcon className="hover:no-underline py-3 bg-secondary/30 px-4 rounded-xl flex-1 border border-border/40">
-                  <div className="flex items-center gap-3 text-lg font-bold uppercase tracking-tight text-primary text-left">
-                    <ListMusic className="w-7 h-7 shrink-0 opacity-70" /> <span>{setName}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-3 ml-4 border-l-2 border-primary/10 pl-4">
-                  <div className="space-y-1.5">
-                    {notes.map((note) => (
-                      <div key={`note-list-item-${note.id}`} onClick={() => { loadNote(note); router.push(`/notes/editor?id=${note.id}`); }} className={cn("group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border", selectedNoteId === note.id ? "bg-primary/15 border-primary/40 text-primary" : "bg-card/40 border-border/50 hover:bg-secondary/40")}>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[17px] font-bold truncate">{note.title}</span>
-                          <span className="text-[14px] opacity-60 truncate">{note.band}</span>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive" onClick={(e) => deleteNote(note.id, e)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
-      </ScrollArea>
-    </div>
-  );
-
   return (
     <AppShell>
       <TooltipProvider>
       <div className="flex flex-col md:flex-row gap-6 h-full min-h-[calc(100vh-140px)]">
-        <aside className="hidden md:flex w-72 flex-col border-r border-border pr-6 shrink-0 h-[calc(100vh-160px)]">
-          <NoteList />
-        </aside>
-
         <main className="flex-1 space-y-6 max-w-2xl mx-auto md:mx-0 w-full pb-20">
           <header className="flex items-center justify-between gap-4 py-4 border-b border-border/50">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Button variant="ghost" size="icon" onClick={() => router.push('/notes')} className="h-10 w-10 rounded-full hover:bg-secondary/40">
+               <Button variant="ghost" size="icon" onClick={() => router.push(selectedNoteId ? `/notes?scrollTo=${selectedNoteId}` : '/notes')} className="h-10 w-10 rounded-full hover:bg-secondary/40">
                 <ArrowLeft className="w-6 h-6" />
               </Button>
-              <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-primary">
-                    <NotebookPen className="w-8 h-8" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 border-none">
-                  <NoteList />
-                </SheetContent>
-              </Sheet>
               <div className="flex flex-col flex-1 min-w-0">
                 {editMode ? (
                   <Input 
@@ -610,7 +473,7 @@ function NoteEditorContent() {
                         </div>
                       )}
                       <div className="flex items-start border-b border-border/20 last:border-0 hover:bg-secondary/5 transition-colors">
-                        <div className="p-3 w-[85px] shrink-0 align-top">
+                        <div className="p-3 w-[70px] shrink-0 align-top">
                           {editMode ? (
                             <Select 
                               value={section.type} 
@@ -646,68 +509,51 @@ function NoteEditorContent() {
 
                             {(section.chords || []).map((chord, cIdx) => (
                               <React.Fragment key={`${section.id}-${cIdx}`}>
-                                {chord === "NEWLINE" ? (
-                                  <div className="w-full h-2 flex items-center group/newline relative my-1">
-                                    <div className="flex-1 h-[1px] bg-primary/10 border-dashed border-t" />
-                                    {editMode && (
-                                      <button 
-                                        className="absolute right-0 opacity-30 hover:opacity-100 text-destructive transition-opacity bg-background p-0.5 rounded-full"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                        }}
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge 
-                                        variant="outline" 
-                                        className={cn(
-                                          "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
-                                          chord.startsWith('x') && chord.length <= 3 
-                                            ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
-                                            : "bg-background border-primary/30 text-primary"
-                                        )}
-                                      >
-                                        {chord}
-                                        {editMode && (
-                                          <button 
-                                            className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                            }}
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        )}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="p-3 bg-card border-primary/40">
-                                      <div className="space-y-2">
-                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
-                                          {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
-                                        </p>
-                                        {chord.startsWith('x') ? (
-                                          <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
-                                        ) : (
-                                          <div className="space-y-1">
-                                            {getChordPositions(chord)?.map((pos, pIdx) => (
-                                              <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
-                                                <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
-                                                <span className="text-foreground font-bold">{pos}</span>
-                                              </div>
-                                            )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={cn(
+                                        "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
+                                        chord.startsWith('x') && chord.length <= 3 
+                                          ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
+                                          : "bg-background border-primary/30 text-primary"
+                                      )}
+                                    >
+                                      {chord}
+                                      {editMode && (
+                                        <button 
+                                          className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
+                                          }}
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="p-3 bg-card border-primary/40">
+                                    <div className="space-y-2">
+                                      <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                        {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
+                                      </p>
+                                      {chord.startsWith('x') ? (
+                                        <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
+                                      ) : (
+                                        <div className="space-y-1">
+                                          {getChordPositions(chord)?.map((pos, pIdx) => (
+                                            <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                              <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
+                                              <span className="text-foreground font-bold">{pos}</span>
+                                            </div>
+                                          )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {editMode && (
                                   <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
                                     <PopoverTrigger asChild>
@@ -728,10 +574,10 @@ function NoteEditorContent() {
                               value={section.text} 
                               onChange={(e) => setSections(sections.map(s => s.id === section.id ? { ...s, text: e.target.value } : s))} 
                               placeholder="Note blocco..." 
-                              className="h-9 text-[11px] font-bold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
+                              className="h-7 text-[11px] font-semibold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
                             />
                           ) : (
-                            <p className="text-[11px] font-bold leading-tight whitespace-pre-wrap">{section.text}</p>
+                            <p className="text-[11px] font-semibold leading-tight whitespace-pre-wrap text-muted-foreground/80">{section.text}</p>
                           )}
                         </div>
                         {editMode && (

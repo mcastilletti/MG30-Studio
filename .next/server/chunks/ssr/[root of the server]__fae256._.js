@@ -3584,20 +3584,20 @@ const useWakeLock = ()=>{
             try {
                 const lock = await navigator.wakeLock.request('screen');
                 setWakeLock(lock);
-                console.log('Screen Wake Lock is active.');
                 lock.addEventListener('release', ()=>{
-                    console.log('Screen Wake Lock was released.');
                     setWakeLock(null);
                 });
             } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
+                // Handle NotAllowedError (Permissions Policy) gracefully without throwing
+                if (err.name === 'NotAllowedError') {
+                    console.warn('Wake Lock is disallowed by permissions policy.');
+                } else {
+                    console.error(`${err.name}, ${err.message}`);
+                }
             }
-        } else {
-            console.log('Wake Lock API is not supported by this browser.');
         }
     }, []);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        // Request wake lock when the component mounts
         requestWakeLock();
         const handleVisibilityChange = ()=>{
             if (wakeLock === null && document.visibilityState === 'visible') {
@@ -3605,13 +3605,11 @@ const useWakeLock = ()=>{
             }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        // Release wake lock when the component unmounts
         return ()=>{
             if (wakeLock !== null) {
                 wakeLock.release().then(()=>{
                     setWakeLock(null);
-                    console.log('Screen Wake Lock released on unmount.');
-                });
+                }).catch(()=>{});
             }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };

@@ -63,12 +63,18 @@ function manifest() {
         description: 'Editor professionale web per la pedaliera NUX MG-30.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#FFD500',
-        theme_color: '#FFD500',
+        background_color: '#0a0a0a',
+        theme_color: '#673AB7',
         icons: [
             {
                 src: '/icon.png',
                 sizes: '192x192',
+                type: 'image/png',
+                purpose: 'any'
+            },
+            {
+                src: '/icon.png',
+                sizes: '512x512',
                 type: 'image/png',
                 purpose: 'any'
             },
