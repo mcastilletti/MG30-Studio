@@ -4,10 +4,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
-import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Dialog, 
@@ -27,14 +26,11 @@ import {
 import { 
   NotebookPen, 
   Plus, 
-  UserSquare2, 
-  ListMusic, 
-  Music2, 
   Trash2,
   Pencil,
   GripVertical,
-  ChevronUp,
-  ChevronDown
+  Music2,
+  FilterX
 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
@@ -68,6 +64,9 @@ interface SavedNote {
   updatedAt?: any;
 }
 
+const FILTER_BAND_KEY = 'mg30_notes_filter_band';
+const FILTER_SETLIST_KEY = 'mg30_notes_filter_setlist';
+
 export default function NotesLibraryPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -82,16 +81,32 @@ export default function NotesLibraryPage() {
   const [newName, setNewName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // Sensori ottimizzati per PC e Android
+  // Caricamento filtri persistenti
+  useEffect(() => {
+    const savedBand = localStorage.getItem(FILTER_BAND_KEY);
+    const savedSetlist = localStorage.getItem(FILTER_SETLIST_KEY);
+    if (savedBand && savedBand !== 'all') setSelectedBand(savedBand);
+    if (savedSetlist && savedSetlist !== 'all') setSelectedSetlist(savedSetlist);
+  }, []);
+
+  // Salvataggio filtri persistenti
+  useEffect(() => {
+    localStorage.setItem(FILTER_BAND_KEY, selectedBand || 'all');
+  }, [selectedBand]);
+
+  useEffect(() => {
+    localStorage.setItem(FILTER_SETLIST_KEY, selectedSetlist || 'all');
+  }, [selectedSetlist]);
+
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8, // Impedisce il drag se si clicca solo un pulsante
+        distance: 8,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // Pressione prolungata per iniziare il drag su mobile
+        delay: 250,
         tolerance: 5,
       },
     }),
@@ -130,39 +145,25 @@ export default function NotesLibraryPage() {
   }, [user, userLoading, firestore]);
 
   const filteredNotes = useMemo(() => {
-    const notesToFilter = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    return notesToFilter.filter(n => {
-      const bandMatch = !selectedBand || n.band === selectedBand;
-      const setlistMatch = !selectedSetlist || n.setlist === selectedSetlist;
-      return bandMatch && setlistMatch;
-    });
+    let notesToFilter = [...savedNotes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    if (selectedBand) {
+      notesToFilter = notesToFilter.filter(n => n.band === selectedBand);
+    }
+    if (selectedSetlist) {
+      notesToFilter = notesToFilter.filter(n => n.setlist === selectedSetlist);
+    }
+    return notesToFilter;
   }, [savedNotes, selectedBand, selectedSetlist]);
 
-  const groupedByBand = useMemo(() => {
-    const groups: Record<string, Record<string, SavedNote[]>> = {};
-    const sourceNotes = selectedBand ? filteredNotes : savedNotes;
-    
-    sourceNotes.forEach(note => {
-      const b = note.band || 'Senza Band';
-      const s = note.setlist || 'Senza Scaletta';
-      if (!groups[b]) groups[b] = {};
-      if (!groups[b][s]) groups[b][s] = [];
-      groups[b][s].push(note);
-    });
+  const bands = useMemo(() => {
+    const unique = [...new Set(savedNotes.map(n => n.band || 'Senza Band'))];
+    return unique.sort();
+  }, [savedNotes]);
 
-    for (const band in groups) {
-      for (const setlist in groups[band]) {
-        groups[band][setlist].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      }
-    }
-
-    return groups;
-  }, [filteredNotes, selectedBand, savedNotes]);
-
-  const bands = useMemo(() => [...new Set(savedNotes.map(n => n.band || 'Senza Band'))], [savedNotes]);
   const setlists = useMemo(() => {
     if (!selectedBand) return [];
-    return [...new Set(savedNotes.filter(n => n.band === selectedBand).map(n => n.setlist || 'Senza Scaletta'))];
+    const unique = [...new Set(savedNotes.filter(n => n.band === selectedBand).map(n => n.setlist || 'Senza Scaletta'))];
+    return unique.sort();
   }, [savedNotes, selectedBand]);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
@@ -233,83 +234,66 @@ export default function NotesLibraryPage() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
-        const activeNote = savedNotes.find(n => n.id === active.id);
-        const overNote = savedNotes.find(n => n.id === over.id);
-
-        if (!activeNote || !overNote) return;
-
-        // Eseguiamo l'ordinamento all'interno dello stesso contesto (band/setlist)
-        const isSameContext = activeNote.band === overNote.band && activeNote.setlist === overNote.setlist;
-        if (!isSameContext) return; // Supportiamo il drag solo all'interno della stessa scaletta
+        const activeIndex = filteredNotes.findIndex(n => n.id === active.id);
+        const overIndex = filteredNotes.findIndex(n => n.id === over.id);
         
-        const contextNotes = savedNotes.filter(n => n.band === activeNote.band && n.setlist === activeNote.setlist);
-        const oldIndex = contextNotes.findIndex(n => n.id === active.id);
-        const newIndex = contextNotes.findIndex(n => n.id === over.id);
+        const newFilteredOrdered = arrayMove(filteredNotes, activeIndex, overIndex);
         
-        const newContextOrdered = arrayMove(contextNotes, oldIndex, newIndex);
-        const updatedWithOrder = newContextOrdered.map((note, index) => ({ ...note, order: index }));
+        // Aggiorniamo l'ordine globale mantenendo la posizione relativa nel setlist
+        const updatedNotes = [...savedNotes];
+        newFilteredOrdered.forEach((note, index) => {
+            const globalIdx = updatedNotes.findIndex(n => n.id === note.id);
+            if (globalIdx !== -1) {
+                updatedNotes[globalIdx] = { ...updatedNotes[globalIdx], order: index };
+            }
+        });
 
-        const otherNotes = savedNotes.filter(n => !(n.band === activeNote.band && n.setlist === activeNote.setlist));
-        const finalNotes = [...otherNotes, ...updatedWithOrder].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        
-        setSavedNotes(finalNotes);
+        const sortedGlobal = updatedNotes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setSavedNotes(sortedGlobal);
         
         const isMockUser = user?.uid === 'dev-user-123';
         if (user && !isMockUser) {
             const batch = writeBatch(firestore);
-            updatedWithOrder.forEach(note => {
+            newFilteredOrdered.forEach((note, index) => {
                 if (note.id.startsWith('local-')) return;
                 const noteRef = doc(firestore, "notes", note.id);
-                batch.update(noteRef, { order: note.order });
+                batch.update(noteRef, { order: index });
             });
             batch.commit().catch(() => {
                 toast({ title: "Errore sincronizzazione ordine cloud", variant: "destructive" });
             });
         } else {
-            localStorage.setItem('mg30_studio_notes', JSON.stringify(finalNotes));
+            localStorage.setItem('mg30_studio_notes', JSON.stringify(sortedGlobal));
         }
     }
   }
 
-  const renderNotesList = (notes: SavedNote[]) => (
-    <SortableContext items={notes.map(n => n.id)} strategy={verticalListSortingStrategy}>
-      <div className="grid grid-cols-1 gap-3">
-        {notes.map((note) => (
-          <SortableNoteCard 
-            key={note.id} 
-            note={note} 
-            onDelete={(e) => handleDelete(e, note.id)} 
-            onClick={() => router.push(`/notes/editor?id=${note.id}`)}
-          />
-        ))}
-      </div>
-    </SortableContext>
-  );
-
-  const hasFilters = selectedBand || selectedSetlist;
+  const resetFilters = () => {
+    setSelectedBand(null);
+    setSelectedSetlist(null);
+  };
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-8 pb-20 px-2 md:px-0">
+      <div className="max-w-5xl mx-auto space-y-6 pb-20 px-2 md:px-0">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <NotebookPen className="w-6 h-6 text-orange-500" />
+            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <NotebookPen className="w-5 h-5 text-orange-500" />
             </div>
-            <h2 className="text-xl md:text-2xl font-black tracking-tight uppercase">Archivio Note</h2>
+            <h2 className="text-xl font-black tracking-tight uppercase">Archivio Note</h2>
           </div>
-          <Button onClick={() => router.push('/notes/editor')} size="icon" className="w-12 h-12 bg-orange-600 hover:bg-orange-700 text-white font-bold gap-3 rounded-full shadow-lg shadow-orange-900/20">
+          <Button onClick={() => router.push('/notes/editor')} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
             <Plus className="w-6 h-6" />
           </Button>
         </header>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card/40 p-4 rounded-2xl border border-border shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+        <div className="flex flex-col md:flex-row gap-3 items-center bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
             <Select value={selectedBand || 'all'} onValueChange={(v) => { setSelectedBand(v === 'all' ? null : v); setSelectedSetlist(null); }}>
-              <SelectTrigger className="h-12 bg-background/50 border-border text-base">
-                <SelectValue placeholder="Seleziona una band..." />
+              <SelectTrigger className="h-11 bg-background/50 border-border text-[14px] font-bold">
+                <SelectValue placeholder="Tutte le band" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tutte le band</SelectItem>
@@ -317,8 +301,8 @@ export default function NotesLibraryPage() {
               </SelectContent>
             </Select>
             <Select value={selectedSetlist || 'all'} onValueChange={(v) => setSelectedSetlist(v === 'all' ? null : v)} disabled={!selectedBand}>
-              <SelectTrigger className="h-12 bg-background/50 border-border text-base">
-                <SelectValue placeholder="Seleziona una scaletta..." />
+              <SelectTrigger className="h-11 bg-background/50 border-border text-[14px] font-bold">
+                <SelectValue placeholder="Tutte le scalette" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tutte le scalette</SelectItem>
@@ -326,14 +310,19 @@ export default function NotesLibraryPage() {
               </SelectContent>
             </Select>
           </div>
+          {(selectedBand || selectedSetlist) && (
+            <Button variant="ghost" size="icon" onClick={resetFilters} title="Reset filtri" className="shrink-0 h-11 w-11 text-muted-foreground">
+              <FilterX className="w-5 h-5" />
+            </Button>
+          )}
         </div>
 
-        <ScrollArea className="h-[calc(100vh-320px)] rounded-2xl pr-2 md:pr-4">
+        <ScrollArea className="h-[calc(100vh-280px)] rounded-2xl">
           {filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-40">
-              <Music2 className="w-16 h-16" />
-              <h3 className="text-xl font-bold uppercase">Nessun brano trovato</h3>
-              <p className="text-sm text-muted-foreground">Prova a cambiare i filtri di ricerca</p>
+              <Music2 className="w-12 h-12" />
+              <h3 className="text-lg font-bold uppercase">Nessun brano</h3>
+              <p className="text-xs">Usa i filtri o aggiungi un nuovo brano</p>
             </div>
           ) : (
             <DndContext 
@@ -341,65 +330,22 @@ export default function NotesLibraryPage() {
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              {hasFilters ? renderNotesList(filteredNotes) : (
-                <Accordion type="multiple" defaultValue={Object.keys(groupedByBand)} className="space-y-4">
-                  {Object.entries(groupedByBand).map(([bandName, setlists]) => (
-                    <AccordionItem key={bandName} value={bandName} className="border-none bg-secondary/10 rounded-2xl overflow-hidden">
-                      <div className="flex items-center group/band">
-                        <AccordionTrigger className="flex-1 px-4 md:px-6 py-5 hover:no-underline hover:bg-secondary/20 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                              <UserSquare2 className="w-5 h-5 md:w-6 md:h-6" />
-                            </div>
-                            <div className="text-left">
-                              <h4 className="text-lg md:text-xl font-black uppercase tracking-tight">{bandName}</h4>
-                              <p className="text-xs text-muted-foreground">{Object.keys(setlists).length} Scalette caricate</p>
-                            </div>
-                          </div>
-                        </AccordionTrigger>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="mx-2 md:mx-4 opacity-0 group-hover/band:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRenameData({ type: 'band', oldName: bandName });
-                            setNewName(bandName);
-                          }}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <AccordionContent className="px-2 md:px-6 pb-6 pt-2">
-                        <div className="space-y-6 ml-1 md:ml-4 border-l-2 border-primary/20 pl-3 md:pl-6">
-                          {Object.entries(setlists).map(([setName, notes]) => (
-                            <div key={setName} className="space-y-3">
-                              <div className="flex items-center gap-4 group/setlist">
-                                <h5 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                                  <ListMusic className="w-4 h-4" /> {setName}
-                                </h5>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 opacity-0 group-hover/setlist:opacity-100 transition-opacity"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setRenameData({ type: 'setlist', oldName: setName, parentBand: bandName });
-                                    setNewName(setName);
-                                  }}
-                                >
-                                  <Pencil className="w-3 h-3" />
-                                </Button>
-                              </div>
-                              {renderNotesList(notes)}
-                            </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
+              <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {filteredNotes.map((note) => (
+                    <SortableNoteCard 
+                      key={note.id} 
+                      note={note} 
+                      onDelete={(e) => handleDelete(e, note.id)} 
+                      onRename={() => {
+                        setRenameData({ type: 'band', oldName: note.band });
+                        setNewName(note.band);
+                      }}
+                      onClick={() => router.push(`/notes/editor?id=${note.id}`)}
+                    />
                   ))}
-                </Accordion>
-              )}
+                </div>
+              </SortableContext>
             </DndContext>
           )}
         </ScrollArea>
@@ -407,26 +353,13 @@ export default function NotesLibraryPage() {
         <Dialog open={!!renameData} onOpenChange={(open) => !open && setRenameData(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="uppercase font-black">
-                Rinomina {renameData?.type === 'band' ? 'Band' : 'Scaletta'}
-              </DialogTitle>
-              <DialogDescription>
-                Stai rinominando "{renameData?.oldName}". Tutti i brani associati verranno aggiornati.
-              </DialogDescription>
+              <DialogTitle className="uppercase font-black">Rinomina Gruppo</DialogTitle>
+              <DialogDescription>Stai aggiornando "{renameData?.oldName}" per tutti i brani.</DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <Input 
-                value={newName} 
-                onChange={(e) => setNewName(e.target.value)} 
-                placeholder="Nuovo nome..."
-                autoFocus
-              />
-            </div>
+            <div className="py-4"><Input value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus /></div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setRenameData(null)}>Annulla</Button>
-              <Button onClick={handleRenameGroup} disabled={isRenaming}>
-                {isRenaming ? "Rinomina in corso..." : "Conferma"}
-              </Button>
+              <Button onClick={handleRenameGroup} disabled={isRenaming}>{isRenaming ? "..." : "Conferma"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -435,7 +368,7 @@ export default function NotesLibraryPage() {
   );
 }
 
-function SortableNoteCard({ note, onDelete, onClick }: { note: SavedNote; onDelete: (e: React.MouseEvent) => void; onClick: () => void; }) {
+function SortableNoteCard({ note, onDelete, onClick }: { note: SavedNote; onDelete: (e: React.MouseEvent) => void; onRename: () => void; onClick: () => void; }) {
   const { 
     attributes,
     listeners,
@@ -457,31 +390,33 @@ function SortableNoteCard({ note, onDelete, onClick }: { note: SavedNote; onDele
        <Card 
         onClick={onClick}
         className={cn(
-          "group relative flex items-center gap-3 p-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden",
+          "group relative flex items-center gap-4 p-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden",
           isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50"
         )}
        >
         <div 
           {...attributes} 
           {...listeners} 
-          className="p-3 -m-3 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing shrink-0"
+          className="p-2 -m-2 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-5 h-5" />
         </div>
         
-        <CardTitle className="text-sm md:text-base font-black uppercase leading-tight flex-1 whitespace-pre-wrap">
-          {note.title}
-        </CardTitle>
+        <div className="flex-1 min-w-0">
+          <CardTitle className="text-[15px] font-black uppercase leading-tight whitespace-pre-wrap">
+            {note.title}
+          </CardTitle>
+          <div className="flex items-center gap-2 mt-1 opacity-50">
+            <span className="text-[10px] font-bold uppercase tracking-widest truncate">{note.band}</span>
+            <span className="text-[10px]">•</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest truncate">{note.setlist}</span>
+          </div>
+        </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
-            onClick={onDelete}
-          >
-              <Trash2 className="w-4 h-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </Card>
