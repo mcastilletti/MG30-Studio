@@ -508,7 +508,7 @@ function NoteEditorContent() {
                             )}
 
                             {(section.chords || []).map((chord, cIdx) => (
-                              chord === "NEWLINE" ? (
+                              chord.trim().toUpperCase() === "NEWLINE" ? (
                                 <div key={`${section.id}-${cIdx}`} className="basis-full h-0 pointer-events-none relative group/newline">
                                   {editMode && (
                                     <button 
@@ -659,7 +659,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
         <div className="space-y-2">
           <label className="text-[10px] font-bold uppercase text-muted-foreground">Ripetizioni</label>
           <div className="grid grid-cols-4 gap-2">
-            {["x2", "x3", "x4", "x8"].map(mult => (
+            {["x2", "x3", "x4", "x5", "x6", "x7", "x8"].map(mult => (
               <Button key={`mult-${mult}`} variant="secondary" onClick={() => onSelect(mult)} className="font-black text-orange-500">{mult}</Button>
             ))}
           </div>
