@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Tabella posizioni accordi per chitarra (MG-30 Studio).
  * Contiene le posizioni principali per ogni accordo supportato, inclusi gli Slash Chords.
@@ -49,7 +48,7 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     sus4: ["x44122", "9-11-11-11-99", "xx-11-11-99"],
     sus2: ["x4112x", "x46644", "9-11-13-xxx"],
     add9: ["x43141", "x-16-15-13-16-13", "9-11-11-10-9-11"],
-    "m/B": ["x22120", "x26654"]
+    "/B": ["x22120", "x26654"]
   },
   "Db": {
     root: "Db",
@@ -80,8 +79,8 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     "/B": ["x20232", "x2x232"],
     "/A": ["x00232", "557775"],
     "/F#": ["2x0232", "244232"],
-    "m/C": ["x3x231", "x30231"],
-    "m/Bb": ["x1x231", "x13231"]
+    "/C": ["x3x231", "x30231"],
+    "/Bb": ["x1x231", "x13231"]
   },
   "D#": {
     root: "D#",
@@ -152,7 +151,7 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     sus4: ["244422", "x9-11-11-12-9", "xx4422"],
     sus2: ["246xxx", "x9-11-11-99", "xx4674"],
     add9: ["244324", "x-9-11-11-9-11", "2x4300"],
-    "m/E": ["044222", "x7767x"]
+    "/E": ["044222", "x7767x"]
   },
   "Gb": {
     root: "Gb",
@@ -226,10 +225,18 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     "/G": ["3x2220", "302220"],
     "/F#": ["2x2220", "2x222x"],
     "/E": ["002220", "042220"],
-    "/C#": ["x42220", "x4765x"],
-    "m/G": ["3x2210", "302210"],
-    "m/F#": ["2x2210", "2x221x"],
-    "m/F": ["1x2210", "13x210"]
+    "/C#": ["x42220", "x4765x"]
+  },
+  "Am": {
+    root: "Am",
+    major: ["x02210", "577555", "x02213"],
+    m: ["x02210", "577555", "x02213"],
+    "7": ["x02010", "575555", "x0555x"],
+    maj7: ["x02110", "5x655x", "x06554"],
+    m7: ["x02010", "575555", "x0555x"],
+    "/G": ["3x2210", "302210"],
+    "/F#": ["2x2210", "2x221x"],
+    "/F": ["1x2210", "13x210"]
   },
   "A#": {
     root: "A#",
@@ -269,14 +276,14 @@ export const CHORD_POSITIONS_DATA: Record<string, ChordPositionEntry> = {
     sus4: ["x24452", "799977", "xx4452"],
     sus2: ["x24422", "x246xxx", "79-11-xxx"],
     add9: ["x24422", "76464x", "x21x22"],
-    "/A": ["x04442", "x01202"],
-    "7/A": ["x04442", "x01202"]
+    "/A": ["x04442", "x01202"]
   }
 };
 
 export function getChordPositions(chordName: string): string[] | null {
   if (!chordName) return null;
 
+  // Cerca la radice più lunga corrispondente (es. "C#" invece di "C")
   const roots = Object.keys(CHORD_POSITIONS_DATA).sort((a, b) => b.length - a.length);
   let matchedRoot = "";
   for (const root of roots) {
@@ -293,10 +300,12 @@ export function getChordPositions(chordName: string): string[] | null {
 
   if (quality === "") return entry.major;
 
+  // Gestione diretta per Slash Chords e varianti mappate esplicitamente
   if (entry[quality]) {
     return entry[quality];
   }
 
+  // Fallback per qualità standard
   switch (quality) {
     case "m": return entry.m;
     case "7": return entry["7"];

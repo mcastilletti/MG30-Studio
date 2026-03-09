@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -17,11 +16,10 @@ export const useWakeLock = () => {
         });
 
       } catch (err: any) {
-        // Handle NotAllowedError (Permissions Policy) gracefully without throwing a hard error
+        // Handle Permissions Policy or other errors gracefully with a warning to avoid Red Overlay in Dev
         if (err.name === 'NotAllowedError') {
           console.warn('Wake Lock is disallowed by permissions policy.');
         } else {
-          // Log other errors as warnings to avoid development error overlays
           console.warn(`${err.name}: ${err.message}`);
         }
       }

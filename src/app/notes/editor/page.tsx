@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
@@ -51,23 +50,23 @@ interface SavedNote {
 
 const CHORD_ROOTS = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
 const CHORD_TABLE: Record<string, string[]> = {
-  "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "C/B", "C/Bb", "C/G", "C/E", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
+  "C": ["C", "Cm", "C7", "Cmaj7", "Cm7", "/B", "/Bb", "/G", "/E", "C aum", "Cdim", "Csus4", "Csus2", "Cadd9"],
   "C#": ["C#", "C#m", "C#m/B", "C#7", "C#maj7", "C#m7", "C# aum", "C#dim", "C#sus4", "C#sus2", "C#add9"],
   "Db": ["Db", "Dbm", "Db7", "Dbmaj7", "Dbm7", "Db aum", "Dbdim", "Dbsus4", "Dbsus2", "Dbmadd9"],
-  "D": ["D", "Dm", "D7", "Dmaj7", "Dm7", "D/C", "D/B", "D/A", "D/F#", "Dm/C", "Dm/Bb", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
+  "D": ["D", "Dm", "D7", "Dmaj7", "Dm7", "/C", "/B", "/A", "/F#", "m/C", "m/Bb", "D aum", "Ddim", "Dsus4", "Dsus2", "Dadd9"],
   "D#": ["D#", "D#m", "D#7", "D#maj7", "D#m7", "D# aum", "D#dim", "D#sus4", "D#sus2", "D#add9"],
   "Eb": ["Eb", "Ebm", "Eb7", "Ebmaj7", "Ebm7", "Eb aum", "Ebdim", "Ebsus4", "Ebsus2", "Ebadd9"],
-  "E": ["E", "Em", "E7", "Emaj7", "Em7", "E/D", "E/G#", "E/F#", "E aum", "Edim", "Esus4", "Esus2", "Eadd9"],
-  "F": ["F", "Fm", "F7", "Fmaj7", "Fm7", "F/E", "F/G", "F aum", "Fdim", "Fsus4", "Fsus2", "Fadd9"],
-  "F#": ["F#", "F#m", "F#m/E", "F#7", "F#maj7", "F#m7", "F# aum", "F#dim", "F#sus4", "F#sus2", "F#add9"],
+  "E": ["E", "Em", "E7", "Emaj7", "Em7", "/D", "/G#", "/F#", "E aum", "Edim", "Esus4", "Esus2", "Eadd9"],
+  "F": ["F", "Fm", "F7", "Fmaj7", "Fm7", "/E", "/G", "F aum", "Fdim", "Fsus4", "Fsus2", "Fadd9"],
+  "F#": ["F#", "F#m", "/E", "F#7", "F#maj7", "F#m7", "F# aum", "F#dim", "F#sus4", "F#sus2", "F#add9"],
   "Gb": ["Gb", "Gbm", "Gb7", "Gbmaj7", "Gbm7", "Gb aum", "Gbdim", "Gbsus4", "Gbsus2", "Gbadd9"],
-  "G": ["G", "Gm", "G7", "Gmaj7", "Gm7", "G/F#", "G/F", "G/E", "G/D", "G/B", "G aum", "Gdim", "Gsus4", "Gsus2", "Gadd9"],
+  "G": ["G", "Gm", "G7", "Gmaj7", "Gm7", "/F#", "/F", "/E", "/D", "/B", "G aum", "Gdim", "Gsus4", "Gsus2", "Gadd9"],
   "G#": ["G#", "G#m", "G#7", "G#maj7", "G#m7", "G# aum", "G#dim", "G#sus4", "G#sus2", "G#add9"],
   "Ab": ["Ab", "Abm", "Ab7", "Abmaj7", "Abm7", "Ab aum", "Abdim", "Absus4", "Absus2", "Abadd9"],
-  "A": ["A", "Am", "A7", "Amaj7", "Am7", "A/G", "A/F#", "A/E", "A/C#", "Am/G", "Am/F#", "Am/F", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
+  "A": ["A", "Am", "A7", "Amaj7", "Am7", "/G", "/F#", "/E", "/C#", "m/G", "m/F#", "m/F", "A aum", "Adim", "Asus4", "Asus2", "Aadd9"],
   "A#": ["A#", "A#m", "A#7", "A#maj7", "A#m7", "A# aum", "A#dim", "A#sus4", "A#sus2", "A#add9"],
   "Bb": ["Bb", "Bbm", "Bb7", "Bbmaj7", "Bbm7", "Bb aum", "Bbdim", "Bbsus4", "Bbsus2", "Bbmadd9"],
-  "B": ["B", "Bm", "B7", "B7/A", "Bmaj7", "Bm7", "B/A", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
+  "B": ["B", "Bm", "B7", "/A", "Bmaj7", "Bm7", "B aum", "Bdim", "Bsus4", "Bsus2", "Badd9"],
 };
 
 function NoteEditorContent() {
@@ -548,11 +547,11 @@ function NoteEditorContent() {
                                     </TooltipTrigger>
                                     <TooltipContent className="p-3 bg-card border-primary/40">
                                       <div className="space-y-2">
-                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                        <div className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
                                           {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
-                                        </p>
+                                        </div>
                                         {chord.startsWith('x') ? (
-                                          <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
+                                          <div className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</div>
                                         ) : (
                                           <div className="space-y-1">
                                             {getChordPositions(chord)?.map((pos, pIdx) => (
@@ -560,7 +559,7 @@ function NoteEditorContent() {
                                                 <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
                                                 <span className="text-foreground font-bold">{pos}</span>
                                               </div>
-                                            )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                            )) || <div className="text-[11px] italic opacity-60">Posizioni non trovate</div>}
                                           </div>
                                         )}
                                       </div>
@@ -590,7 +589,7 @@ function NoteEditorContent() {
                               className="h-7 text-[11px] font-semibold border-none bg-transparent p-0 italic text-muted-foreground focus-visible:ring-0 shadow-none" 
                             />
                           ) : (
-                            <p className="text-[11px] font-semibold leading-tight whitespace-pre-wrap text-muted-foreground/80">{section.text}</p>
+                            <div className="text-[11px] font-semibold leading-tight whitespace-pre-wrap text-muted-foreground/80">{section.text}</div>
                           )}
                         </div>
                         {editMode && (
@@ -689,7 +688,7 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
       <label className="text-[10px] font-bold uppercase text-muted-foreground">Qualità per {selectedRoot}</label>
       <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-2">
         {CHORD_TABLE[selectedRoot!]?.map((chord, i) => (
-          <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
+          <Button key={`quality-${chord}-${i}`} variant="outline" onClick={() => { onSelect(chord.startsWith('/') || chord.startsWith('m/') ? selectedRoot + chord : chord); setStep('letter'); }} className="text-xs font-bold truncate">{chord}</Button>
         ))}
       </div>
       <Button variant="ghost" size="sm" onClick={() => setStep('accidental')} className="text-[10px] uppercase font-bold">Indietro</Button>

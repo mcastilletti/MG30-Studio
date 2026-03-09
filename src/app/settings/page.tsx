@@ -1,7 +1,6 @@
-
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +11,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SettingsPage() {
   const { user } = useUser();
+  const [currentHostname, setCurrentHostname] = useState('...');
 
-  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '...';
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentHostname(window.location.hostname);
+    }
+  }, []);
 
   return (
     <AppShell>
@@ -72,7 +76,7 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground italic">Esegui il login per proteggere i tuoi dati.</p>
+                  <div className="text-xs text-muted-foreground italic">Esegui il login per proteggere i tuoi dati.</div>
                 </div>
               )}
             </CardContent>
@@ -89,7 +93,7 @@ export default function SettingsPage() {
           <CardContent className="text-xs space-y-4">
             <div className="space-y-2">
               <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 1. Autorizza il dominio attuale</div>
-              <div className="text-muted-foreground ml-3">Vai nella Console Firebase > Auth > Settings > Authorized Domains e aggiungi:</div>
+              <div className="text-muted-foreground ml-3">Vai nella Console Firebase &gt; Auth &gt; Settings &gt; Authorized Domains e aggiungi:</div>
               <code className="block ml-3 bg-secondary p-2 rounded text-primary font-mono text-center select-all">{currentHostname}</code>
             </div>
             
