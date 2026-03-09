@@ -508,65 +508,78 @@ function NoteEditorContent() {
                             )}
 
                             {(section.chords || []).map((chord, cIdx) => (
-                              <React.Fragment key={`${section.id}-${cIdx}`}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge 
-                                      variant="outline" 
-                                      className={cn(
-                                        "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
-                                        chord.startsWith('x') && chord.length <= 3 
-                                          ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
-                                          : "bg-background border-primary/30 text-primary"
-                                      )}
+                              chord === "NEWLINE" ? (
+                                <div key={`${section.id}-${cIdx}`} className="basis-full h-0 pointer-events-none relative group/newline">
+                                  {editMode && (
+                                    <button 
+                                      className="absolute -top-3 left-0 opacity-0 group-hover/newline:opacity-100 text-destructive text-[8px] font-black uppercase bg-background px-1 border border-destructive/20 rounded z-10"
+                                      onClick={() => setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s))}
                                     >
-                                      {chord}
-                                      {editMode && (
-                                        <button 
-                                          className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
-                                          }}
-                                        >
-                                          <X className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                    </Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="p-3 bg-card border-primary/40">
-                                    <div className="space-y-2">
-                                      <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
-                                        {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
-                                      </p>
-                                      {chord.startsWith('x') ? (
-                                        <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
-                                      ) : (
-                                        <div className="space-y-1">
-                                          {getChordPositions(chord)?.map((pos, pIdx) => (
-                                            <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
-                                              <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
-                                              <span className="text-foreground font-bold">{pos}</span>
-                                            </div>
-                                          )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                                {editMode && (
-                                  <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
-                                    <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-dashed border-primary/10 text-primary/20 hover:text-primary hover:border-primary/50 transition-all opacity-0 hover:opacity-100">
-                                        <Plus className="w-3 h-3" />
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-72 p-4" align="center">
-                                      <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, cIdx + 1, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
-                                    </PopoverContent>
-                                  </Popover>
-                                )}
-                              </React.Fragment>
+                                      Rimuovi A Capo
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <React.Fragment key={`${section.id}-${cIdx}`}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge 
+                                        variant="outline" 
+                                        className={cn(
+                                          "h-9 px-3 text-[20px] font-black shadow-sm cursor-help relative group/badge",
+                                          chord.startsWith('x') && chord.length <= 3 
+                                            ? "bg-orange-500/10 border-orange-500/30 text-orange-500" 
+                                            : "bg-background border-primary/30 text-primary"
+                                        )}
+                                      >
+                                        {chord}
+                                        {editMode && (
+                                          <button 
+                                            className="ml-2 opacity-30 hover:opacity-100 text-destructive transition-opacity"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSections(sections.map(s => s.id === section.id ? { ...s, chords: (s.chords || []).filter((_, idx) => idx !== cIdx) } : s));
+                                            }}
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="p-3 bg-card border-primary/40">
+                                      <div className="space-y-2">
+                                        <p className="text-[11px] font-bold uppercase text-primary border-b border-primary/20 pb-1">
+                                          {chord.startsWith('x') ? 'Ripetizione' : 'Posizioni Chitarra'}
+                                        </p>
+                                        {chord.startsWith('x') ? (
+                                          <p className="text-[12px] font-medium">Ripeti la sequenza {chord.substring(1)} volte.</p>
+                                        ) : (
+                                          <div className="space-y-1">
+                                            {getChordPositions(chord)?.map((pos, pIdx) => (
+                                              <div key={`${chord}-${pIdx}`} className="flex items-center gap-2 font-mono text-[12px]">
+                                                <span className="text-muted-foreground w-4">{pIdx + 1}.</span>
+                                                <span className="text-foreground font-bold">{pos}</span>
+                                              </div>
+                                            )) || <p className="text-[11px] italic opacity-60">Posizioni non trovate</p>}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  {editMode && (
+                                    <Popover onOpenChange={() => { setChordPickerStep('letter'); setSelectedLetter(null); setSelectedRoot(null); }}>
+                                      <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-dashed border-primary/10 text-primary/20 hover:text-primary hover:border-primary/50 transition-all opacity-0 hover:opacity-100">
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-72 p-4" align="center">
+                                        <ChordPicker onSelect={(chord: string) => handleAddChordAt(section.id, cIdx + 1, chord)} step={chordPickerStep} setStep={setChordPickerStep} selectedLetter={selectedLetter} setSelectedLetter={setSelectedLetter} selectedRoot={selectedRoot} setSelectedRoot={setSelectedRoot} />
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                                </React.Fragment>
+                              )
                             ))}
                           </div>
                           {editMode ? (
