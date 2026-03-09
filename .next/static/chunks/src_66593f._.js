@@ -7679,7 +7679,7 @@ function NoteEditorContent() {
                                                                                             lineNumber: 498,
                                                                                             columnNumber: 31
                                                                                         }, this),
-                                                                                        (section.chords || []).map((chord, cIdx)=>chord === "NEWLINE" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                                        (section.chords || []).map((chord, cIdx)=>chord.trim().toUpperCase() === "NEWLINE" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                                                 className: "basis-full h-0 pointer-events-none relative group/newline",
                                                                                                 children: editMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                                                     className: "absolute -top-3 left-0 opacity-0 group-hover/newline:opacity-100 text-destructive text-[8px] font-black uppercase bg-background px-1 border border-destructive/20 rounded z-10",
@@ -8196,6 +8196,9 @@ function ChordPicker({ onSelect, step, setStep, selectedLetter, setSelectedLette
                                 "x2",
                                 "x3",
                                 "x4",
+                                "x5",
+                                "x6",
+                                "x7",
                                 "x8"
                             ].map((mult)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                     variant: "secondary",

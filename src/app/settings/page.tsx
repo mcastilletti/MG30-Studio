@@ -46,9 +46,9 @@ export default function SettingsPage() {
                 <span className="text-muted-foreground font-medium uppercase">Firestore Database</span>
                 <Badge variant="outline" className="text-green-500 border-green-500/30">ATTIVO</Badge>
               </div>
-              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+              <div className="text-[10px] text-muted-foreground leading-relaxed italic">
                 Il piano Spark di Firebase offre 1GB di database gratuito, sufficiente per migliaia di preset e note.
-              </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -66,9 +66,9 @@ export default function SettingsPage() {
                     <div className="w-2 h-2 rounded-full bg-green-500" />
                     <span className="font-mono text-[10px] truncate">{user.email}</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <div className="text-[10px] text-muted-foreground">
                     Sincronizzazione attiva. I tuoi dati sono protetti dalle regole di sicurezza di Firebase.
-                  </p>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -88,14 +88,14 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="text-xs space-y-4">
             <div className="space-y-2">
-              <p className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 1. Autorizza il dominio attuale</p>
-              <p className="text-muted-foreground ml-3">Vai nella Console Firebase > Auth > Settings > Authorized Domains e aggiungi:</p>
+              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 1. Autorizza il dominio attuale</div>
+              <div className="text-muted-foreground ml-3">Vai nella Console Firebase > Auth > Settings > Authorized Domains e aggiungi:</div>
               <code className="block ml-3 bg-secondary p-2 rounded text-primary font-mono text-center select-all">{currentHostname}</code>
             </div>
             
             <div className="space-y-2">
-              <p className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 2. Controlla il blocco popup</p>
-              <p className="text-muted-foreground ml-3">Se la finestra si chiude da sola (popup-closed), assicurati che il tuo browser non stia bloccando i redirect di Google. Controlla l'icona a destra nella barra degli indirizzi.</p>
+              <div className="font-bold flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> 2. Controlla il blocco popup</div>
+              <div className="text-muted-foreground ml-3">Se la finestra si chiude da sola (popup-closed), assicurati che il tuo browser non stia bloccando i redirect di Google. Controlla l'icona a destra nella barra degli indirizzi.</div>
             </div>
 
             <div className="pt-2">
@@ -117,12 +117,12 @@ export default function SettingsPage() {
           <CardContent className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">App Version</p>
-                <p className="font-mono text-xs">1.3.0-stable</p>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground">App Version</div>
+                <div className="font-mono text-xs">1.3.0-stable</div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground">Hardware Target</p>
-                <p className="font-mono text-xs">NUX MG-30 (v3.x / v4.x)</p>
+                <div className="text-[10px] uppercase font-bold text-muted-foreground">Hardware Target</div>
+                <div className="font-mono text-xs">NUX MG-30 (v3.x / v4.x)</div>
               </div>
             </div>
           </CardContent>
