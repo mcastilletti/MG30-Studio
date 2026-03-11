@@ -647,10 +647,6 @@ body {
   height: 1rem;
 }
 
-.h-0 {
-  height: 0;
-}
-
 .h-1\.5 {
   height: .375rem;
 }
@@ -1088,10 +1084,6 @@ body {
   resize: none;
 }
 
-.break-inside-avoid {
-  break-inside: avoid;
-}
-
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
@@ -1336,10 +1328,6 @@ body {
   border-left-width: 1px;
 }
 
-.border-l-2 {
-  border-left-width: 2px;
-}
-
 .border-r {
   border-right-width: 1px;
 }
@@ -1394,11 +1382,6 @@ body {
 
 .border-destructive\/50 {
   border-color: hsl(var(--destructive) / .5);
-}
-
-.border-gray-300 {
-  --tw-border-opacity: 1;
-  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
 }
 
 .border-green-500\/30 {
@@ -2393,8 +2376,19 @@ body {
 
 @media print {
   @page {
-    margin: 0;
-    size: A4;
+    margin: 1cm;
+    size: A4 portrait;
+  }
+
+  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], main {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    position: static !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .no-print {
@@ -2405,95 +2399,100 @@ body {
     display: block !important;
   }
 
-  body {
-    width: 100%;
-    height: 100%;
-    background: #fff !important;
-    color: #000 !important;
-  }
-
-  .page-break {
-    page-break-after: always;
-    break-after: page;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .print-content {
-    padding: 1.5cm;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-sizing: border-box;
+  .print-song-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 27cm !important;
+    padding: 1.5cm !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   .print-title {
-    font-size: 32pt;
-    font-weight: 900;
-    text-transform: uppercase;
-    border-bottom: 3pt solid #000;
-    margin-bottom: .5cm;
-    text-align: center;
-    line-height: 1;
+    font-size: 32pt !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    border-bottom: 3pt solid #000 !important;
+    margin-bottom: .5cm !important;
+    text-align: center !important;
+    line-height: 1.1 !important;
   }
 
   .print-subtitle {
-    font-size: 12pt;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #444;
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: .8cm;
-  }
-
-  .print-chord {
-    font-size: 24pt;
-    font-weight: 900;
-    padding: .1cm .3cm;
-    border: 1.5pt solid #000;
-    margin-right: .2cm;
-    margin-bottom: .2cm;
-    display: inline-block;
-    background: #f9f9f9;
-  }
-
-  .print-section-badge {
-    font-size: 11pt;
-    font-weight: 900;
-    text-transform: uppercase;
-    padding: .1cm .3cm;
-    border: 1.5pt solid #000;
-    display: inline-block;
-    width: 2.5cm;
-    text-align: center;
-    margin-bottom: .2cm;
-    background: #eee;
-  }
-
-  .print-text {
-    font-size: 16pt;
-    font-weight: 600;
-    line-height: 1.3;
+    font-size: 14pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #333 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 1cm !important;
   }
 
   .print-general-notes {
-    font-size: 13pt;
-    font-style: italic;
-    margin-bottom: .8cm;
-    background: #f0f0f0;
-    padding: .4cm;
-    border-radius: 4pt;
-    border: 1pt solid #ccc;
+    font-size: 14pt !important;
+    font-style: italic !important;
+    margin-bottom: 1cm !important;
+    background: #f4f4f4 !important;
+    padding: .5cm !important;
+    border-radius: 6pt !important;
+    border: 1pt solid #ccc !important;
+    white-space: pre-wrap !important;
   }
 
   .print-sections-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 1cm;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: .8cm !important;
+  }
+
+  .print-section-row {
+    display: flex !important;
+    gap: .6cm !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-section-badge {
+    font-size: 11pt !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    padding: .1cm .3cm !important;
+    border: 2pt solid #000 !important;
+    display: inline-block !important;
+    width: 2.5cm !important;
+    text-align: center !important;
+    background: #e0e0e0 !important;
+  }
+
+  .print-chord-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: .3cm !important;
+    margin-bottom: .2cm !important;
+  }
+
+  .print-chord {
+    font-size: 24pt !important;
+    font-weight: 900 !important;
+    padding: .1cm .3cm !important;
+    border: 1.5pt solid #000 !important;
+    background: #fff !important;
+    display: inline-block !important;
+  }
+
+  .print-text {
+    font-size: 18pt !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    margin-top: .1cm !important;
+  }
+
+  .basis-full {
+    flex-basis: 100% !important;
+    height: 0 !important;
   }
 }
 

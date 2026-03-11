@@ -6,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, FileText, Printer } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, Printer } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +14,6 @@ import { DndContext, closestCenter, KeyboardSensor, MouseSensor, TouchSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
 interface NoteSection {
   id: string;
@@ -276,10 +275,10 @@ function NotesLibraryContent() {
         </div>
       </div>
 
-      {/* VISTA DI STAMPA PDF - UNICO BRANO PER PAGINA */}
+      {/* VISTA DI STAMPA PDF - POSIZIONATA PER ESSERE VISIBILE AL MOTORE DI STAMPA */}
       <div className="hidden print:block print-only">
         {filteredNotes.map((note) => (
-          <div key={`print-${note.id}`} className="page-break print-content">
+          <div key={`print-${note.id}`} className="print-song-page">
             <h1 className="print-title">{note.title}</h1>
             
             <div className="print-subtitle">
@@ -295,15 +294,15 @@ function NotesLibraryContent() {
 
             <div className="print-sections-container">
               {note.sections?.map((section, sIdx) => (
-                <div key={`${note.id}-s-${sIdx}`} className="flex gap-6 border-l-2 border-gray-300 pl-4 break-inside-avoid">
+                <div key={`${note.id}-s-${sIdx}`} className="print-section-row">
                   <div className="shrink-0">
                     <span className="print-section-badge">{section.type}</span>
                   </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex-1">
+                    <div className="print-chord-container">
                       {section.chords?.map((chord, cIdx) => (
                         chord.toUpperCase() === 'NEWLINE' ? (
-                          <div key={`nl-${cIdx}`} className="basis-full h-0" />
+                          <div key={`nl-${cIdx}`} className="basis-full" />
                         ) : (
                           <span key={`c-${cIdx}`} className="print-chord">{chord}</span>
                         )
