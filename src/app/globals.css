@@ -60,6 +60,69 @@
   }
 }
 
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .page-break {
+    page-break-after: always;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 14pt;
+  }
+  .print-content {
+    padding: 1cm;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .print-title {
+    font-size: 32pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    border-bottom: 2pt solid black;
+    margin-bottom: 1cm;
+    text-align: center;
+  }
+  .print-chord {
+    font-size: 24pt;
+    font-weight: 900;
+    padding: 0.2cm 0.4cm;
+    border: 1pt solid black;
+    margin-right: 0.3cm;
+    margin-bottom: 0.3cm;
+    display: inline-block;
+  }
+  .print-section-badge {
+    font-size: 12pt;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0.1cm 0.3cm;
+    border: 1pt solid black;
+    display: inline-block;
+    width: 2.5cm;
+    text-align: center;
+    margin-bottom: 0.2cm;
+  }
+  .print-text {
+    font-size: 16pt;
+    font-weight: 500;
+  }
+  .print-general-notes {
+    font-size: 14pt;
+    font-style: italic;
+    margin-bottom: 1cm;
+    background: #f0f0f0;
+    padding: 0.5cm;
+    border-radius: 4pt;
+  }
+}
+
 .knob-container {
   touch-action: none;
 }

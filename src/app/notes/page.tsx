@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
@@ -7,7 +6,7 @@ import { AppShell } from '@/components/layout/app-shell';
 import { Card, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, FileText, Printer } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -15,12 +14,23 @@ import { DndContext, closestCenter, KeyboardSensor, MouseSensor, TouchSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+interface NoteSection {
+  id: string;
+  type: string;
+  text: string;
+  chords?: string[];
+}
 
 interface SavedNote {
   id: string;
   title: string;
   band: string;
   setlist: string;
+  generalNotes?: string;
+  sections?: NoteSection[];
+  presetSlot?: string;
   order?: number;
   updatedAt?: any;
 }
@@ -195,9 +205,13 @@ function NotesLibraryContent() {
     }
   }
 
+  const handleExportPdf = () => {
+    window.print();
+  };
+
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6 pb-20 px-2 md:px-0">
+      <div className="max-w-7xl mx-auto space-y-6 pb-20 px-2 md:px-0 no-print">
         <header className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
@@ -205,9 +219,16 @@ function NotesLibraryContent() {
             </div>
             <h2 className="text-xl font-black tracking-tight uppercase">Archivio Note</h2>
           </div>
-          <Button onClick={() => router.push('/notes/editor')} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
-            <Plus className="w-6 h-6" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedSetlist && filteredNotes.length > 0 && (
+              <Button onClick={handleExportPdf} variant="outline" className="gap-2 border-orange-500/30 text-orange-500 hover:bg-orange-500/10">
+                <Printer className="w-4 h-4" /> Esporta PDF
+              </Button>
+            )}
+            <Button onClick={() => router.push('/notes/editor')} size="icon" className="w-11 h-11 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-full shadow-lg">
+              <Plus className="w-6 h-6" />
+            </Button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-card/40 p-3 rounded-2xl border border-border shadow-sm">
@@ -254,6 +275,48 @@ function NotesLibraryContent() {
           )}
         </div>
       </div>
+
+      {/* VISTA DI STAMPA PDF */}
+      <div className="hidden print:block print-only">
+        {filteredNotes.map((note) => (
+          <div key={`print-${note.id}`} className="page-break print-content">
+            <h1 className="print-title">{note.title}</h1>
+            
+            <div className="flex justify-between items-center mb-4 text-[10px] uppercase font-bold text-gray-400">
+               <span>{note.band} - {note.setlist}</span>
+               {note.presetSlot && <span>PRESET MG-30: {note.presetSlot}</span>}
+            </div>
+
+            {note.generalNotes && (
+              <div className="print-general-notes">
+                {note.generalNotes}
+              </div>
+            )}
+
+            <div className="flex-1 space-y-8">
+              {note.sections?.map((section, sIdx) => (
+                <div key={`${note.id}-s-${sIdx}`} className="flex gap-6 border-l-2 border-gray-200 pl-4">
+                  <div className="shrink-0">
+                    <span className="print-section-badge">{section.type}</span>
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      {section.chords?.map((chord, cIdx) => (
+                        chord.toUpperCase() === 'NEWLINE' ? (
+                          <div key={`nl-${cIdx}`} className="basis-full h-0" />
+                        ) : (
+                          <span key={`c-${cIdx}`} className="print-chord">{chord}</span>
+                        )
+                      ))}
+                    </div>
+                    <p className="print-text leading-tight">{section.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </AppShell>
   );
 }
@@ -286,7 +349,7 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
          "group relative flex items-center gap-3 p-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden", 
          isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50"
        )}>
-        <div className="flex flex-col gap-1 shrink-0">
+        <div className="flex flex-col gap-1 shrink-0 no-print">
           <Button 
             variant="secondary" 
             size="icon" 
@@ -309,9 +372,14 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
         
         <div className="flex-1 min-w-0">
           <CardTitle className="text-[16px] font-black uppercase leading-tight whitespace-pre-wrap">{note.title}</CardTitle>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.band}</span>
+            <span className="text-[10px] text-muted-foreground opacity-30">•</span>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold">{note.setlist}</span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 no-print">
           <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
           <div {...attributes} {...listeners} className="p-2 -m-2 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing touch-none" onClick={(e) => e.stopPropagation()}><GripVertical className="w-5 h-5" /></div>
         </div>

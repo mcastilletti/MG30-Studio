@@ -3588,11 +3588,11 @@ const useWakeLock = ()=>{
                     setWakeLock(null);
                 });
             } catch (err) {
-                // Handle NotAllowedError (Permissions Policy) gracefully without throwing
+                // Handle Permissions Policy or other errors gracefully with a warning to avoid Red Overlay in Dev
                 if (err.name === 'NotAllowedError') {
                     console.warn('Wake Lock is disallowed by permissions policy.');
                 } else {
-                    console.error(`${err.name}, ${err.message}`);
+                    console.warn(`${err.name}: ${err.message}`);
                 }
             }
         }
