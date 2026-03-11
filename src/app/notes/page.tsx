@@ -276,13 +276,13 @@ function NotesLibraryContent() {
         </div>
       </div>
 
-      {/* VISTA DI STAMPA PDF */}
+      {/* VISTA DI STAMPA PDF - UNICO BRANO PER PAGINA */}
       <div className="hidden print:block print-only">
         {filteredNotes.map((note) => (
           <div key={`print-${note.id}`} className="page-break print-content">
             <h1 className="print-title">{note.title}</h1>
             
-            <div className="flex justify-between items-center mb-4 text-[10px] uppercase font-bold text-gray-400">
+            <div className="print-subtitle">
                <span>{note.band} - {note.setlist}</span>
                {note.presetSlot && <span>PRESET MG-30: {note.presetSlot}</span>}
             </div>
@@ -293,9 +293,9 @@ function NotesLibraryContent() {
               </div>
             )}
 
-            <div className="flex-1 space-y-8">
+            <div className="print-sections-container">
               {note.sections?.map((section, sIdx) => (
-                <div key={`${note.id}-s-${sIdx}`} className="flex gap-6 border-l-2 border-gray-200 pl-4">
+                <div key={`${note.id}-s-${sIdx}`} className="flex gap-6 border-l-2 border-gray-300 pl-4 break-inside-avoid">
                   <div className="shrink-0">
                     <span className="print-section-badge">{section.type}</span>
                   </div>
@@ -309,7 +309,7 @@ function NotesLibraryContent() {
                         )
                       ))}
                     </div>
-                    <p className="print-text leading-tight">{section.text}</p>
+                    {section.text && <p className="print-text">{section.text}</p>}
                   </div>
                 </div>
               ))}
