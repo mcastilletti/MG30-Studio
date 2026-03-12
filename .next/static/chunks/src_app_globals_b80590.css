@@ -2401,11 +2401,11 @@ body {
 
 @media print {
   @page {
-    margin: 0;
+    margin: 15mm;
     size: A4 portrait;
   }
 
-  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], main {
+  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main, .flex, .overflow-auto, .overflow-hidden {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -2416,15 +2416,18 @@ body {
     color: #000 !important;
     padding: 0 !important;
     margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  [data-sidebar-wrapper] > :not(main), header, .no-print {
+  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, .no-print, button {
     display: none !important;
   }
 
   .print-only {
     display: block !important;
     width: 100% !important;
+    background: #fff !important;
   }
 
   .print-song-page {
@@ -2434,22 +2437,24 @@ body {
     break-inside: avoid !important;
     display: flex !important;
     flex-direction: column !important;
-    width: 210mm !important;
-    min-height: 296mm !important;
-    padding: 12mm !important;
-    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 260mm !important;
+    padding: 0 !important;
+    margin: 0 0 20mm !important;
     background: #fff !important;
     position: relative !important;
+    box-sizing: border-box !important;
   }
 
   .print-title {
     font-size: 25pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    border-bottom: 3pt solid #000 !important;
-    margin-bottom: 6mm !important;
+    border-bottom: 2pt solid #000 !important;
+    margin-bottom: 4mm !important;
     text-align: center !important;
     line-height: 1.1 !important;
+    color: #000 !important;
   }
 
   .print-subtitle {
@@ -2459,33 +2464,33 @@ body {
     color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 8mm !important;
+    margin-bottom: 6mm !important;
     border-bottom: 1pt solid #ddd !important;
-    padding-bottom: 1.5mm !important;
+    padding-bottom: 1mm !important;
   }
 
   .print-general-notes {
     font-size: 10pt !important;
     font-style: italic !important;
-    margin-bottom: 7mm !important;
-    background: #f4f4f4 !important;
-    padding: 4mm !important;
-    border-radius: 3pt !important;
-    border: 1pt solid #ccc !important;
+    margin-bottom: 6mm !important;
+    background: #f8f8f8 !important;
+    padding: 3mm !important;
+    border-radius: 2pt !important;
+    border: .5pt solid #ccc !important;
     white-space: pre-wrap !important;
+    color: #000 !important;
   }
 
   .print-sections-container {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 5mm !important;
-    justify-content: flex-start !important;
+    gap: 4mm !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 6mm !important;
+    gap: 5mm !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -2494,40 +2499,46 @@ body {
     font-size: 8pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    padding: 1.5mm 3mm !important;
-    border: 1.5pt solid #000 !important;
+    padding: 1mm 2mm !important;
+    border: 1pt solid #000 !important;
     display: inline-block !important;
-    width: 21mm !important;
+    width: 18mm !important;
     text-align: center !important;
-    background: #e0e0e0 !important;
+    background: #eee !important;
+    color: #000 !important;
   }
 
   .print-chord-container {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 3mm !important;
-    margin-bottom: 1.5mm !important;
+    gap: 2.5mm !important;
+    margin-bottom: 1mm !important;
   }
 
   .print-chord {
     font-size: 20pt !important;
     font-weight: 900 !important;
-    padding: 1.5mm 3mm !important;
-    border: 1.5pt solid #000 !important;
+    padding: 1mm 2.5mm !important;
+    border: 1pt solid #000 !important;
     background: #fff !important;
     display: inline-block !important;
+    color: #000 !important;
+    line-height: 1 !important;
   }
 
   .print-text {
     font-size: 14pt !important;
     font-weight: 600 !important;
-    line-height: 1.3 !important;
-    margin-top: 1.5mm !important;
+    line-height: 1.2 !important;
+    margin-top: 1mm !important;
+    color: #000 !important;
   }
 
   .basis-full {
     flex-basis: 100% !important;
     height: 0 !important;
+    width: 100% !important;
+    display: block !important;
   }
 }
 
