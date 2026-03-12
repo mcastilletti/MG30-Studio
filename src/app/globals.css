@@ -91,49 +91,51 @@
     width: 100% !important;
   }
 
+  /* CONTAINER PRINCIPALE BRANO */
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
-    padding: 14mm !important; /* Ridotto del 30% da 20mm */
+    /* Rimosso height fisso per evitare troncamenti */
+    min-height: 296mm !important; 
+    padding: 12mm !important; 
     box-sizing: border-box !important;
-    overflow: hidden !important;
     background: white !important;
     position: relative !important;
   }
 
   .print-title {
-    font-size: 25pt !important; /* Ridotto del 30% da 36pt */
+    font-size: 25pt !important; 
     font-weight: 900 !important;
     text-transform: uppercase !important;
     border-bottom: 3pt solid black !important;
-    margin-bottom: 6mm !important; /* Ridotto del 30% da 8mm */
+    margin-bottom: 6mm !important; 
     text-align: center !important;
     line-height: 1.1 !important;
   }
 
   .print-subtitle {
-    font-size: 11pt !important; /* Ridotto del 30% da 16pt */
+    font-size: 11pt !important; 
     font-weight: 700 !important;
     text-transform: uppercase !important;
     color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 8mm !important; /* Ridotto del 30% da 12mm */
+    margin-bottom: 8mm !important; 
     border-bottom: 1pt solid #ddd !important;
     padding-bottom: 1.5mm !important;
   }
 
   .print-general-notes {
-    font-size: 10pt !important; /* Ridotto del 30% da 14pt */
+    font-size: 10pt !important; 
     font-style: italic !important;
-    margin-bottom: 7mm !important; /* Ridotto del 30% da 10mm */
+    margin-bottom: 7mm !important; 
     background: #f4f4f4 !important;
-    padding: 4mm !important; /* Ridotto del 30% da 6mm */
+    padding: 4mm !important; 
     border-radius: 3pt !important;
     border: 1pt solid #ccc !important;
     white-space: pre-wrap !important;
@@ -143,25 +145,26 @@
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6mm !important; /* Ridotto del 30% da 8mm */
+    gap: 5mm !important; 
     justify-content: flex-start !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 7mm !important; /* Ridotto del 30% da 10mm */
-    break-inside: avoid !important;
+    gap: 6mm !important; 
+    /* Forza la sezione a rimanere unita */
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .print-section-badge {
-    font-size: 8pt !important; /* Ridotto del 30% da 12pt */
+    font-size: 8pt !important; 
     font-weight: 900 !important;
     text-transform: uppercase !important;
     padding: 1.5mm 3mm !important;
     border: 1.5pt solid black !important;
     display: inline-block !important;
-    width: 21mm !important; /* Ridotto del 30% da 30mm */
+    width: 21mm !important; 
     text-align: center !important;
     background: #e0e0e0 !important;
   }
@@ -169,12 +172,12 @@
   .print-chord-container {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 3mm !important; /* Ridotto del 30% da 4mm */
+    gap: 3mm !important; 
     margin-bottom: 1.5mm !important;
   }
 
   .print-chord {
-    font-size: 20pt !important; /* Ridotto del 30% da 28pt */
+    font-size: 20pt !important; 
     font-weight: 900 !important;
     padding: 1.5mm 3mm !important;
     border: 1.5pt solid black !important;
@@ -183,7 +186,7 @@
   }
 
   .print-text {
-    font-size: 14pt !important; /* Ridotto del 30% da 20pt */
+    font-size: 14pt !important; 
     font-weight: 600 !important;
     line-height: 1.3 !important;
     margin-top: 1.5mm !important;

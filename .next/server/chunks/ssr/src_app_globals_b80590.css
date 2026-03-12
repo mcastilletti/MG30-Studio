@@ -2430,14 +2430,14 @@ body {
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important;
-    max-height: 297mm !important;
-    padding: 14mm !important;
+    min-height: 296mm !important;
+    padding: 12mm !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
     background: #fff !important;
     position: relative !important;
   }
@@ -2479,15 +2479,15 @@ body {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 6mm !important;
+    gap: 5mm !important;
     justify-content: flex-start !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 7mm !important;
-    break-inside: avoid !important;
+    gap: 6mm !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .print-section-badge {
