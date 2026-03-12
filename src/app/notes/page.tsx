@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
@@ -48,6 +49,8 @@ function NotesLibraryContent() {
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
   const [selectedSetlist, setSelectedSetlist] = useState<string | null>(null);
   const noteRefs = useRef<Record<string, HTMLDivElement>>({});
+
+  const scrollToId = searchParams.get('scrollTo');
 
   useEffect(() => {
     const savedBand = localStorage.getItem(FILTER_BAND_KEY);
@@ -104,16 +107,16 @@ function NotesLibraryContent() {
   }, [savedNotes, selectedBand, selectedSetlist]);
 
   useEffect(() => {
-    const scrollToId = searchParams.get('scrollTo');
     if (scrollToId && filteredNotes.length > 0) {
-        const element = noteRefs.current[scrollToId];
-        if (element) {
-            setTimeout(() => {
+        const timer = setTimeout(() => {
+            const element = noteRefs.current[scrollToId];
+            if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100); 
-        }
+            }
+        }, 200); 
+        return () => clearTimeout(timer);
     }
-  }, [filteredNotes, searchParams]);
+  }, [filteredNotes, scrollToId]);
 
   const bands = useMemo(() => {
     const unique = [...new Set(savedNotes.map(n => n.band || 'Senza Band'))];
@@ -266,6 +269,7 @@ function NotesLibraryContent() {
                       isLast={index === filteredNotes.length - 1}
                       onClick={() => router.push(`/notes/editor?id=${note.id}`)}
                       ref={(el) => { if(el) noteRefs.current[note.id] = el; }}
+                      isHighlighted={note.id === scrollToId}
                     />
                   ))}
                 </div>
@@ -275,7 +279,6 @@ function NotesLibraryContent() {
         </div>
       </div>
 
-      {/* VISTA DI STAMPA PDF - POSIZIONATA PER ESSERE VISIBILE AL MOTORE DI STAMPA */}
       <div className="hidden print:block print-only">
         {filteredNotes.map((note) => (
           <div key={`print-${note.id}`} className="print-song-page">
@@ -327,7 +330,8 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
   isFirst: boolean;
   isLast: boolean;
   onClick: () => void; 
-}>(({ note, onDelete, onMove, isFirst, isLast, onClick }, ref) => {
+  isHighlighted?: boolean;
+}>(({ note, onDelete, onMove, isFirst, isLast, onClick, isHighlighted }, ref) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
@@ -346,7 +350,8 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
     <div ref={combinedRef} style={style} onClick={onClick}>
        <Card className={cn(
          "group relative flex items-center gap-3 p-4 hover:border-orange-500/50 transition-all cursor-pointer bg-card/60 border-border overflow-hidden", 
-         isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50"
+         isDragging && "shadow-2xl shadow-orange-500/30 border-orange-500/50",
+         isHighlighted && "ring-2 ring-orange-500 border-orange-500 shadow-lg shadow-orange-500/20 bg-orange-500/5"
        )}>
         <div className="flex flex-col gap-1 shrink-0 no-print">
           <Button 
