@@ -67,7 +67,6 @@
   }
 
   /* RESET TOTALE LAYOUT PER STAMPA */
-  /* Forziamo tutti i genitori a essere visibili e non vincolati ad altezza schermo per non tagliare il PDF */
   html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], main {
     height: auto !important;
     min-height: 0 !important;
@@ -81,7 +80,6 @@
     margin: 0 !important;
   }
 
-  /* Nascondiamo l'interfaccia dell'app durante la stampa */
   [data-sidebar-wrapper] > *:not(main), 
   header, 
   .no-print {
@@ -93,7 +91,6 @@
     width: 100% !important;
   }
 
-  /* Ogni brano è un foglio A4 indipendente */
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
@@ -102,69 +99,69 @@
     width: 210mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
-    padding: 20mm !important;
+    padding: 14mm !important; /* Ridotto del 30% da 20mm */
     box-sizing: border-box !important;
-    overflow: hidden !important; /* Forza il contenuto in una pagina */
+    overflow: hidden !important;
     background: white !important;
     position: relative !important;
   }
 
   .print-title {
-    font-size: 36pt !important;
+    font-size: 25pt !important; /* Ridotto del 30% da 36pt */
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    border-bottom: 4pt solid black !important;
-    margin-bottom: 8mm !important;
+    border-bottom: 3pt solid black !important;
+    margin-bottom: 6mm !important; /* Ridotto del 30% da 8mm */
     text-align: center !important;
     line-height: 1.1 !important;
   }
 
   .print-subtitle {
-    font-size: 16pt !important;
+    font-size: 11pt !important; /* Ridotto del 30% da 16pt */
     font-weight: 700 !important;
     text-transform: uppercase !important;
     color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 12mm !important;
+    margin-bottom: 8mm !important; /* Ridotto del 30% da 12mm */
     border-bottom: 1pt solid #ddd !important;
-    padding-bottom: 2mm !important;
+    padding-bottom: 1.5mm !important;
   }
 
   .print-general-notes {
-    font-size: 14pt !important;
+    font-size: 10pt !important; /* Ridotto del 30% da 14pt */
     font-style: italic !important;
-    margin-bottom: 10mm !important;
+    margin-bottom: 7mm !important; /* Ridotto del 30% da 10mm */
     background: #f4f4f4 !important;
-    padding: 6mm !important;
-    border-radius: 4pt !important;
+    padding: 4mm !important; /* Ridotto del 30% da 6mm */
+    border-radius: 3pt !important;
     border: 1pt solid #ccc !important;
     white-space: pre-wrap !important;
   }
 
   .print-sections-container {
-    flex: 1 !important; /* Espande le sezioni per occupare il foglio */
+    flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8mm !important;
+    gap: 6mm !important; /* Ridotto del 30% da 8mm */
     justify-content: flex-start !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 10mm !important;
+    gap: 7mm !important; /* Ridotto del 30% da 10mm */
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
   .print-section-badge {
-    font-size: 12pt !important;
+    font-size: 8pt !important; /* Ridotto del 30% da 12pt */
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    padding: 2mm 4mm !important;
-    border: 2pt solid black !important;
+    padding: 1.5mm 3mm !important;
+    border: 1.5pt solid black !important;
     display: inline-block !important;
-    width: 30mm !important;
+    width: 21mm !important; /* Ridotto del 30% da 30mm */
     text-align: center !important;
     background: #e0e0e0 !important;
   }
@@ -172,24 +169,24 @@
   .print-chord-container {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4mm !important;
-    margin-bottom: 2mm !important;
+    gap: 3mm !important; /* Ridotto del 30% da 4mm */
+    margin-bottom: 1.5mm !important;
   }
 
   .print-chord {
-    font-size: 28pt !important; /* Accordi belli grandi */
+    font-size: 20pt !important; /* Ridotto del 30% da 28pt */
     font-weight: 900 !important;
-    padding: 2mm 4mm !important;
-    border: 2pt solid black !important;
+    padding: 1.5mm 3mm !important;
+    border: 1.5pt solid black !important;
     background: #fff !important;
     display: inline-block !important;
   }
 
   .print-text {
-    font-size: 20pt !important; /* Testo leggibile */
+    font-size: 14pt !important; /* Ridotto del 30% da 20pt */
     font-weight: 600 !important;
     line-height: 1.3 !important;
-    margin-top: 2mm !important;
+    margin-top: 1.5mm !important;
   }
 
   .basis-full {

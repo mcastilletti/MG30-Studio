@@ -1396,6 +1396,11 @@ body {
   border-color: hsl(var(--input));
 }
 
+.border-orange-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(249 115 22 / var(--tw-border-opacity, 1));
+}
+
 .border-orange-500\/20 {
   border-color: #f9731633;
 }
@@ -1446,11 +1451,6 @@ body {
 
 .border-yellow-500\/20 {
   border-color: #eab30833;
-}
-
-.border-orange-500 {
-  --tw-border-opacity: 1;
-  border-color: rgb(249 115 22 / var(--tw-border-opacity, 1));
 }
 
 .border-l-transparent {
@@ -1569,6 +1569,10 @@ body {
   background-color: #f973161a;
 }
 
+.bg-orange-500\/5 {
+  background-color: #f973160d;
+}
+
 .bg-orange-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(234 88 12 / var(--tw-bg-opacity, 1));
@@ -1642,10 +1646,6 @@ body {
 .bg-yellow-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(202 138 4 / var(--tw-bg-opacity, 1));
-}
-
-.bg-orange-500\/5 {
-  background-color: #f973160d;
 }
 
 .fill-current {
@@ -2215,13 +2215,13 @@ body {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-.shadow-orange-500\/30 {
-  --tw-shadow-color: #f973164d;
+.shadow-orange-500\/20 {
+  --tw-shadow-color: #f9731633;
   --tw-shadow: var(--tw-shadow-colored);
 }
 
-.shadow-orange-500\/20 {
-  --tw-shadow-color: #f9731633;
+.shadow-orange-500\/30 {
+  --tw-shadow-color: #f973164d;
   --tw-shadow: var(--tw-shadow-colored);
 }
 
@@ -2246,13 +2246,13 @@ body {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
-.ring-sidebar-ring {
-  --tw-ring-color: hsl(var(--sidebar-ring));
-}
-
 .ring-orange-500 {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(249 115 22 / var(--tw-ring-opacity, 1));
+}
+
+.ring-sidebar-ring {
+  --tw-ring-color: hsl(var(--sidebar-ring));
 }
 
 .ring-offset-background {
@@ -2435,7 +2435,7 @@ body {
     width: 210mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
-    padding: 20mm !important;
+    padding: 14mm !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     background: #fff !important;
@@ -2443,34 +2443,34 @@ body {
   }
 
   .print-title {
-    font-size: 36pt !important;
+    font-size: 25pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    border-bottom: 4pt solid #000 !important;
-    margin-bottom: 8mm !important;
+    border-bottom: 3pt solid #000 !important;
+    margin-bottom: 6mm !important;
     text-align: center !important;
     line-height: 1.1 !important;
   }
 
   .print-subtitle {
-    font-size: 16pt !important;
+    font-size: 11pt !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 12mm !important;
+    margin-bottom: 8mm !important;
     border-bottom: 1pt solid #ddd !important;
-    padding-bottom: 2mm !important;
+    padding-bottom: 1.5mm !important;
   }
 
   .print-general-notes {
-    font-size: 14pt !important;
+    font-size: 10pt !important;
     font-style: italic !important;
-    margin-bottom: 10mm !important;
+    margin-bottom: 7mm !important;
     background: #f4f4f4 !important;
-    padding: 6mm !important;
-    border-radius: 4pt !important;
+    padding: 4mm !important;
+    border-radius: 3pt !important;
     border: 1pt solid #ccc !important;
     white-space: pre-wrap !important;
   }
@@ -2479,25 +2479,25 @@ body {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8mm !important;
+    gap: 6mm !important;
     justify-content: flex-start !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 10mm !important;
+    gap: 7mm !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
   .print-section-badge {
-    font-size: 12pt !important;
+    font-size: 8pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    padding: 2mm 4mm !important;
-    border: 2pt solid #000 !important;
+    padding: 1.5mm 3mm !important;
+    border: 1.5pt solid #000 !important;
     display: inline-block !important;
-    width: 30mm !important;
+    width: 21mm !important;
     text-align: center !important;
     background: #e0e0e0 !important;
   }
@@ -2505,24 +2505,24 @@ body {
   .print-chord-container {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4mm !important;
-    margin-bottom: 2mm !important;
+    gap: 3mm !important;
+    margin-bottom: 1.5mm !important;
   }
 
   .print-chord {
-    font-size: 28pt !important;
+    font-size: 20pt !important;
     font-weight: 900 !important;
-    padding: 2mm 4mm !important;
-    border: 2pt solid #000 !important;
+    padding: 1.5mm 3mm !important;
+    border: 1.5pt solid #000 !important;
     background: #fff !important;
     display: inline-block !important;
   }
 
   .print-text {
-    font-size: 20pt !important;
+    font-size: 14pt !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
-    margin-top: 2mm !important;
+    margin-top: 1.5mm !important;
   }
 
   .basis-full {

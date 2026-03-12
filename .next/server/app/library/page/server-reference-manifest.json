@@ -1,16 +1,4 @@
 {
-  "node": {
-    "4089f783f0009362e69c1db5613fa0701f6cb2ccf8": {
-      "workers": {
-        "app/library/page": {
-          "moduleId": "[project]/.next-internal/server/app/library/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/ai/flows/preset-summary-flow.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/library/page": "action-browser"
-      }
-    }
-  },
+  "node": {},
   "edge": {}
 }
