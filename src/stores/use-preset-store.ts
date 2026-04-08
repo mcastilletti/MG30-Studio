@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 import { MG30_MODELS } from '@/lib/mg30-data';
@@ -57,18 +58,23 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {
       if (e.id === effectId) {
+        // Evitiamo aggiornamenti se il valore è identico
+        if (e.parameters[param] === value) return e;
         return { ...e, parameters: { ...e.parameters, [param]: value } };
       }
       return e;
     });
 
     set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
+    // Non salviamo in cronologia ad ogni parametro (troppo pesante durante la rotazione pomelli)
   },
 
   updateModel: (effectId, modelId) => {
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {
       if (e.id === effectId) {
+        if (e.model === modelId) return e;
+        
         const modelData = MG30_MODELS[e.type].find(m => m.id === modelId);
         const defaultParams: Record<string, number | string> = {};
         modelData?.parameters.forEach(p => {
@@ -103,6 +109,7 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {
       if (e.type === blockType) {
+        if (e.enabled === enabled) return e;
         return { ...e, enabled: enabled };
       }
       return e;
@@ -126,9 +133,19 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
 
   saveToHistory: () => {
     const { activePreset, history, historyIndex } = get();
+    
+    // Evitiamo duplicati consecutivi in cronologia
+    const lastSaved = history[historyIndex];
+    if (lastSaved && JSON.stringify(lastSaved) === JSON.stringify(activePreset)) {
+      return;
+    }
+
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.parse(JSON.stringify(activePreset)));
-    if (newHistory.length > 50) newHistory.shift();
+    
+    // Cap della cronologia per prevenire memory leak
+    if (newHistory.length > 30) newHistory.shift();
+    
     set({ history: newHistory, historyIndex: newHistory.length - 1 });
   }
 }));

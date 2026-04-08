@@ -5,7 +5,7 @@ import { Preset, EffectState } from '@/types/preset';
 import { usePresetStore } from './use-preset-store';
 import { MG30_MODELS } from '@/lib/mg30-data';
 
-// Tabella CC per Modelli e Bypass (stesso controller su MG-30)
+// Tabella CC per Modelli e Bypass
 const BLOCK_MODEL_CC: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -19,7 +19,7 @@ const BLOCK_MODEL_CC: Record<string, number> = {
   'ir': 9
 };
 
-// Offset base per lo stato ON forniti dall'utente
+// Offset base per lo stato ON
 const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'wah': 65,
   'compressor': 65,
@@ -33,7 +33,7 @@ const BLOCK_MODEL_OFFSET: Record<string, number> = {
   'ir': 1
 };
 
-// CC per i parametri dei blocchi (Knobs)
+// CC per i parametri dei blocchi
 const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'wah': [12],
   'compressor': [14, 15, 16],
@@ -49,7 +49,6 @@ const BLOCK_PARAM_CCS: Record<string, number[]> = {
   'vol': [74]
 };
 
-// Mappatura esatta per CC 75 (Select) e CC 78 (Enter Editor) come richiesto
 const BLOCK_INDEX_MAP: Record<string, number> = {
   'wah': 0,
   'compressor': 1,
@@ -106,6 +105,7 @@ interface MidiStore {
   devicePresets: Preset[];
   isSyncing: boolean;
   isEditorSyncing: boolean;
+  isInitializing: boolean;
   syncProgress: number;
   lastError: string | null;
   
@@ -136,14 +136,20 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   devicePresets: INITIAL_PRESETS,
   isSyncing: false,
   isEditorSyncing: false,
+  isInitializing: false,
   syncProgress: 0,
   lastError: null,
 
   initialize: async () => {
+    const state = get();
+    if (state.isInitializing || state.status === 'connected') return;
+    
     if (typeof window === 'undefined' || !navigator.requestMIDIAccess) {
       set({ status: 'error', lastError: 'Web MIDI API non supportata' });
       return;
     }
+
+    set({ isInitializing: true, status: 'connecting' });
 
     try {
       const midiAccess = await navigator.requestMIDIAccess({ sysex: true });
@@ -167,16 +173,16 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
 
         if (nuxInput && nuxOutput) {
           nuxInput.onmidimessage = (msg) => get().handleIncomingMidi(msg);
-          set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected' });
+          set({ input: nuxInput as MIDIInput, output: nuxOutput as MIDIOutput, status: 'connected', isInitializing: false });
         } else {
-          set({ status: 'disconnected' });
+          set({ status: 'disconnected', isInitializing: false });
         }
       };
 
       midiAccess.onstatechange = updateDevices;
       updateDevices();
     } catch (err) {
-      set({ status: 'error', lastError: 'Errore accesso MIDI' });
+      set({ status: 'error', lastError: 'Errore accesso MIDI', isInitializing: false });
     }
   },
 
@@ -190,17 +196,26 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
       const slot = pc + 1;
       const activePreset = usePresetStore.getState().activePreset;
       const existingPreset = get().devicePresets.find(p => p.slot === slot);
-      usePresetStore.getState().setActivePreset(existingPreset || { ...activePreset, slot });
-      setTimeout(() => get().syncActivePreset(), 50);
+      
+      // Evitiamo aggiornamenti se lo slot è già attivo
+      if (activePreset.slot !== slot) {
+        usePresetStore.getState().setActivePreset(existingPreset || { ...activePreset, slot });
+        // Sync ritardato per lasciare respirare il pedale dopo il cambio PC
+        setTimeout(() => get().syncActivePreset(), 100);
+      }
     }
   },
 
   syncActivePreset: () => {
-    const { output } = get();
-    if (!output) return;
+    const { output, isEditorSyncing } = get();
+    if (!output || isEditorSyncing) return;
+    
     set({ isEditorSyncing: true });
+    // Richiesta stato attuale tramite SysEx
     output.send([0xF0, 0x00, 0x20, 0x6B, 0x01, 0x00, 0x01, 0xF7]);
-    setTimeout(() => set({ isEditorSyncing: false }), 1500);
+    
+    // Timeout di protezione per sbloccare l'UI se il pedale non risponde
+    setTimeout(() => set({ isEditorSyncing: false }), 2000);
   },
 
   sendControlChange: (cc, value) => {
@@ -209,10 +224,13 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
   },
 
   sendProgramChange: (pc) => {
-    const { output } = get();
+    const { output, isSyncing } = get();
     if (output) {
       output.send([0xC0, pc]);
-      setTimeout(() => get().syncActivePreset(), 150);
+      // Durante il sync di massa non richiediamo il dump sysex per non bloccare tutto
+      if (!isSyncing) {
+        setTimeout(() => get().syncActivePreset(), 200);
+      }
     }
   },
 
@@ -275,7 +293,6 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     const onValue = safeIndex + baseOffset;
 
     let midiValue: number;
-    // Correzione offset 64: Se ON è >= 64, OFF è -64. Altrimenti OFF è +64.
     if (baseOffset >= 64) {
       midiValue = enabled ? onValue : onValue - 64;
     } else {
@@ -315,17 +332,21 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
     modelData.parameters.forEach((param, index) => {
       const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
       if (ccs[index] !== undefined) {
-        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 150);
+        // Delay progressivo per non saturare il buffer MIDI
+        setTimeout(() => get().sendControlChange(ccs[index], Math.round(val)), index * 100);
       }
     });
   },
 
   syncFullPreset: (preset) => {
-    const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName } = get();
+    const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, isEditorSyncing } = get();
+    if (isEditorSyncing) return;
+
     set({ isEditorSyncing: true });
 
     sendPresetName(preset.name);
 
+    // Iterazione lenta per stabilità hardware
     preset.effects.forEach((e, idx) => {
       setTimeout(() => {
         get().enterBlockEditor(e.type);
@@ -338,22 +359,26 @@ export const useMidiStore = create<MidiStore>((set, get) => ({
             
             setTimeout(() => {
               syncBlockParameters(e.type, e.parameters);
-            }, 500);
-          }, 500);
-        }, 500);
-      }, idx * 2000); 
+            }, 300);
+          }, 300);
+        }, 300);
+      }, idx * 1500); 
     });
 
-    const totalTime = preset.effects.length * 2000 + 1000;
+    const totalTime = preset.effects.length * 1500 + 500;
     setTimeout(() => set({ isEditorSyncing: false }), totalTime);
   },
 
   syncPresets: async () => {
+    if (get().isSyncing) return;
+    
     set({ isSyncing: true, syncProgress: 0 });
     for (let i = 1; i <= 128; i++) {
+      if (!get().isSyncing) break; // Possibilità di interrompere
       set({ syncProgress: Math.round((i / 128) * 100) });
       get().sendProgramChange(i - 1);
-      await new Promise(r => setTimeout(r, 1000));
+      // Tempo di attesa maggiore per evitare blocchi MIDI su scambi di massa
+      await new Promise(r => setTimeout(r, 800));
     }
     set({ isSyncing: false });
   },

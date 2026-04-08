@@ -1,26 +1,33 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useWakeLock = () => {
-  const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
 
   const requestWakeLock = useCallback(async () => {
-    if ('wakeLock' in navigator) {
-      try {
-        const lock = await navigator.wakeLock.request('screen');
-        setWakeLock(lock);
-        
-        lock.addEventListener('release', () => {
-          setWakeLock(null);
-        });
+    // Evitiamo richieste se già attivo o non supportato
+    if (wakeLockRef.current || !('wakeLock' in navigator)) return;
 
-      } catch (err: any) {
-        // Handle Permissions Policy or other errors gracefully with a warning to avoid Red Overlay in Dev
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      wakeLockRef.current = lock;
+      setIsLocked(true);
+      
+      lock.addEventListener('release', () => {
+        wakeLockRef.current = null;
+        setIsLocked(false);
+      });
+
+    } catch (err: any) {
+      // Silenzioso in produzione, solo warning in dev
+      if (process.env.NODE_ENV === 'development') {
         if (err.name === 'NotAllowedError') {
           console.warn('Wake Lock is disallowed by permissions policy.');
         } else {
-          console.warn(`${err.name}: ${err.message}`);
+          console.warn(`WakeLock: ${err.name}: ${err.message}`);
         }
       }
     }
@@ -30,7 +37,7 @@ export const useWakeLock = () => {
     requestWakeLock();
 
     const handleVisibilityChange = () => {
-      if (wakeLock === null && document.visibilityState === 'visible') {
+      if (wakeLockRef.current === null && document.visibilityState === 'visible') {
         requestWakeLock();
       }
     };
@@ -38,14 +45,12 @@ export const useWakeLock = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      if (wakeLock !== null) {
-        wakeLock.release().then(() => {
-          setWakeLock(null);
-        }).catch(() => {});
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(() => {});
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [requestWakeLock, wakeLock]);
+  }, [requestWakeLock]);
 
-  return;
+  return isLocked;
 };
