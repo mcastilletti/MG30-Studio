@@ -1,10 +1,9 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const viewport: Viewport = {
-  themeColor: '#673AB7',
+  themeColor: '#FFD500',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

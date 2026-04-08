@@ -2027,6 +2027,11 @@ body {
   color: rgb(245 158 11 / var(--tw-text-opacity, 1));
 }
 
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
+}
+
 .text-border {
   color: hsl(var(--border));
 }
@@ -2401,11 +2406,11 @@ body {
 
 @media print {
   @page {
-    margin: 15mm;
+    margin: 10mm;
     size: A4 portrait;
   }
 
-  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main, .flex, .overflow-auto, .overflow-hidden {
+  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main, div, section {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -2420,7 +2425,7 @@ body {
     box-shadow: none !important;
   }
 
-  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, .no-print, button {
+  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, .no-print, button {
     display: none !important;
   }
 
@@ -2438,12 +2443,11 @@ body {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    min-height: 260mm !important;
+    min-height: 270mm !important;
     padding: 0 !important;
-    margin: 0 0 20mm !important;
+    margin: 0 0 10mm !important;
     background: #fff !important;
     position: relative !important;
-    box-sizing: border-box !important;
   }
 
   .print-title {
@@ -2475,7 +2479,6 @@ body {
     margin-bottom: 6mm !important;
     background: #f8f8f8 !important;
     padding: 3mm !important;
-    border-radius: 2pt !important;
     border: .5pt solid #ccc !important;
     white-space: pre-wrap !important;
     color: #000 !important;
@@ -2501,7 +2504,6 @@ body {
     text-transform: uppercase !important;
     padding: 1mm 2mm !important;
     border: 1pt solid #000 !important;
-    display: inline-block !important;
     width: 18mm !important;
     text-align: center !important;
     background: #eee !important;
@@ -2512,7 +2514,6 @@ body {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 2.5mm !important;
-    margin-bottom: 1mm !important;
   }
 
   .print-chord {
@@ -2521,7 +2522,6 @@ body {
     padding: 1mm 2.5mm !important;
     border: 1pt solid #000 !important;
     background: #fff !important;
-    display: inline-block !important;
     color: #000 !important;
     line-height: 1 !important;
   }
@@ -2537,7 +2537,6 @@ body {
   .basis-full {
     flex-basis: 100% !important;
     height: 0 !important;
-    width: 100% !important;
     display: block !important;
   }
 }
@@ -2551,21 +2550,6 @@ body {
   height: 10px;
   border-radius: 50%;
   box-shadow: 0 0 5px;
-}
-
-.led-red {
-  background-color: #ff4d4d;
-  color: #ff4d4d;
-}
-
-.led-green {
-  background-color: #4dff4d;
-  color: #4dff4d;
-}
-
-.led-amber {
-  background-color: #fc0;
-  color: #fc0;
 }
 
 .selection\:bg-primary\/30 ::selection {

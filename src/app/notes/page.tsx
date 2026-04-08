@@ -3,17 +3,20 @@
 import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
-import { Card, CardTitle } from '@/components/ui/card';
+import { Card, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, Printer } from 'lucide-react';
+import { NotebookPen, Plus, Trash2, GripVertical, Music2, Layers, ChevronUp, ChevronDown, Printer, Copy, ArrowRight } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, doc, deleteDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { DndContext, closestCenter, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+
 
 interface NoteSection {
   id: string;
@@ -32,6 +35,7 @@ interface SavedNote {
   presetSlot?: string;
   order?: number;
   updatedAt?: any;
+  userId?: string;
 }
 
 const FILTER_BAND_KEY = 'mg30_notes_filter_band';
@@ -48,6 +52,14 @@ function NotesLibraryContent() {
   const [selectedBand, setSelectedBand] = useState<string | null>(null);
   const [selectedSetlist, setSelectedSetlist] = useState<string | null>(null);
   const noteRefs = useRef<Record<string, HTMLDivElement>>({});
+
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const [noteToCopy, setNoteToCopy] = useState<SavedNote | null>(null);
+  const [copyStep, setCopyStep] = useState(1);
+  const [targetBand, setTargetBand] = useState('');
+  const [targetSetlist, setTargetSetlist] = useState('');
+  const [newSetlistName, setNewSetlistName] = useState('');
+
 
   const scrollToId = searchParams.get('scrollTo');
 
@@ -127,6 +139,13 @@ function NotesLibraryContent() {
     const unique = [...new Set(savedNotes.filter(n => n.band === selectedBand).map(n => n.setlist || 'Senza Scaletta'))];
     return unique.sort();
   }, [savedNotes, selectedBand]);
+
+  const setlistsForCopy = useMemo(() => {
+    if (!targetBand) return [];
+    const unique = [...new Set(savedNotes.filter(n => n.band === targetBand).map(n => n.setlist || 'Senza Scaletta'))];
+    return unique.sort();
+  }, [savedNotes, targetBand]);
+
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -210,6 +229,57 @@ function NotesLibraryContent() {
     window.print();
   };
 
+  const openCopyDialog = (e: React.MouseEvent, note: SavedNote) => {
+    e.stopPropagation();
+    setNoteToCopy(note);
+    setIsCopyDialogOpen(true);
+    setCopyStep(1);
+    setTargetBand('');
+    setTargetSetlist('');
+    setNewSetlistName('');
+  }
+
+  const handleConfirmCopy = async () => {
+    if (!noteToCopy || !targetBand) return;
+
+    const destinationSetlist = newSetlistName.trim() || targetSetlist;
+    if (!destinationSetlist) {
+      toast({ title: "Scegli o crea una scaletta.", variant: "destructive" });
+      return;
+    }
+
+    const notesInDestination = savedNotes.filter(n => n.band === targetBand && n.setlist === destinationSetlist);
+    const newOrder = notesInDestination.length > 0 ? Math.max(...notesInDestination.map(n => n.order ?? 0)) + 1 : 0;
+
+    const newNote: Omit<SavedNote, 'id'> = {
+      ...noteToCopy,
+      band: targetBand,
+      setlist: destinationSetlist,
+      order: newOrder,
+      updatedAt: serverTimestamp(),
+      userId: user?.uid,
+    };
+    delete newNote.id;
+
+    const isMockUser = user?.uid === 'dev-user-123';
+    if (user && !isMockUser) {
+        try {
+            await addDoc(collection(firestore, "notes"), newNote);
+            toast({ title: `Brano copiato in ${targetBand} / ${destinationSetlist}` });
+        } catch(e) {
+            toast({ title: "Errore nella copia.", variant: "destructive" });
+        }
+    } else {
+        const localNewNote = { ...newNote, id: `local-${Date.now()}` };
+        const updatedNotes = [...savedNotes, localNewNote];
+        localStorage.setItem('mg30_studio_notes', JSON.stringify(updatedNotes));
+        setSavedNotes(updatedNotes);
+        toast({ title: `Brano copiato in ${targetBand} / ${destinationSetlist}` });
+    }
+    
+    setIsCopyDialogOpen(false);
+  }
+
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-6 pb-20 px-2 md:px-0 no-print">
@@ -263,6 +333,7 @@ function NotesLibraryContent() {
                       key={note.id} 
                       note={note} 
                       onDelete={(e) => handleDelete(e, note.id)} 
+                      onCopy={(e) => openCopyDialog(e, note)}
                       onMove={(e, dir) => handleMove(e, note.id, dir)}
                       isFirst={index === 0}
                       isLast={index === filteredNotes.length - 1}
@@ -277,6 +348,52 @@ function NotesLibraryContent() {
           )}
         </div>
       </div>
+
+      <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copia "{noteToCopy?.title}"</DialogTitle>
+            <DialogDescription>Scegli band e scaletta di destinazione.</DialogDescription>
+          </DialogHeader>
+          {copyStep === 1 && (
+              <div className="py-4 space-y-4">
+                <p className="text-sm font-bold">Step 1: Scegli la Band</p>
+                <Select value={targetBand} onValueChange={setTargetBand}>
+                    <SelectTrigger className="h-11 text-[14px]"><SelectValue placeholder="Scegli band..." /></SelectTrigger>
+                    <SelectContent>
+                        {bands.map(b => <SelectItem key={`cb-${b}`} value={b}>{b}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </div>
+          )}
+          {copyStep === 2 && (
+               <div className="py-4 space-y-4">
+                 <p className="text-sm font-bold">Step 2: Scegli o crea una Scaletta</p>
+                <Select value={targetSetlist} onValueChange={setTargetSetlist}>
+                    <SelectTrigger className="h-11 text-[14px]"><SelectValue placeholder="Scegli scaletta..." /></SelectTrigger>
+                    <SelectContent>
+                        {setlistsForCopy.map(s => <SelectItem key={`cs-${s}`} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-border"/>
+                    <p className="text-xs text-muted-foreground uppercase">oppure</p>
+                    <div className="flex-1 h-px bg-border"/>
+                </div>
+                <Input 
+                    placeholder="Crea nuova scaletta..."
+                    value={newSetlistName}
+                    onChange={(e) => setNewSetlistName(e.target.value)}
+                />
+              </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCopyDialogOpen(false)}>Annulla</Button>
+            {copyStep === 1 && <Button onClick={() => setCopyStep(2)} disabled={!targetBand}>Avanti <ArrowRight className="w-4 h-4 ml-2"/></Button>}
+            {copyStep === 2 && <Button onClick={handleConfirmCopy}>Conferma Copia</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="hidden print:block print-only">
         {filteredNotes.map((note) => (
@@ -325,12 +442,13 @@ function NotesLibraryContent() {
 const SortableNoteCard = React.forwardRef<HTMLDivElement, { 
   note: SavedNote; 
   onDelete: (e: React.MouseEvent) => void; 
+  onCopy: (e: React.MouseEvent, note: SavedNote) => void; 
   onMove: (e: React.MouseEvent, dir: 'up' | 'down') => void;
   isFirst: boolean;
   isLast: boolean;
   onClick: () => void; 
   isHighlighted?: boolean;
-}>(({ note, onDelete, onMove, isFirst, isLast, onClick, isHighlighted }, ref) => {
+}>(({ note, onDelete, onCopy, onMove, isFirst, isLast, onClick, isHighlighted }, ref) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : 0, opacity: isDragging ? 0.6 : 1 };
 
@@ -383,6 +501,7 @@ const SortableNoteCard = React.forwardRef<HTMLDivElement, {
         </div>
         
         <div className="flex items-center gap-1 shrink-0 no-print">
+           <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" onClick={(e) => onCopy(e, note)}><Copy className="w-4 h-4" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive opacity-30 group-hover:opacity-100 transition-opacity" onClick={onDelete}><Trash2 className="w-4 h-4" /></Button>
           <div {...attributes} {...listeners} className="p-2 -m-2 text-muted-foreground/30 hover:text-orange-500 cursor-grab active:cursor-grabbing touch-none" onClick={(e) => e.stopPropagation()}><GripVertical className="w-5 h-5" /></div>
         </div>
