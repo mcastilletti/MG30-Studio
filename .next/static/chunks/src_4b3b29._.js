@@ -2707,6 +2707,8 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
             const { activePreset } = get();
             const newEffects = activePreset.effects.map((e)=>{
                 if (e.id === effectId) {
+                    // Evitiamo aggiornamenti se il valore è identico
+                    if (e.parameters[param] === value) return e;
                     return {
                         ...e,
                         parameters: {
@@ -2724,11 +2726,13 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
                     lastModified: new Date()
                 }
             });
+        // Non salviamo in cronologia ad ogni parametro (troppo pesante durante la rotazione pomelli)
         },
         updateModel: (effectId, modelId)=>{
             const { activePreset } = get();
             const newEffects = activePreset.effects.map((e)=>{
                 if (e.id === effectId) {
+                    if (e.model === modelId) return e;
                     const modelData = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$mg30$2d$data$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MG30_MODELS"][e.type].find((m)=>m.id === modelId);
                     const defaultParams = {};
                     modelData?.parameters.forEach((p)=>{
@@ -2775,6 +2779,7 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
             const { activePreset } = get();
             const newEffects = activePreset.effects.map((e)=>{
                 if (e.type === blockType) {
+                    if (e.enabled === enabled) return e;
                     return {
                         ...e,
                         enabled: enabled
@@ -2809,9 +2814,15 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
         },
         saveToHistory: ()=>{
             const { activePreset, history, historyIndex } = get();
+            // Evitiamo duplicati consecutivi in cronologia
+            const lastSaved = history[historyIndex];
+            if (lastSaved && JSON.stringify(lastSaved) === JSON.stringify(activePreset)) {
+                return;
+            }
             const newHistory = history.slice(0, historyIndex + 1);
             newHistory.push(JSON.parse(JSON.stringify(activePreset)));
-            if (newHistory.length > 50) newHistory.shift();
+            // Cap della cronologia per prevenire memory leak
+            if (newHistory.length > 30) newHistory.shift();
             set({
                 history: newHistory,
                 historyIndex: newHistory.length - 1
@@ -2836,7 +2847,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$e
 ;
 ;
 ;
-// Tabella CC per Modelli e Bypass (stesso controller su MG-30)
+// Tabella CC per Modelli e Bypass
 const BLOCK_MODEL_CC = {
     'wah': 0,
     'compressor': 1,
@@ -2849,7 +2860,7 @@ const BLOCK_MODEL_CC = {
     'reverb': 8,
     'ir': 9
 };
-// Offset base per lo stato ON forniti dall'utente
+// Offset base per lo stato ON
 const BLOCK_MODEL_OFFSET = {
     'wah': 65,
     'compressor': 65,
@@ -2862,7 +2873,7 @@ const BLOCK_MODEL_OFFSET = {
     'reverb': 1,
     'ir': 1
 };
-// CC per i parametri dei blocchi (Knobs)
+// CC per i parametri dei blocchi
 const BLOCK_PARAM_CCS = {
     'wah': [
         12
@@ -2940,7 +2951,6 @@ const BLOCK_PARAM_CCS = {
         74
     ]
 };
-// Mappatura esatta per CC 75 (Select) e CC 78 (Enter Editor) come richiesto
 const BLOCK_INDEX_MAP = {
     'wah': 0,
     'compressor': 1,
@@ -3108,9 +3118,12 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
         devicePresets: INITIAL_PRESETS,
         isSyncing: false,
         isEditorSyncing: false,
+        isInitializing: false,
         syncProgress: 0,
         lastError: null,
         initialize: async ()=>{
+            const state = get();
+            if (state.isInitializing || state.status === 'connected') return;
             if ("object" === 'undefined' || !navigator.requestMIDIAccess) {
                 set({
                     status: 'error',
@@ -3118,6 +3131,10 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 });
                 return;
             }
+            set({
+                isInitializing: true,
+                status: 'connecting'
+            });
             try {
                 const midiAccess = await navigator.requestMIDIAccess({
                     sysex: true
@@ -3158,11 +3175,13 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                         set({
                             input: nuxInput,
                             output: nuxOutput,
-                            status: 'connected'
+                            status: 'connected',
+                            isInitializing: false
                         });
                     } else {
                         set({
-                            status: 'disconnected'
+                            status: 'disconnected',
+                            isInitializing: false
                         });
                     }
                 };
@@ -3171,7 +3190,8 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             } catch (err) {
                 set({
                     status: 'error',
-                    lastError: 'Errore accesso MIDI'
+                    lastError: 'Errore accesso MIDI',
+                    isInitializing: false
                 });
             }
         },
@@ -3184,19 +3204,24 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 const slot = pc + 1;
                 const activePreset = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset;
                 const existingPreset = get().devicePresets.find((p)=>p.slot === slot);
-                __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().setActivePreset(existingPreset || {
-                    ...activePreset,
-                    slot
-                });
-                setTimeout(()=>get().syncActivePreset(), 50);
+                // Evitiamo aggiornamenti se lo slot è già attivo
+                if (activePreset.slot !== slot) {
+                    __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().setActivePreset(existingPreset || {
+                        ...activePreset,
+                        slot
+                    });
+                    // Sync ritardato per lasciare respirare il pedale dopo il cambio PC
+                    setTimeout(()=>get().syncActivePreset(), 100);
+                }
             }
         },
         syncActivePreset: ()=>{
-            const { output } = get();
-            if (!output) return;
+            const { output, isEditorSyncing } = get();
+            if (!output || isEditorSyncing) return;
             set({
                 isEditorSyncing: true
             });
+            // Richiesta stato attuale tramite SysEx
             output.send([
                 0xF0,
                 0x00,
@@ -3207,9 +3232,10 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 0x01,
                 0xF7
             ]);
+            // Timeout di protezione per sbloccare l'UI se il pedale non risponde
             setTimeout(()=>set({
                     isEditorSyncing: false
-                }), 1500);
+                }), 2000);
         },
         sendControlChange: (cc, value)=>{
             const { output } = get();
@@ -3220,13 +3246,16 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             ]);
         },
         sendProgramChange: (pc)=>{
-            const { output } = get();
+            const { output, isSyncing } = get();
             if (output) {
                 output.send([
                     0xC0,
                     pc
                 ]);
-                setTimeout(()=>get().syncActivePreset(), 150);
+                // Durante il sync di massa non richiediamo il dump sysex per non bloccare tutto
+                if (!isSyncing) {
+                    setTimeout(()=>get().syncActivePreset(), 200);
+                }
             }
         },
         sendPresetName: (name)=>{
@@ -3292,7 +3321,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             const baseOffset = BLOCK_MODEL_OFFSET[blockType] || 1;
             const onValue = safeIndex + baseOffset;
             let midiValue;
-            // Correzione offset 64: Se ON è >= 64, OFF è -64. Altrimenti OFF è +64.
             if (baseOffset >= 64) {
                 midiValue = enabled ? onValue : onValue - 64;
             } else {
@@ -3324,16 +3352,19 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 150);
+                    // Delay progressivo per non saturare il buffer MIDI
+                    setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 100);
                 }
             });
         },
         syncFullPreset: (preset)=>{
-            const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName } = get();
+            const { sendModelChange, toggleBlock, syncBlockParameters, sendPresetName, isEditorSyncing } = get();
+            if (isEditorSyncing) return;
             set({
                 isEditorSyncing: true
             });
             sendPresetName(preset.name);
+            // Iterazione lenta per stabilità hardware
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
                     get().enterBlockEditor(e.type);
@@ -3343,27 +3374,30 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                             toggleBlock(e.type, e.enabled);
                             setTimeout(()=>{
                                 syncBlockParameters(e.type, e.parameters);
-                            }, 500);
-                        }, 500);
-                    }, 500);
-                }, idx * 2000);
+                            }, 300);
+                        }, 300);
+                    }, 300);
+                }, idx * 1500);
             });
-            const totalTime = preset.effects.length * 2000 + 1000;
+            const totalTime = preset.effects.length * 1500 + 500;
             setTimeout(()=>set({
                     isEditorSyncing: false
                 }), totalTime);
         },
         syncPresets: async ()=>{
+            if (get().isSyncing) return;
             set({
                 isSyncing: true,
                 syncProgress: 0
             });
             for(let i = 1; i <= 128; i++){
+                if (!get().isSyncing) break; // Possibilità di interrompere
                 set({
                     syncProgress: Math.round(i / 128 * 100)
                 });
                 get().sendProgramChange(i - 1);
-                await new Promise((r)=>setTimeout(r, 1000));
+                // Tempo di attesa maggiore per evitare blocchi MIDI su scambi di massa
+                await new Promise((r)=>setTimeout(r, 800));
             }
             set({
                 isSyncing: false
@@ -3890,29 +3924,35 @@ __turbopack_esm__({
     "useWakeLock": (()=>useWakeLock)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
 var _s = __turbopack_refresh__.signature();
 "use client";
 ;
 const useWakeLock = ()=>{
     _s();
-    const [wakeLock, setWakeLock] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const wakeLockRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const [isLocked, setIsLocked] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const requestWakeLock = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
         "useWakeLock.useCallback[requestWakeLock]": async ()=>{
-            if ('wakeLock' in navigator) {
-                try {
-                    const lock = await navigator.wakeLock.request('screen');
-                    setWakeLock(lock);
-                    lock.addEventListener('release', {
-                        "useWakeLock.useCallback[requestWakeLock]": ()=>{
-                            setWakeLock(null);
-                        }
-                    }["useWakeLock.useCallback[requestWakeLock]"]);
-                } catch (err) {
-                    // Handle Permissions Policy or other errors gracefully with a warning to avoid Red Overlay in Dev
+            // Evitiamo richieste se già attivo o non supportato
+            if (wakeLockRef.current || !('wakeLock' in navigator)) return;
+            try {
+                const lock = await navigator.wakeLock.request('screen');
+                wakeLockRef.current = lock;
+                setIsLocked(true);
+                lock.addEventListener('release', {
+                    "useWakeLock.useCallback[requestWakeLock]": ()=>{
+                        wakeLockRef.current = null;
+                        setIsLocked(false);
+                    }
+                }["useWakeLock.useCallback[requestWakeLock]"]);
+            } catch (err) {
+                // Silenzioso in produzione, solo warning in dev
+                if ("TURBOPACK compile-time truthy", 1) {
                     if (err.name === 'NotAllowedError') {
                         console.warn('Wake Lock is disallowed by permissions policy.');
                     } else {
-                        console.warn(`${err.name}: ${err.message}`);
+                        console.warn(`WakeLock: ${err.name}: ${err.message}`);
                     }
                 }
             }
@@ -3923,7 +3963,7 @@ const useWakeLock = ()=>{
             requestWakeLock();
             const handleVisibilityChange = {
                 "useWakeLock.useEffect.handleVisibilityChange": ()=>{
-                    if (wakeLock === null && document.visibilityState === 'visible') {
+                    if (wakeLockRef.current === null && document.visibilityState === 'visible') {
                         requestWakeLock();
                     }
                 }
@@ -3931,12 +3971,8 @@ const useWakeLock = ()=>{
             document.addEventListener('visibilitychange', handleVisibilityChange);
             return ({
                 "useWakeLock.useEffect": ()=>{
-                    if (wakeLock !== null) {
-                        wakeLock.release().then({
-                            "useWakeLock.useEffect": ()=>{
-                                setWakeLock(null);
-                            }
-                        }["useWakeLock.useEffect"]).catch({
+                    if (wakeLockRef.current) {
+                        wakeLockRef.current.release().catch({
                             "useWakeLock.useEffect": ()=>{}
                         }["useWakeLock.useEffect"]);
                     }
@@ -3945,12 +3981,11 @@ const useWakeLock = ()=>{
             })["useWakeLock.useEffect"];
         }
     }["useWakeLock.useEffect"], [
-        requestWakeLock,
-        wakeLock
+        requestWakeLock
     ]);
-    return;
+    return isLocked;
 };
-_s(useWakeLock, "+c6UUqgGtIU1Yw9pEWNSLAKEY7Q=");
+_s(useWakeLock, "YPRWyWOgSXtqKOoUxGhhVz/a+/4=");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_refresh__.registerExports(module, globalThis.$RefreshHelpers$);
 }

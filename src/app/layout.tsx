@@ -15,18 +15,12 @@ export const metadata: Metadata = {
   description: 'A professional web-based editor for the NUX MG-30 multi-effects pedal.',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'MG30 Studio',
   },
   icons: {
-    icon: [
-      { url: 'data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeg64mYAAAAASUVORK5CYII=' },
-      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/icon.png' },
-      { url: '/icon.png', sizes: '180x180', type: 'image/png' },
-    ],
+    icon: '/icon.png',
+    apple: '/icon.png',
   },
   formatDetection: {
     telephone: false,
@@ -44,7 +38,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet" />
-        <link rel="shortcut icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeg64mYAAAAASUVORK5CYII=" />
+        <link rel="shortcut icon" href="/icon.png" />
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>
