@@ -2683,6 +2683,7 @@ const createDefaultEffects = ()=>[
 const DEFAULT_PRESET = {
     name: 'Active MG-30 Tone',
     slot: 1,
+    activeScene: 0,
     category: 'Clean',
     tags: [],
     favorite: false,
@@ -2707,7 +2708,6 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
             const { activePreset } = get();
             const newEffects = activePreset.effects.map((e)=>{
                 if (e.id === effectId) {
-                    // Evitiamo aggiornamenti se il valore è identico
                     if (e.parameters[param] === value) return e;
                     return {
                         ...e,
@@ -2726,7 +2726,6 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
                     lastModified: new Date()
                 }
             });
-        // Non salviamo in cronologia ad ogni parametro (troppo pesante durante la rotazione pomelli)
         },
         updateModel: (effectId, modelId)=>{
             const { activePreset } = get();
@@ -2750,6 +2749,18 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
                 activePreset: {
                     ...activePreset,
                     effects: newEffects,
+                    lastModified: new Date()
+                }
+            });
+            get().saveToHistory();
+        },
+        updateScene: (sceneIndex)=>{
+            const { activePreset } = get();
+            if (activePreset.activeScene === sceneIndex) return;
+            set({
+                activePreset: {
+                    ...activePreset,
+                    activeScene: sceneIndex,
                     lastModified: new Date()
                 }
             });
@@ -2814,14 +2825,12 @@ const usePresetStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
         },
         saveToHistory: ()=>{
             const { activePreset, history, historyIndex } = get();
-            // Evitiamo duplicati consecutivi in cronologia
             const lastSaved = history[historyIndex];
             if (lastSaved && JSON.stringify(lastSaved) === JSON.stringify(activePreset)) {
                 return;
             }
             const newHistory = history.slice(0, historyIndex + 1);
             newHistory.push(JSON.parse(JSON.stringify(activePreset)));
-            // Cap della cronologia per prevenire memory leak
             if (newHistory.length > 30) newHistory.shift();
             set({
                 history: newHistory,
@@ -2860,6 +2869,7 @@ const BLOCK_MODEL_CC = {
     'reverb': 8,
     'ir': 9
 };
+const SCENE_SELECT_CC = 80;
 // Offset base per lo stato ON
 const BLOCK_MODEL_OFFSET = {
     'wah': 65,
@@ -3098,6 +3108,7 @@ const INITIAL_PRESETS = Array.from({
     length: 128
 }, (_, i)=>({
         slot: i + 1,
+        activeScene: 0,
         name: `Preset ${formatSlotLabel(i + 1)}`,
         category: 'User',
         tags: [],
@@ -3204,13 +3215,11 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 const slot = pc + 1;
                 const activePreset = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().activePreset;
                 const existingPreset = get().devicePresets.find((p)=>p.slot === slot);
-                // Evitiamo aggiornamenti se lo slot è già attivo
                 if (activePreset.slot !== slot) {
                     __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$use$2d$preset$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePresetStore"].getState().setActivePreset(existingPreset || {
                         ...activePreset,
                         slot
                     });
-                    // Sync ritardato per lasciare respirare il pedale dopo il cambio PC
                     setTimeout(()=>get().syncActivePreset(), 100);
                 }
             }
@@ -3221,7 +3230,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             set({
                 isEditorSyncing: true
             });
-            // Richiesta stato attuale tramite SysEx
             output.send([
                 0xF0,
                 0x00,
@@ -3232,7 +3240,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 0x01,
                 0xF7
             ]);
-            // Timeout di protezione per sbloccare l'UI se il pedale non risponde
             setTimeout(()=>set({
                     isEditorSyncing: false
                 }), 2000);
@@ -3252,11 +3259,13 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                     0xC0,
                     pc
                 ]);
-                // Durante il sync di massa non richiediamo il dump sysex per non bloccare tutto
                 if (!isSyncing) {
                     setTimeout(()=>get().syncActivePreset(), 200);
                 }
             }
+        },
+        sendSceneChange: (sceneIndex)=>{
+            get().sendControlChange(SCENE_SELECT_CC, sceneIndex);
         },
         sendPresetName: (name)=>{
             const { output } = get();
@@ -3352,7 +3361,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
             modelData.parameters.forEach((param, index)=>{
                 const val = Number(parameters[param.id.toLowerCase()] ?? param.default);
                 if (ccs[index] !== undefined) {
-                    // Delay progressivo per non saturare il buffer MIDI
                     setTimeout(()=>get().sendControlChange(ccs[index], Math.round(val)), index * 100);
                 }
             });
@@ -3364,7 +3372,6 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 isEditorSyncing: true
             });
             sendPresetName(preset.name);
-            // Iterazione lenta per stabilità hardware
             preset.effects.forEach((e, idx)=>{
                 setTimeout(()=>{
                     get().enterBlockEditor(e.type);
@@ -3391,12 +3398,11 @@ const useMidiStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
                 syncProgress: 0
             });
             for(let i = 1; i <= 128; i++){
-                if (!get().isSyncing) break; // Possibilità di interrompere
+                if (!get().isSyncing) break;
                 set({
                     syncProgress: Math.round(i / 128 * 100)
                 });
                 get().sendProgramChange(i - 1);
-                // Tempo di attesa maggiore per evitare blocchi MIDI su scambi di massa
                 await new Promise((r)=>setTimeout(r, 800));
             }
             set({

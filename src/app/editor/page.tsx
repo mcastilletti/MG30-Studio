@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X } from 'lucide-react';
+import { Undo2, Redo2, Save, Power, LayoutGrid, ChevronLeft, ChevronRight, Settings2, Sparkles, Loader2, RefreshCw, CheckCircle2, X, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MG30_MODELS } from '@/lib/mg30-data';
 import { generateMG30Preset, MG30PresetOutput } from '@/ai/flows/mg30-preset-gen';
@@ -43,8 +43,8 @@ const formatSlotLabel = (slot: number) => {
 };
 
 export default function EditorPage() {
-  const { activePreset, updateParameter, updateModel, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
-  const { status, sendProgramChange, sendKnobParameter, sendModelChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
+  const { activePreset, updateParameter, updateModel, updateScene, toggleEffect, undo, redo, setActivePreset } = usePresetStore();
+  const { status, sendProgramChange, sendKnobParameter, sendModelChange, sendSceneChange, toggleBlock, enterBlockEditor, exitBlockEditor, isEditorSyncing, syncActivePreset, syncFullPreset } = useMidiStore();
   const { toast } = useToast();
   
   const [selectedBlockId, setSelectedBlockId] = useState<string>('amp');
@@ -63,8 +63,6 @@ export default function EditorPage() {
     return MG30_MODELS[selectedEffect.type as any]?.find(m => m.id === selectedEffect.model) || MG30_MODELS[selectedEffect.type as any]?.[0];
   }, [selectedEffect]);
 
-  // Sincronizza solo quando lo stato cambia in 'connected' per la prima volta o manualmente.
-  // Rimosso isEditorSyncing dalle dipendenze per evitare loop infiniti ogni 2 secondi.
   useEffect(() => {
     if (status === 'connected') {
       syncActivePreset();
@@ -82,6 +80,13 @@ export default function EditorPage() {
     updateModel(effectId, modelId);
     if (status === 'connected') {
       sendModelChange(type, modelId);
+    }
+  };
+
+  const handleSceneChange = (index: number) => {
+    updateScene(index);
+    if (status === 'connected') {
+      sendSceneChange(index);
     }
   };
 
@@ -203,7 +208,7 @@ export default function EditorPage() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
           <div className="flex items-center gap-4 cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors group">
             <div className="flex items-center gap-2">
               <button onClick={(e) => { e.stopPropagation(); handleSlotChange('prev'); }} className="p-2 hover:bg-secondary rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
@@ -212,62 +217,89 @@ export default function EditorPage() {
             </div>
             <div>
               <h3 className="text-xl font-bold">{activePreset.name}</h3>
-              <Badge variant="outline" className="text-[10px] mt-1">MG-30 CONNECTED</Badge>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-[10px]">MG-30 CONNECTED</Badge>
+                <Badge variant="secondary" className="text-[10px] bg-primary/20 text-primary border-primary/30">SCENE {activePreset.activeScene + 1}</Badge>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2 border-primary/50 text-primary">
-                  <Sparkles className="w-4 h-4" /> AI Mode
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                {!proposedPreset ? (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
-                      <DialogDescription>Descrivi il suono desiderato. L'AI configurerà modelli e parametri hardware.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <Textarea 
-                        placeholder="Es: Suono Gilmour anni '70 con molto delay e un ampli clean..." 
-                        value={aiPrompt} 
-                        onChange={(e) => setAiPrompt(e.target.value)} 
-                        className="min-h-[150px] bg-secondary/20"
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
-                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        Genera Preset
-                      </Button>
-                    </DialogFooter>
-                  </>
-                ) : (
-                  <>
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
-                      <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-4 space-y-4">
-                      <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
-                        "{proposedPreset.explanation}"
+
+          <div className="flex flex-wrap items-center gap-3">
+             {/* Scene Selector */}
+             <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-lg border border-border">
+                <div className="px-2 text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1"><Layers className="w-3 h-3" /> Scenes</div>
+                {[0, 1, 2].map((idx) => (
+                  <Button 
+                    key={`scene-btn-${idx}`}
+                    variant={activePreset.activeScene === idx ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleSceneChange(idx)}
+                    className={cn(
+                      "h-8 w-10 font-bold transition-all",
+                      activePreset.activeScene === idx ? "bg-primary shadow-lg scale-105" : "text-muted-foreground"
+                    )}
+                  >
+                    {idx + 1}
+                  </Button>
+                ))}
+             </div>
+
+             <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
+
+            <div className="flex items-center gap-2">
+              <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/50 text-primary">
+                    <Sparkles className="w-4 h-4" /> AI Mode
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  {!proposedPreset ? (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> AI Tone Designer</DialogTitle>
+                        <DialogDescription>Descrivi il suono desiderato. L'AI configurerà modelli e parametri hardware.</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <Textarea 
+                          placeholder="Es: Suono Gilmour anni '70 con molto delay e un ampli clean..." 
+                          value={aiPrompt} 
+                          onChange={(e) => setAiPrompt(e.target.value)} 
+                          className="min-h-[150px] bg-secondary/20"
+                        />
                       </div>
-                    </div>
-                    <DialogFooter className="gap-2">
-                      <Button variant="ghost" onClick={() => setProposedPreset(null)}>Scarta</Button>
-                      <Button onClick={applyProposedPreset} className="bg-green-600 hover:bg-green-700 text-white flex-1">Applica all'Editor</Button>
-                    </DialogFooter>
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
-            <div className="w-[1px] h-8 bg-border mx-2" />
-            <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sync Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
-            <Button variant="outline" size="icon" onClick={undo} title="Undo"><Undo2 className="w-4 h-4" /></Button>
-            <Button variant="outline" size="icon" onClick={redo} title="Redo"><Redo2 className="w-4 h-4" /></Button>
-            <Button className="gap-2" onClick={handleSave}><Save className="w-4 h-4" /> SAVE</Button>
+                      <DialogFooter>
+                        <Button onClick={handleAiModeGenerate} disabled={isGenerating || !aiPrompt.trim()} className="w-full">
+                          {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                          Genera Preset
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  ) : (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-green-500" /> Preset Generato: {proposedPreset.name}</DialogTitle>
+                        <DialogDescription>L'AI ha selezionato i modelli e i parametri migliori.</DialogDescription>
+                      </DialogHeader>
+                      <div className="py-4 space-y-4">
+                        <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs italic">
+                          "{proposedPreset.explanation}"
+                        </div>
+                      </div>
+                      <DialogFooter className="gap-2">
+                        <Button variant="ghost" onClick={() => setProposedPreset(null)}>Scarta</Button>
+                        <Button onClick={applyProposedPreset} className="bg-green-600 hover:bg-green-700 text-white flex-1">Applica all'Editor</Button>
+                      </DialogFooter>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
+              <div className="hidden sm:block w-[1px] h-8 bg-border mx-1" />
+              <Button variant="outline" size="icon" onClick={() => syncActivePreset()} title="Sync Hardware"><RefreshCw className={cn("w-4 h-4", isEditorSyncing && "animate-spin")} /></Button>
+              <Button variant="outline" size="icon" onClick={undo} title="Undo"><Undo2 className="w-4 h-4" /></Button>
+              <Button variant="outline" size="icon" onClick={redo} title="Redo"><Redo2 className="w-4 h-4" /></Button>
+              <Button className="gap-2" onClick={handleSave}><Save className="w-4 h-4" /> SAVE</Button>
+            </div>
           </div>
         </div>
 

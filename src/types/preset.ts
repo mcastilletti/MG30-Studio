@@ -9,9 +9,10 @@ export interface EffectState {
 }
 
 export interface Preset {
-  id?: number;
+  id?: string;
   name: string;
   slot: number; // 1-128
+  activeScene: number; // 0, 1, 2
   category: string;
   tags: string[];
   favorite: boolean;

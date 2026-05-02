@@ -550,6 +550,11 @@ body {
   margin-bottom: .25rem;
 }
 
+.mx-1 {
+  margin-left: .25rem;
+  margin-right: .25rem;
+}
+
 .-ml-4 {
   margin-left: -1rem;
 }
@@ -1646,6 +1651,10 @@ body {
 .bg-yellow-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(202 138 4 / var(--tw-bg-opacity, 1));
+}
+
+.bg-primary\/20 {
+  background-color: hsl(var(--primary) / .2);
 }
 
 .fill-current {
@@ -3427,6 +3436,10 @@ body {
     margin-top: 0;
   }
 
+  .sm\:block {
+    display: block;
+  }
+
   .sm\:flex {
     display: flex;
   }
@@ -3589,6 +3602,14 @@ body {
 
   .lg\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .lg\:flex-row {
+    flex-direction: row;
+  }
+
+  .lg\:items-center {
+    align-items: center;
   }
 }
 

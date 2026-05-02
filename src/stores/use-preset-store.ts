@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { Preset, EffectState } from '@/types/preset';
 import { MG30_MODELS } from '@/lib/mg30-data';
@@ -20,6 +19,7 @@ const createDefaultEffects = (): EffectState[] => [
 const DEFAULT_PRESET: Preset = {
   name: 'Active MG-30 Tone',
   slot: 1,
+  activeScene: 0,
   category: 'Clean',
   tags: [],
   favorite: false,
@@ -37,6 +37,7 @@ interface PresetStore {
   setActivePreset: (preset: Preset) => void;
   updateParameter: (effectId: string, param: string, value: number | string) => void;
   updateModel: (effectId: string, modelId: string) => void;
+  updateScene: (sceneIndex: number) => void;
   toggleEffect: (effectId: string) => void;
   updateBlockStateLocally: (blockType: string, enabled: boolean) => void;
   undo: () => void;
@@ -58,7 +59,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     const { activePreset } = get();
     const newEffects = activePreset.effects.map(e => {
       if (e.id === effectId) {
-        // Evitiamo aggiornamenti se il valore è identico
         if (e.parameters[param] === value) return e;
         return { ...e, parameters: { ...e.parameters, [param]: value } };
       }
@@ -66,7 +66,6 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
     });
 
     set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
-    // Non salviamo in cronologia ad ogni parametro (troppo pesante durante la rotazione pomelli)
   },
 
   updateModel: (effectId, modelId) => {
@@ -90,6 +89,13 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
       return e;
     });
     set({ activePreset: { ...activePreset, effects: newEffects, lastModified: new Date() } });
+    get().saveToHistory();
+  },
+
+  updateScene: (sceneIndex) => {
+    const { activePreset } = get();
+    if (activePreset.activeScene === sceneIndex) return;
+    set({ activePreset: { ...activePreset, activeScene: sceneIndex, lastModified: new Date() } });
     get().saveToHistory();
   },
 
@@ -133,19 +139,13 @@ export const usePresetStore = create<PresetStore>((set, get) => ({
 
   saveToHistory: () => {
     const { activePreset, history, historyIndex } = get();
-    
-    // Evitiamo duplicati consecutivi in cronologia
     const lastSaved = history[historyIndex];
     if (lastSaved && JSON.stringify(lastSaved) === JSON.stringify(activePreset)) {
       return;
     }
-
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.parse(JSON.stringify(activePreset)));
-    
-    // Cap della cronologia per prevenire memory leak
     if (newHistory.length > 30) newHistory.shift();
-    
     set({ history: newHistory, historyIndex: newHistory.length - 1 });
   }
 }));
