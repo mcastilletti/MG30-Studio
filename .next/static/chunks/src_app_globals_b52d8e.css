@@ -2415,7 +2415,7 @@ body {
 
 @media print {
   @page {
-    margin: 10mm;
+    margin: 0;
     size: A4 portrait;
   }
 
@@ -2447,16 +2447,17 @@ body {
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
-    page-break-inside: avoid-page !important;
-    break-inside: avoid-page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    min-height: 270mm !important;
-    padding: 0 !important;
-    margin: 0 0 10mm !important;
+    height: 297mm !important;
+    padding: 15mm !important;
+    margin: 0 !important;
     background: #fff !important;
     position: relative !important;
+    overflow: hidden !important;
   }
 
   .print-title {
@@ -2498,6 +2499,7 @@ body {
     display: flex !important;
     flex-direction: column !important;
     gap: 4mm !important;
+    overflow: hidden !important;
   }
 
   .print-section-row {
