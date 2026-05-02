@@ -525,6 +525,11 @@ body {
   margin-right: -.25rem;
 }
 
+.mx-1 {
+  margin-left: .25rem;
+  margin-right: .25rem;
+}
+
 .mx-2 {
   margin-left: .5rem;
   margin-right: .5rem;
@@ -548,11 +553,6 @@ body {
 .my-1 {
   margin-top: .25rem;
   margin-bottom: .25rem;
-}
-
-.mx-1 {
-  margin-left: .25rem;
-  margin-right: .25rem;
 }
 
 .-ml-4 {
@@ -1595,6 +1595,10 @@ body {
   background-color: hsl(var(--primary) / .1);
 }
 
+.bg-primary\/20 {
+  background-color: hsl(var(--primary) / .2);
+}
+
 .bg-primary\/5 {
   background-color: hsl(var(--primary) / .05);
 }
@@ -1651,10 +1655,6 @@ body {
 .bg-yellow-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(202 138 4 / var(--tw-bg-opacity, 1));
-}
-
-.bg-primary\/20 {
-  background-color: hsl(var(--primary) / .2);
 }
 
 .fill-current {
@@ -2447,11 +2447,11 @@ body {
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: avoid-page !important;
+    break-inside: avoid-page !important;
     display: flex !important;
     flex-direction: column !important;
-    width: 100% !important;
+    width: 210mm !important;
     min-height: 270mm !important;
     padding: 0 !important;
     margin: 0 0 10mm !important;
