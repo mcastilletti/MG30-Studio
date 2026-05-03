@@ -1,12 +1,12 @@
 'use server';
 
+import { ai, z } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+
 /**
  * @fileOverview Analisi sonora AI per preset MG-30.
- * Utilizza Gemini 1.5 Flash per stabilità e quote elevate.
+ * Utilizza Gemini 2.5 Flash per prestazioni ottimali.
  */
-
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 
 const PresetSummaryInputSchema = z.object({
   preset: z.any().describe('I dati completi del preset da analizzare'),
@@ -22,7 +22,7 @@ export type PresetSummaryOutput = z.infer<typeof PresetSummaryOutputSchema>;
 const presetSummaryPrompt = ai.definePrompt(
   {
     name: 'presetSummaryPrompt',
-    model: 'googleai/gemini-1.5-flash', 
+    model: googleAI.model('gemini-2.5-flash'), 
     input: { schema: PresetSummaryInputSchema },
     output: { schema: PresetSummaryOutputSchema },
     config: {

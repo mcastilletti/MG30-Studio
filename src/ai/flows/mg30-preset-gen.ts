@@ -1,11 +1,13 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { ai, z } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 
 /**
- * SCHEMI DI VALIDAZIONE
+ * @fileOverview AI Tone Designer per NUX MG-30.
+ * Converte descrizioni testuali o JSON in configurazioni hardware precise.
  */
+
 const MG30PresetInputSchema = z.object({
   description: z.string().describe('Descrizione del suono o JSON strutturato con parametri tecnici'),
 });
@@ -30,12 +32,11 @@ export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 const mg30PresetPrompt = ai.definePrompt(
   {
     name: 'mg30PresetPrompt',
-    model: 'googleai/gemini-1.5-flash', 
+    model: googleAI.model('gemini-2.5-flash'), 
     input: { schema: MG30PresetInputSchema },
     output: { schema: MG30PresetOutputSchema },
     config: {
       temperature: 0.1, 
-      responseMimeType: 'application/json',
     },
     system: `Sei un traduttore tecnico rigoroso per NUX MG-30. 
     
@@ -59,7 +60,7 @@ const mg30PresetPrompt = ai.definePrompt(
     5. SE IL JSON DICE "status": "ON", imposta "enabled": true. Se dice "OFF", imposta "enabled": false.
     6. Se l'input è testuale, progetta una catena completa coerente col suono richiesto.`,
   },
-  `Richiesta: {{description}}
+  `Richiesta: {{{description}}}
   Analizza la richiesta. Se trovi parametri specifici o un oggetto JSON, mappa fedelmente ogni valore numerico e ogni modello senza alterarlo.`
 );
 
