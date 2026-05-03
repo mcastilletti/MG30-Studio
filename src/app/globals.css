@@ -50,9 +50,11 @@
     size: A4 portrait;
   }
 
+  /* Reset radicale per la stampa: rimuove ogni vincolo di altezza dei container Next.js */
   html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main {
     height: auto !important;
     min-height: 0 !important;
+    max-height: none !important;
     overflow: visible !important;
     display: block !important;
     background: white !important;
@@ -69,6 +71,7 @@
 
   .print-only { display: block !important; width: 100% !important; background: white !important; }
 
+  /* Forza ogni brano in un foglio A4 bloccato */
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
@@ -77,14 +80,15 @@
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important;
+    height: 297mm !important; /* Altezza fissa A4 */
     padding: 15mm !important;
     margin: 0 !important;
     background: white !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow: hidden !important; /* Evita che il contenuto sbordi se troppo lungo */
   }
 
+  /* Riduzione del 30% dei contenuti */
   .print-title {
     font-size: 25pt !important; 
     font-weight: 900 !important;
