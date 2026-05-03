@@ -1,18 +1,20 @@
 'use server';
 /**
- * @fileOverview Reverse engineering MIDI SysEx con Gemini 2.5 Flash.
+ * @fileOverview Reverse engineering MIDI SysEx (Genkit v1.x).
+ * 
+ * - analyzeSysEx - Analizza sequenze hex per mappare parametri hardware.
  */
 
 import { ai, z } from '@/ai/genkit';
 
 const AnalyzeSysExInputSchema = z.object({
-  sysexData: z.string().describe('Sequenza di messaggi SysEx (hex).'),
-  controlDescription: z.string().describe('Descrizione dell\'azione eseguita hardware.'),
+  sysexData: z.string().describe('Sequenza di messaggi SysEx in formato hex.'),
+  controlDescription: z.string().describe('Azione eseguita sull hardware (es: gain da 0 a 100).'),
 });
 export type AnalyzeSysExInput = z.infer<typeof AnalyzeSysExInputSchema>;
 
 const AnalyzeSysExOutputSchema = z.object({
-  parameterMapping: z.string().describe('Spiegazione tecnica del mapping.'),
+  parameterMapping: z.string().describe('Spiegazione tecnica dettagliata del mapping identificato.'),
 });
 export type AnalyzeSysExOutput = z.infer<typeof AnalyzeSysExOutputSchema>;
 
@@ -20,22 +22,22 @@ const prompt = ai.definePrompt({
   name: 'analyzeSysExPrompt',
   input: { schema: AnalyzeSysExInputSchema },
   output: { schema: AnalyzeSysExOutputSchema },
-  prompt: `Sei un ingegnere MIDI esperto nel reverse engineering dei protocolli NUX. 
-Analizza questi dati SysEx per identificare parametri, range di valori e offset.
+  prompt: `Sei un ingegnere MIDI esperto nel protocollo NUX. 
+Analizza questi dati SysEx per identificare l'offset del parametro, il range di valori e la struttura del messaggio.
 
 Dati SysEx: {{{sysexData}}}
-Azione: {{{controlDescription}}}
+Azione hardware descritta: {{{controlDescription}}}
 
-Fornisci un mapping tecnico dettagliato.`,
+Fornisci un mapping tecnico preciso, evidenziando i byte che cambiano e il loro significato.`,
 });
 
-const analyzeSysExFlow = ai.defineFlow(
+export const analyzeSysExFlow = ai.defineFlow(
   {
     name: 'analyzeSysExFlow',
     inputSchema: AnalyzeSysExInputSchema,
     outputSchema: AnalyzeSysExOutputSchema,
   },
-  async input => {
+  async (input) => {
     const { output } = await prompt(input);
     if (!output) throw new Error('Analisi SysEx fallita.');
     return output;
