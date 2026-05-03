@@ -2409,25 +2409,20 @@ body {
 
   html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main {
     height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
     overflow: visible !important;
     display: block !important;
     background: #fff !important;
     color: #000 !important;
     padding: 0 !important;
     margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
   }
 
-  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, .no-print, button {
+  .no-print, [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, button {
     display: none !important;
   }
 
   .print-only {
     display: block !important;
-    width: 100% !important;
   }
 
   .print-song-page {
@@ -2438,16 +2433,15 @@ body {
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important;
-    padding: 10mm 15mm !important;
-    margin: 0 !important;
+    height: 296mm !important;
+    padding: 12mm 15mm !important;
     background: #fff !important;
-    position: relative !important;
     overflow: hidden !important;
+    border: none !important;
   }
 
   .print-title {
-    font-size: 25pt !important;
+    font-size: 24pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
     border-bottom: 2pt solid #000 !important;
@@ -2461,15 +2455,14 @@ body {
     font-weight: 700 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 4mm !important;
+    margin-bottom: 3mm !important;
     border-bottom: 1pt solid #eee !important;
   }
 
   .print-general-notes {
     font-size: 9pt !important;
     font-style: italic !important;
-    margin-bottom: 5mm !important;
-    background: #fdfdfd !important;
+    margin-bottom: 4mm !important;
     padding: 2mm !important;
     border: .5pt solid #eee !important;
     white-space: pre-wrap !important;
@@ -2501,9 +2494,9 @@ body {
   }
 
   .print-chord {
-    font-size: 20pt !important;
+    font-size: 19pt !important;
     font-weight: 900 !important;
-    padding: .5mm 2mm !important;
+    padding: .5mm 1.5mm !important;
     border: 1pt solid #000 !important;
     line-height: 1 !important;
     display: inline-block !important;

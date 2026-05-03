@@ -50,31 +50,26 @@
     size: A4 portrait;
   }
 
-  /* Reset drastico: rimuove display flex/grid che rompono i page-breaks */
+  /* Reset totale per la stampa */
   html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main {
     height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
     overflow: visible !important;
     display: block !important;
     background: white !important;
     color: black !important;
     padding: 0 !important;
     margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
   }
 
-  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, .no-print, button {
+  .no-print, [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, button {
     display: none !important;
   }
 
   .print-only { 
     display: block !important; 
-    width: 100% !important; 
   }
 
-  /* Forza ogni brano in un blocco unico A4 */
+  /* Forza il brano in una singola pagina A4 */
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
@@ -83,17 +78,16 @@
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important; /* Altezza fissa A4 obbligatoria */
-    padding: 10mm 15mm !important;
-    margin: 0 !important;
+    height: 296mm !important; /* Altezza fissa per bloccare il contenuto */
+    padding: 12mm 15mm !important;
     background: white !important;
-    position: relative !important;
-    overflow: hidden !important; /* Impedisce al contenuto di strabordare e creare nuove pagine */
+    overflow: hidden !important; /* Impedisce il salto di pagina */
+    border: none !important;
   }
 
-  /* Riduzione del 30% dei testi */
+  /* Dimensioni ridotte del 30% per fit perfetto */
   .print-title {
-    font-size: 25pt !important; 
+    font-size: 24pt !important; 
     font-weight: 900 !important;
     text-transform: uppercase !important;
     border-bottom: 2pt solid black !important;
@@ -107,15 +101,14 @@
     font-weight: 700 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 4mm !important; 
+    margin-bottom: 3mm !important; 
     border-bottom: 1pt solid #eee !important;
   }
 
   .print-general-notes {
     font-size: 9pt !important; 
     font-style: italic !important;
-    margin-bottom: 5mm !important; 
-    background: #fdfdfd !important;
+    margin-bottom: 4mm !important; 
     padding: 2mm !important; 
     border: 0.5pt solid #eee !important;
     white-space: pre-wrap !important;
@@ -147,9 +140,9 @@
   }
 
   .print-chord {
-    font-size: 20pt !important; 
+    font-size: 19pt !important; 
     font-weight: 900 !important;
-    padding: 0.5mm 2mm !important;
+    padding: 0.5mm 1.5mm !important;
     border: 1pt solid black !important;
     line-height: 1 !important;
     display: inline-block !important;
