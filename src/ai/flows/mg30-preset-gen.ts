@@ -1,16 +1,15 @@
 'use server';
-
-import { ai, z } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
-
 /**
  * @fileOverview AI Tone Designer per NUX MG-30.
- * Converte descrizioni testuali o JSON in configurazioni hardware precise.
+ * Converte descrizioni testuali in configurazioni hardware precise.
  */
+
+import { ai, z } from '@/ai/genkit';
 
 const MG30PresetInputSchema = z.object({
   description: z.string().describe('Descrizione del suono o JSON strutturato con parametri tecnici'),
 });
+export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 
 const MG30PresetOutputSchema = z.object({
   name: z.string().describe('Nome del preset'),
@@ -25,47 +24,48 @@ const MG30PresetOutputSchema = z.object({
     }))
   })).describe('Configurazione della catena completa'),
 });
-
-export type MG30PresetInput = z.infer<typeof MG30PresetInputSchema>;
 export type MG30PresetOutput = z.infer<typeof MG30PresetOutputSchema>;
 
-const mg30PresetPrompt = ai.definePrompt(
-  {
-    name: 'mg30PresetPrompt',
-    model: googleAI.model('gemini-2.5-flash'), 
-    input: { schema: MG30PresetInputSchema },
-    output: { schema: MG30PresetOutputSchema },
-    config: {
-      temperature: 0.1, 
-    },
-    system: `Sei un traduttore tecnico rigoroso per NUX MG-30. 
-    
-    REGOLE MANDATORIE:
-    1. Se l'input contiene un JSON con "signal_chain" o valori numerici (es. GAIN: 65), DEVI APPLICARE ESATTAMENTE QUEI VALORI senza interpretarli o modificarli.
-    2. Non inventare parametri. Mappa i valori forniti sugli ID parametri esistenti dell'hardware MG-30.
-    3. Usa SOLO questi ID Modello validi:
-       - amp: jazzclean, deluxervb, bassmate, tweedy, twinrvb, hiwire, calicrunch, classa15, classa30, plexi100w, plexi45, brit800, 1987x50w, slo100, firemanhbe, dualrect, dievh4, vibroking, match, brit2000, uber.
-       - efx: tscream, bluesdrv, morningdrv, reddirt, eatdist, mufffuzz, distone, rcboost, acboost, distplus, katana.
-       - compressor: rose, kcomp, studiocomp.
-       - modulation: mod-ce1, mod-ce2, mod-ph90, mod-uvibe, mod-tremolo, mod-flanger, mod-vibrator.
-       - delay: dly-analog, dly-digital, dly-tape, dly-mod, dly-reverse.
-       - reverb: room, hall, plate, spring, shimmer.
-       - ir: ir-jz120, ir-dr112, ir-1960, ir-v412, ir-gb412.
-       - noise-gate: gate.
-       - eq: eq-ge6, eq-10band, eq-para.
-    
-    4. MAPPATURA TIPI (Usa ESATTAMENTE questi nomi nel campo 'type'):
-       wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol, eq.
-    
-    5. SE IL JSON DICE "status": "ON", imposta "enabled": true. Se dice "OFF", imposta "enabled": false.
-    6. Se l'input è testuale, progetta una catena completa coerente col suono richiesto.`,
+const prompt = ai.definePrompt({
+  name: 'mg30PresetPrompt',
+  input: { schema: MG30PresetInputSchema },
+  output: { schema: MG30PresetOutputSchema },
+  config: {
+    temperature: 0.1,
   },
-  `Richiesta: {{{description}}}
-  Analizza la richiesta. Se trovi parametri specifici o un oggetto JSON, mappa fedelmente ogni valore numerico e ogni modello senza alterarlo.`
+  prompt: `Sei un traduttore tecnico rigoroso per la pedaliera NUX MG-30. 
+    
+REGOLE MANDATORIE:
+1. Se l'input contiene parametri tecnici specifici (es. GAIN: 65), DEVI APPLICARLI ESATTAMENTE.
+2. Usa SOLO questi ID Modello validi:
+   - amp: jazzclean, deluxervb, bassmate, tweedy, twinrvb, hiwire, calicrunch, classa15, classa30, plexi100w, plexi45, brit800, 1987x50w, slo100, firemanhbe, dualrect, dievh4, vibroking, match, brit2000, uber.
+   - efx: tscream, bluesdrv, morningdrv, reddirt, eatdist, mufffuzz, distone, rcboost, acboost, distplus, katana.
+   - compressor: rose, kcomp, studiocomp.
+   - modulation: mod-ce1, mod-ce2, mod-ph90, mod-uvibe, mod-tremolo, mod-flanger, mod-vibrator.
+   - delay: dly-analog, dly-digital, dly-tape, dly-mod, dly-reverse.
+   - reverb: room, hall, plate, spring, shimmer.
+   - ir: ir-jz120, ir-dr112, ir-1960, ir-v412, ir-gb412.
+   - noise-gate: gate.
+   - eq: eq-ge6, eq-10band, eq-para.
+
+3. MAPPATURA TIPI: wah, noise-gate, compressor, efx, amp, ir, sr, modulation, delay, reverb, vol, eq.
+
+Richiesta: {{{description}}}`,
+});
+
+const mg30PresetFlow = ai.defineFlow(
+  {
+    name: 'mg30PresetFlow',
+    inputSchema: MG30PresetInputSchema,
+    outputSchema: MG30PresetOutputSchema,
+  },
+  async input => {
+    const { output } = await prompt(input);
+    if (!output) throw new Error('Generazione AI fallita.');
+    return output;
+  }
 );
 
 export async function generateMG30Preset(input: MG30PresetInput): Promise<MG30PresetOutput> {
-  const { output } = await mg30PresetPrompt(input);
-  if (!output) throw new Error('Generazione fallita: output vuoto.');
-  return output;
+  return mg30PresetFlow(input);
 }

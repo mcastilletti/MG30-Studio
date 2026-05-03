@@ -330,18 +330,6 @@ img, video {
   --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-border: 260 10% 15%;
   --sidebar-ring: 261 43% 48%;
-  --block-wah: 300 100% 75%;
-  --block-amp: 0 100% 50%;
-  --block-gate: 70 100% 50%;
-  --block-ir: 192 100% 50%;
-  --block-cmp: 60 100% 50%;
-  --block-eq: 0 0% 100%;
-  --block-efx: 32 100% 50%;
-  --block-sr: 120 100% 50%;
-  --block-mod: 220 100% 50%;
-  --block-dly: 180 100% 50%;
-  --block-rvb: 288 100% 50%;
-  --block-vol: 0 0% 80%;
 }
 
 * {
@@ -2419,13 +2407,11 @@ body {
     size: A4 portrait;
   }
 
-  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main, div, section {
+  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main {
     height: auto !important;
     min-height: 0 !important;
-    max-height: none !important;
     overflow: visible !important;
     display: block !important;
-    position: static !important;
     background: #fff !important;
     color: #000 !important;
     padding: 0 !important;
@@ -2468,19 +2454,15 @@ body {
     margin-bottom: 4mm !important;
     text-align: center !important;
     line-height: 1.1 !important;
-    color: #000 !important;
   }
 
   .print-subtitle {
     font-size: 11pt !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
     margin-bottom: 6mm !important;
     border-bottom: 1pt solid #ddd !important;
-    padding-bottom: 1mm !important;
   }
 
   .print-general-notes {
@@ -2491,7 +2473,6 @@ body {
     padding: 3mm !important;
     border: .5pt solid #ccc !important;
     white-space: pre-wrap !important;
-    color: #000 !important;
   }
 
   .print-sections-container {
@@ -2499,14 +2480,12 @@ body {
     display: flex !important;
     flex-direction: column !important;
     gap: 4mm !important;
-    overflow: hidden !important;
   }
 
   .print-section-row {
     display: flex !important;
     gap: 5mm !important;
     page-break-inside: avoid !important;
-    break-inside: avoid !important;
   }
 
   .print-section-badge {
@@ -2518,13 +2497,6 @@ body {
     width: 18mm !important;
     text-align: center !important;
     background: #eee !important;
-    color: #000 !important;
-  }
-
-  .print-chord-container {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 2.5mm !important;
   }
 
   .print-chord {
@@ -2532,9 +2504,8 @@ body {
     font-weight: 900 !important;
     padding: 1mm 2.5mm !important;
     border: 1pt solid #000 !important;
-    background: #fff !important;
-    color: #000 !important;
     line-height: 1 !important;
+    display: inline-block !important;
   }
 
   .print-text {
@@ -2542,25 +2513,7 @@ body {
     font-weight: 600 !important;
     line-height: 1.2 !important;
     margin-top: 1mm !important;
-    color: #000 !important;
   }
-
-  .basis-full {
-    flex-basis: 100% !important;
-    height: 0 !important;
-    display: block !important;
-  }
-}
-
-.knob-container {
-  touch-action: none;
-}
-
-.led-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 5px;
 }
 
 .selection\:bg-primary\/30 ::selection {

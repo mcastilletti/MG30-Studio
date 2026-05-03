@@ -10,13 +10,13 @@
     --card-foreground: 0 0% 98%;
     --popover: 260 10% 12%;
     --popover-foreground: 0 0% 98%;
-    --primary: 261 43% 48%; /* Deep Purple #673AB7 */
+    --primary: 261 43% 48%;
     --primary-foreground: 0 0% 100%;
     --secondary: 260 10% 20%;
     --secondary-foreground: 0 0% 98%;
     --muted: 260 10% 16%;
     --muted-foreground: 0 0% 70%;
-    --accent: 282 65% 40%; /* Electric Violet #8E24AA */
+    --accent: 282 65% 40%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -33,27 +33,11 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 260 10% 15%;
     --sidebar-ring: 261 43% 48%;
-
-    /* MG-30 Block Colors */
-    --block-wah: 300 100% 75%;
-    --block-amp: 0 100% 50%;
-    --block-gate: 70 100% 50%;
-    --block-ir: 192 100% 50%;
-    --block-cmp: 60 100% 50%;
-    --block-eq: 0 0% 100%;
-    --block-efx: 32 100% 50%;
-    --block-sr: 120 100% 50%;
-    --block-mod: 220 100% 50%;
-    --block-dly: 180 100% 50%;
-    --block-rvb: 288 100% 50%;
-    --block-vol: 0 0% 80%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -66,20 +50,11 @@
     size: A4 portrait;
   }
 
-  /* RESET TOTALE STRUTTURALE */
-  html, body, #__next, 
-  [data-sidebar-provider], 
-  [data-sidebar-wrapper], 
-  [data-sidebar-content],
-  main,
-  div,
-  section {
+  html, body, #__next, [data-sidebar-provider], [data-sidebar-wrapper], [data-sidebar-content], main {
     height: auto !important;
     min-height: 0 !important;
-    max-height: none !important;
     overflow: visible !important;
     display: block !important;
-    position: static !important;
     background: white !important;
     color: black !important;
     padding: 0 !important;
@@ -88,24 +63,12 @@
     box-shadow: none !important;
   }
 
-  /* Nascondiamo UI non necessaria */
-  [data-sidebar-trigger],
-  [data-sidebar-rail],
-  [data-sidebar],
-  header,
-  nav,
-  .no-print,
-  button {
+  [data-sidebar-trigger], [data-sidebar-rail], [data-sidebar], header, nav, .no-print, button {
     display: none !important;
   }
 
-  .print-only {
-    display: block !important;
-    width: 100% !important;
-    background: white !important;
-  }
+  .print-only { display: block !important; width: 100% !important; background: white !important; }
 
-  /* OGNI BRANO OCCUPA UN FOGLIO A4 RIGIDAMENTE */
   .print-song-page {
     page-break-after: always !important;
     break-after: page !important;
@@ -114,15 +77,14 @@
     display: flex !important;
     flex-direction: column !important;
     width: 210mm !important;
-    height: 297mm !important; /* Forza altezza A4 */
-    padding: 15mm !important; /* Margini di sicurezza */
+    height: 297mm !important;
+    padding: 15mm !important;
     margin: 0 !important;
     background: white !important;
     position: relative !important;
-    overflow: hidden !important; /* Impedisce al contenuto di uscire */
+    overflow: hidden !important;
   }
 
-  /* CONTENUTI RIDOTTI DEL 30% */
   .print-title {
     font-size: 25pt !important; 
     font-weight: 900 !important;
@@ -131,19 +93,15 @@
     margin-bottom: 4mm !important; 
     text-align: center !important;
     line-height: 1.1 !important;
-    color: black !important;
   }
 
   .print-subtitle {
     font-size: 11pt !important; 
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    color: #333 !important;
     display: flex !important;
     justify-content: space-between !important;
     margin-bottom: 6mm !important; 
     border-bottom: 1pt solid #ddd !important;
-    padding-bottom: 1mm !important;
   }
 
   .print-general-notes {
@@ -154,7 +112,6 @@
     padding: 3mm !important; 
     border: 0.5pt solid #ccc !important;
     white-space: pre-wrap !important;
-    color: black !important;
   }
 
   .print-sections-container {
@@ -162,14 +119,12 @@
     display: flex !important;
     flex-direction: column !important;
     gap: 4mm !important; 
-    overflow: hidden !important;
   }
 
   .print-section-row {
     display: flex !important;
     gap: 5mm !important; 
     page-break-inside: avoid !important;
-    break-inside: avoid !important;
   }
 
   .print-section-badge {
@@ -181,13 +136,6 @@
     width: 18mm !important; 
     text-align: center !important;
     background: #eee !important;
-    color: black !important;
-  }
-
-  .print-chord-container {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 2.5mm !important; 
   }
 
   .print-chord {
@@ -195,9 +143,8 @@
     font-weight: 900 !important;
     padding: 1mm 2.5mm !important;
     border: 1pt solid black !important;
-    background: #fff !important;
-    color: black !important;
     line-height: 1 !important;
+    display: inline-block !important;
   }
 
   .print-text {
@@ -205,23 +152,5 @@
     font-weight: 600 !important;
     line-height: 1.2 !important;
     margin-top: 1mm !important;
-    color: black !important;
   }
-
-  .basis-full {
-    flex-basis: 100% !important;
-    height: 0 !important;
-    display: block !important;
-  }
-}
-
-.knob-container {
-  touch-action: none;
-}
-
-.led-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 0 5px currentColor;
 }
