@@ -19,8 +19,12 @@ export const metadata: Metadata = {
     title: 'MG30 Studio',
   },
   icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
+    icon: [
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' }
+    ],
   },
   formatDetection: {
     telephone: false,
