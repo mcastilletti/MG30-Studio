@@ -2407,16 +2407,18 @@ body {
     size: A4 portrait;
   }
 
-  html, body {
+  html, body, [data-sidebar-provider], main {
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     background: #fff !important;
     color: #000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    display: block !important;
   }
 
-  .no-print, [data-sidebar-provider], header, nav, button, [data-sidebar-trigger] {
+  .no-print, [data-sidebar-provider] > aside, header, nav, button, [data-sidebar-trigger] {
     display: none !important;
   }
 
@@ -2430,10 +2432,11 @@ body {
     width: 210mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
-    padding: 10mm 12mm !important;
+    padding: 10mm 15mm !important;
     overflow: hidden !important;
     background: #fff !important;
     position: relative !important;
+    border: none !important;
   }
 
   .print-title {
@@ -2451,40 +2454,39 @@ body {
     font-weight: 700 !important;
     display: flex !important;
     justify-content: space-between !important;
-    margin-bottom: 2mm !important;
-    border-bottom: .5pt solid #ddd !important;
+    margin-bottom: 3mm !important;
   }
 
   .print-general-notes {
     font-size: 8pt !important;
     font-style: italic !important;
-    margin-bottom: 3mm !important;
+    margin-bottom: 4mm !important;
     padding: 2mm !important;
-    border: .3pt solid #eee !important;
-    background: #fafafa !important;
+    background: #f5f5f5 !important;
     white-space: pre-wrap !important;
+    border-radius: 2mm !important;
   }
 
   .print-sections-container {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 2mm !important;
+    gap: 3mm !important;
   }
 
   .print-section-row {
     display: flex !important;
-    gap: 3mm !important;
+    gap: 4mm !important;
     break-inside: avoid !important;
   }
 
   .print-section-badge {
-    font-size: 6.5pt !important;
+    font-size: 7pt !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
-    padding: .8mm !important;
-    border: .8pt solid #000 !important;
-    width: 14mm !important;
+    padding: 1mm !important;
+    border: 1pt solid #000 !important;
+    width: 16mm !important;
     text-align: center !important;
     background: #eee !important;
   }
@@ -2492,20 +2494,21 @@ body {
   .print-chord {
     font-size: 16pt !important;
     font-weight: 900 !important;
-    padding: .3mm 1.2mm !important;
-    border: .8pt solid #000 !important;
+    padding: .5mm 1.5mm !important;
+    border: 1pt solid #000 !important;
     display: inline-block !important;
-    margin-right: .8mm !important;
-    margin-bottom: .8mm !important;
+    margin-right: 1mm !important;
+    margin-bottom: 1mm !important;
     line-height: 1 !important;
+    background: #fff !important;
   }
 
   .print-text {
     font-size: 11pt !important;
     font-weight: 600 !important;
-    line-height: 1 !important;
-    margin-top: .5mm !important;
-    color: #333 !important;
+    line-height: 1.2 !important;
+    margin-top: 1mm !important;
+    color: #222 !important;
   }
 }
 
