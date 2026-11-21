@@ -1,34 +1,34 @@
-# MG30 Studio (mcastilletti/Nux-MG-30-AI)
+# Sottocosto
 
-Un editor web professionale per la pedaliera multi-effetto **NUX MG-30**, potenziato dall'intelligenza artificiale e pronto per il deployment.
+Carichi i volantini (PDF o foto) dei negozi che frequenti, l'app ne estrae le offerte con **Gemini** e le confronta con la tua **lista dei prodotti abituali**, mostrando per ciascuno l'offerta più conveniente (anche al kg/litro) e quelle alternative.
 
-## 🚀 Push su GitHub
-Se hai clonato il progetto e vuoi caricarlo sul tuo repository `mcastilletti/Nux-MG-30-AI`, esegui questi comandi nel terminale:
+- `web/` — React + TypeScript + Vite (Firebase Auth con Google, Firestore in tempo reale, Storage)
+- `functions/` — Cloud Functions in **Python**: lettura volantini (`parser.py`), normalizzazione quantità/prezzo unitario (`units.py`), abbinamento prodotti↔offerte (`matcher.py`)
+- Firestore/Storage rules: accesso solo ai propri dati (`users/{uid}/…`)
 
+## Flusso
+1. Tab **Lista**: aggiungi i prodotti (parole chiave, esclusioni, prezzo obiettivo, unità di confronto).
+2. Tab **Volantini**: scegli negozio, validità e carica il file → su Storage `flyers/{uid}/{id}/file`.
+3. `process_flyer` (trigger Storage) legge il file a blocchi di 4 pagine con Gemini, salva le offerte e ricalcola i confronti.
+4. Tab **Offerte**: miglior offerta per prodotto, ordinata per prezzo al kg/l/pz; scadute ignorate.
+
+## Setup
 ```bash
-git init
-git remote add origin https://github.com/mcastilletti/Nux-MG-30-AI.git
-git add .
-git commit -m "Initial commit: MG30 Studio with AI and PDF Fixes"
-git branch -M main
-git push -u origin main
+# 1. Progetto Firebase: .firebaserc punta a studio-3261187179-ec15d (quello già nel repo).
+#    Per usarne un altro: firebase use --add
+#    Abilita: Authentication (Google), Firestore, Storage, piano Blaze (richiesto dalle Functions).
+# 2. Web
+cd web && cp .env.example .env   # compila con la config SDK del progetto
+npm install && npm run dev
+# 3. Chiave Gemini (Secret Manager) e deploy
+firebase functions:secrets:set GEMINI_API_KEY
+npm --prefix web run build
+firebase deploy
 ```
+**Regione**: le funzioni usano `europe-west1` (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web). Il bucket Storage deve essere nella stessa regione/area (es. `eur3`), altrimenti cambia entrambe.
 
-## 🛠 Configurazione Rapida
-1.  **Chiave AI**: Ottieni una chiave API su [Google AI Studio](https://aistudio.google.com/app/apikey) e incollala nel file `.env` alla voce `GOOGLE_GENAI_API_KEY`.
-2.  **Icona PWA**: Assicurati di salvare la tua icona come `public/icon.png`. L'app è già configurata per impostare lo sfondo giallo (#FFD500) automaticamente su Android.
-
-## ✨ Funzionalità principali
-- **Visual Editor**: Controllo completo dei blocchi tramite MIDI e gestione delle **3 SCENE** (CC 80) per ogni preset.
-- **AI Mode**: Generazione automatica dei parametri da testo naturale utilizzando **Gemini 2.5 Flash** tramite Genkit v1.x.
-- **Note Brani & PDF**: Gestione scalette con accordi e stampa **PDF A4 su pagina singola garantita** (contenuto ridotto del 30% e altezza bloccata per evitare troncamenti).
-- **PWA Ready**: Installabile su Android con icona a sfondo giallo (#FFD500) e modalità "maskable" (nessun bordo bianco).
-
-## 💡 Risoluzione Problemi Migrazione
-Se il pulsante "Move now" di Firebase Studio è bloccato nonostante tu sia Owner:
-1. Premi `Ctrl+Shift+P` (o `Cmd+Shift+P` su Mac).
-2. Digita **"Zip & Download"** e premi Invio.
-3. Estrai e apri il progetto nel tuo IDE locale (es. VS Code) per continuare lo sviluppo.
-
-## Sviluppo
-Basato su **Next.js 15**, **Genkit 1.x**, e **Zustand**.
+## Test
+```bash
+cd functions && python -m venv venv && . venv/bin/activate
+pip install -r requirements-dev.txt && pytest
+```
