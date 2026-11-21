@@ -5,6 +5,7 @@ import io
 import json
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
 PAGES_PER_CHUNK = 4
@@ -100,12 +101,17 @@ def clean_offers(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def parse_flyer(data: bytes, mime: str, llm: LLMCall = _gemini_call) -> list[dict[str, Any]]:
     parts = [(c, "application/pdf") for c in _split_pdf(data)] if mime == "application/pdf" else [(data, mime)]
-    offers: list[dict[str, Any]] = []
-    for i, (blob, m) in enumerate(parts):
+
+    def one(i: int) -> list[dict[str, Any]]:
+        blob, m = parts[i]
         try:
-            offers.extend(json.loads(llm(blob, m, PROMPT)))
+            return json.loads(llm(blob, m, PROMPT))
         except Exception:  # un blocco fallito non deve perdere gli altri
             logging.exception("Errore nel blocco %d/%d del volantino", i + 1, len(parts))
             if len(parts) == 1:
                 raise
+            return []
+
+    with ThreadPoolExecutor(max_workers=min(4, len(parts))) as pool:  # blocchi in parallelo, ordine conservato
+        offers = [o for chunk in pool.map(one, range(len(parts))) for o in chunk]
     return clean_offers(offers)

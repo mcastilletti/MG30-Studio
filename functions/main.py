@@ -15,7 +15,7 @@ from firebase_functions.params import SecretParam
 
 from volantini.matcher import compute_matches
 from volantini.parser import parse_flyer
-from volantini.scraper import discover_pdf_urls, download_pdfs
+from volantini.scraper import discover_flyers, download_pdfs
 
 REGION = "europe-west1"  # deve coincidere con VITE_FUNCTIONS_REGION
 BUCKET = "studio-7805098640-5b1fc-eu"  # bucket Storage dei volantini, creato in europe-west1 (vedi README)
@@ -129,8 +129,8 @@ def scan_store_for(uid: str, store_id: str) -> dict:
     urls = [u for u in store.get("urls", []) if isinstance(u, str) and u.strip()]
     new = 0
     try:
-        pdf_urls = discover_pdf_urls(urls, log=logs.append)
-        found = download_pdfs(pdf_urls, log=logs.append)
+        cands = discover_flyers(urls, log=logs.append, exclude=store.get("exclude") or [])
+        found = download_pdfs(cands, log=logs.append)
         bucket = storage.bucket(BUCKET)
         for f in found:
             flyer_ref = _user(uid).collection("flyers").document(f.flyer_id)
@@ -138,8 +138,8 @@ def scan_store_for(uid: str, store_id: str) -> dict:
             if prev.exists and (prev.to_dict() or {}).get("contentHash") == f.sha256:
                 continue  # già analizzato, contenuto invariato
             flyer_ref.set({
-                "storeId": store_id, "storeName": store.get("name", ""), "fileName": f.url.rsplit("/", 1)[-1][:120],
-                "sourceUrl": f.url, "contentHash": f.sha256, "validFrom": None, "validTo": None,
+                "storeId": store_id, "storeName": store.get("name", ""), "fileName": (f.title or f.url.rsplit("/", 1)[-1])[:120],
+                "sourceUrl": f.url, "contentHash": f.sha256, "validFrom": f.valid_from, "validTo": f.valid_to,
                 "status": "uploading", "createdAt": firestore.SERVER_TIMESTAMP,
             })  # prima il documento, poi il file: l'upload fa partire process_flyer
             bucket.blob(f"flyers/{uid}/{f.flyer_id}/flyer.pdf").upload_from_string(f.data, content_type="application/pdf")

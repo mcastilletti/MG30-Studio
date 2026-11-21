@@ -6,10 +6,13 @@ DoveConviene…) senza link diretto al PDF non vengono rilevati.
 from __future__ import annotations
 
 import hashlib
+import html as htmllib
 import ipaddress
+import json
 import re
 import socket
 from dataclasses import dataclass
+from datetime import date, datetime, timezone
 from typing import Callable
 from urllib.parse import urldefrag, urljoin, urlparse
 
@@ -18,7 +21,7 @@ from bs4 import BeautifulSoup
 
 MAX_PDF_BYTES = 30 * 1024 * 1024
 MAX_SUBPAGES = 6
-MAX_PDFS_PER_STORE = 5
+MAX_PDFS_PER_STORE = 10
 TIMEOUT = 20
 UA = "Mozilla/5.0 (compatible; SottocostoBot/1.0)"
 _FLYER_HINT = re.compile(r"volantin|flyer|offert|sfoglia|promo|catalog|settimana|brochure", re.I)
@@ -95,51 +98,130 @@ def parse_links(html: str, base_url: str) -> tuple[list[str], list[str]]:
 
 
 @dataclass
+class Candidate:
+    url: str
+    title: str | None = None
+    valid_from: str | None = None  # ISO YYYY-MM-DD
+    valid_to: str | None = None
+
+
+@dataclass
 class FoundPDF:
     url: str
     data: bytes
     sha256: str
-    flyer_id: str  # stabile per URL: se il sito aggiorna lo stesso link, il volantino viene riletto
+    flyer_id: str  # stabile per URL (senza query): se il sito sostituisce il file, il volantino viene riletto
+    title: str | None = None
+    valid_from: str | None = None
+    valid_to: str | None = None
 
 
 def flyer_id_for(url: str) -> str:
-    return hashlib.sha1(url.encode()).hexdigest()[:24]
+    """Id stabile: ignora la query (molti siti ci mettono un hash di versione che cambia a ogni aggiornamento)."""
+    p = urlparse(url)
+    return hashlib.sha1(f"{p.scheme}://{p.netloc}{p.path}".encode()).hexdigest()[:24]
 
 
-def discover_pdf_urls(
+def _to_iso(v) -> str | None:
+    if isinstance(v, (int, float)) and v > 1e11:  # millisecondi epoch
+        return datetime.fromtimestamp(v / 1000, timezone.utc).date().isoformat()
+    if isinstance(v, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", v[:10]):
+        return v[:10]
+    return None
+
+
+_PDFURL_RE = re.compile(r'"pdfUrl"\s*:\s*"')
+
+
+def parse_embedded_flyers(page: str, base_url: str) -> list[Candidate]:
+    """Siti che incorporano i volantini come JSON nella pagina (es. Conad): oggetti con "pdfUrl",
+    "title"/"feTitle", "validFrom"/"validTo"."""
+    text = htmllib.unescape(page)
+    dec = json.JSONDecoder()
+    out: dict[str, Candidate] = {}
+    for m in _PDFURL_RE.finditer(text):
+        starts = [i for i in (j.start() for j in re.finditer(r'\{"', text[max(0, m.start() - 8000):m.start()]))]
+        for off in reversed(starts[-40:]):  # l'oggetto che contiene pdfUrl, scartando quelli annidati
+            try:
+                obj, _ = dec.raw_decode(text, max(0, m.start() - 8000) + off)
+            except ValueError:
+                continue
+            if isinstance(obj, dict) and isinstance(obj.get("pdfUrl"), str):
+                url = urljoin(base_url, obj["pdfUrl"])
+                out.setdefault(flyer_id_for(url), Candidate(
+                    url, obj.get("feTitle") or obj.get("title"), _to_iso(obj.get("validFrom")), _to_iso(obj.get("validTo")),
+                ))
+                break
+    return list(out.values())
+
+
+def _rank(c: Candidate, today: date) -> tuple:
+    """Prima i volantini in corso, poi i futuri, per data di inizio più recente."""
+    vf = c.valid_from or "0000-00-00"
+    active = not (c.valid_from and c.valid_from > today.isoformat())
+    return (not active, "".join(chr(255 - ord(ch)) for ch in vf))
+
+
+def _keep(c: Candidate, exclude: list[str], today: date) -> bool:
+    if c.valid_to and c.valid_to < today.isoformat():
+        return False  # scaduto
+    hay = f"{c.title or ''} {c.url}".lower()
+    return not any(w.strip().lower() in hay for w in exclude if w.strip())
+
+
+def discover_flyers(
     start_urls: list[str],
     get_text: Callable[[str], str] = fetch_text,
     log: Callable[[str], None] = lambda _m: None,
-) -> list[str]:
-    """Cerca link a PDF nelle pagine indicate e in alcune sotto-pagine pertinenti (profondità 1)."""
-    found: list[str] = []
+    exclude: list[str] | None = None,
+    today: date | None = None,
+) -> list[Candidate]:
+    """Cerca volantini (link a PDF o JSON incorporato) nelle pagine indicate e, se non ne trova,
+    in alcune sotto-pagine pertinenti (profondità 1)."""
+    today = today or date.today()
+    found: dict[str, Candidate] = {}
+
+    def scan_page(url: str) -> tuple[bool, list[str]]:
+        page = get_text(url)
+        embedded = parse_embedded_flyers(page, url)
+        pdfs, subpages = parse_links(page, url)
+        cands = embedded or [Candidate(u) for u in pdfs]  # i dati incorporati hanno titolo e date: preferiti
+        for c in cands:
+            found.setdefault(flyer_id_for(c.url), c)
+        return bool(cands), subpages
+
     for start in start_urls:
         if urlparse(start).path.lower().endswith(".pdf"):
-            found.append(start)
+            found.setdefault(flyer_id_for(start), Candidate(start))
             continue
         try:
-            pdfs, pages = parse_links(get_text(start), start)
+            has, subs = scan_page(start)
         except Exception as exc:  # noqa: BLE001
             log(f"{start}: {exc}")
             continue
-        found.extend(pdfs)
-        if not pdfs:  # nessun PDF in home: prova le sotto-pagine "volantino/offerte…"
-            for sub in pages[:MAX_SUBPAGES]:
+        if not has:  # nessun volantino nella pagina: prova le sotto-pagine "volantino/offerte…"
+            for sub in subs[:MAX_SUBPAGES]:
                 try:
-                    found.extend(parse_links(get_text(sub), sub)[0])
+                    scan_page(sub)
                 except Exception as exc:  # noqa: BLE001
                     log(f"{sub}: {exc}")
-    return list(dict.fromkeys(found))[:MAX_PDFS_PER_STORE]
+    keep = [c for c in found.values() if _keep(c, exclude or [], today)]
+    keep.sort(key=lambda c: _rank(c, today))
+    return keep[:MAX_PDFS_PER_STORE]
 
 
-def download_pdfs(urls: list[str], fetch: Callable[[str], bytes | None] = fetch_pdf, log: Callable[[str], None] = lambda _m: None) -> list[FoundPDF]:
+def download_pdfs(
+    cands: list[Candidate],
+    fetch: Callable[[str], bytes | None] = fetch_pdf,
+    log: Callable[[str], None] = lambda _m: None,
+) -> list[FoundPDF]:
     out = []
-    for u in urls:
+    for c in cands:
         try:
-            data = fetch(u)
+            data = fetch(c.url)
         except Exception as exc:  # noqa: BLE001
-            log(f"{u}: {exc}")
+            log(f"{c.url}: {exc}")
             continue
         if data:
-            out.append(FoundPDF(u, data, hashlib.sha256(data).hexdigest(), flyer_id_for(u)))
+            out.append(FoundPDF(c.url, data, hashlib.sha256(data).hexdigest(), flyer_id_for(c.url), c.title, c.valid_from, c.valid_to))
     return out

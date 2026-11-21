@@ -11,6 +11,7 @@ export interface Store {
   id: string;
   name: string;
   urls: string[];
+  exclude?: string[];
   lastScanStatus?: "ok" | "empty" | "error";
   lastScanMessage?: string;
   lastScanAt?: { toDate(): Date } | null;

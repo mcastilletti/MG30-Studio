@@ -12,6 +12,8 @@ Indichi i negozi che frequenti con il link alle pagine dei loro volantini: l'app
 3. `process_flyer` (trigger Storage) legge il file a blocchi di 4 pagine con Gemini, salva le offerte e ricalcola i confronti.
 4. Tab **Offerte**: miglior offerta per prodotto, ordinata per prezzo al kg/l/pz; scadute ignorate.
 
+**Cosa legge lo scraping**: link a PDF nella pagina e volantini incorporati come JSON (formato usato per esempio da conad.it, con titolo e date di validità). Un filtro per negozio permette di ignorare volantini per parola (es. catalogo giocattoli, manuali). Non esegue JavaScript.
+
 **Limiti dello scraping**: legge solo HTML statico. I siti che mostrano il volantino con un visualizzatore JavaScript (Publitas, Issuu, DoveConviene…) senza link diretto al PDF non vengono rilevati: in quel caso la scansione lo segnala e si usa il caricamento manuale. Le richieste sono limitate a indirizzi pubblici (protezione SSRF), 30 MB per PDF, max 5 PDF per negozio. Verifica che i termini d'uso dei siti consentano la lettura automatica.
 
 ## Setup

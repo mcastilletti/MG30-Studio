@@ -9,6 +9,7 @@ import type { Flyer, Store } from "../types";
 const STATUS: Record<Flyer["status"], string> = {
   uploading: "In arrivo…", processing: "Lettura in corso…", done: "Pronto", error: "Errore",
 };
+const parseWords = (s: string) => s.split(",").map((w) => w.trim()).filter(Boolean);
 const parseUrls = (s: string) => s.split(/\s+/).map((u) => u.trim()).filter(Boolean);
 const scan = (storeId?: string) => httpsCallable(functions, "scan_store")(storeId ? { storeId } : {});
 
@@ -17,6 +18,7 @@ export default function StoresTab({ uid }: { uid: string }) {
   const flyers = useUserCollection<Flyer>(uid, "flyers");
   const [name, setName] = useState("");
   const [urls, setUrls] = useState("");
+  const [exclude, setExclude] = useState("");
   const [scanning, setScanning] = useState<string | null>(null);
   const [err, setErr] = useState("");
 
@@ -33,8 +35,8 @@ export default function StoresTab({ uid }: { uid: string }) {
     const bad = list.find((u) => !/^https?:\/\//i.test(u));
     if (bad) return setErr(`Link non valido (deve iniziare con http): ${bad}`);
     setErr("");
-    const created = await addDoc(collection(db, "users", uid, "stores"), { name: name.trim(), urls: list });
-    setName(""); setUrls("");
+    const created = await addDoc(collection(db, "users", uid, "stores"), { name: name.trim(), urls: list, exclude: parseWords(exclude) });
+    setName(""); setUrls(""); setExclude("");
     run(created.id, created.id);
   }
 
@@ -50,6 +52,7 @@ export default function StoresTab({ uid }: { uid: string }) {
       <form onSubmit={add} className="card form">
         <input placeholder="Nome negozio (es. Coop)" value={name} onChange={(e) => setName(e.target.value)} required />
         <textarea placeholder={"Link alle pagine dei volantini, uno per riga\nhttps://www.negozio.it/volantino"} rows={3} value={urls} onChange={(e) => setUrls(e.target.value)} required />
+        <input placeholder="Ignora volantini che contengono (opz., es. giocattolo, manuale, carta)" value={exclude} onChange={(e) => setExclude(e.target.value)} />
         <button className="primary">Aggiungi e cerca volantini</button>
         <small className="muted">L'app cerca i PDF in queste pagine ogni mattina. Funziona con link a PDF o pagine che li contengono; i siti con visualizzatori interattivi senza PDF scaricabile non sono leggibili (usa il caricamento manuale).</small>
         {err && <p className="error">{err}</p>}
@@ -71,6 +74,7 @@ export default function StoresTab({ uid }: { uid: string }) {
               </span>
             </div>
             <small>{s.urls.join(" · ")}</small>
+            {!!s.exclude?.length && <small>Ignora: {s.exclude.join(", ")}</small>}
             {s.lastScanStatus && (
               <small className={s.lastScanStatus === "ok" ? "" : "error"}>
                 {s.lastScanAt ? `Ultima scansione ${s.lastScanAt.toDate().toLocaleString("it-IT")}: ` : ""}{s.lastScanMessage}
