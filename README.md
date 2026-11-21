@@ -31,6 +31,8 @@ firebase deploy
 ```
 **Regione**: funzioni (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web) e bucket Storage dei volantini sono in `europe-west1`. Il bucket predefinito del progetto non si può spostare: crea un bucket aggiuntivo in Firebase Console → Storage → Aggiungi bucket, con il nome in `BUCKET` (`functions/main.py`) e lo stesso in `storageBucket` / `firebase.json`.
 
+**Modello Gemini**: di default `gemini-3.8-flash`. Se Google lo ritira, crea `functions/.env` con `GEMINI_MODEL=<nuovo-modello>` e rifai `firebase deploy --only functions`, senza modificare il codice.
+
 ## Test
 ```bash
 cd functions && python -m venv venv && . venv/bin/activate

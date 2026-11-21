@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
 PAGES_PER_CHUNK = 4
-DEFAULT_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-3.8-flash"  # sovrascrivibile con GEMINI_MODEL in functions/.env
 
 PROMPT = """Sei un assistente che legge volantini promozionali di supermercati italiani.
 Estrai TUTTE le offerte di prodotti alimentari e per la casa visibili nelle pagine.
