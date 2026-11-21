@@ -17,7 +17,7 @@ export default function App() {
   if (!user)
     return (
       <main className="center login">
-        <h1>🛒 Volantini</h1>
+        <h1>🛒 Sottocosto</h1>
         <p>Trova le offerte migliori per i prodotti che compri di solito.</p>
         <button className="primary" onClick={() => signInWithPopup(auth, googleProvider)}>
           Accedi con Google
@@ -28,7 +28,7 @@ export default function App() {
   return (
     <>
       <header>
-        <h1>🛒 Volantini</h1>
+        <h1>🛒 Sottocosto</h1>
         <nav>
           {TABS.map(([id, label]) => (
             <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>

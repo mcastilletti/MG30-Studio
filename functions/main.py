@@ -1,4 +1,4 @@
-"""Cloud Functions (Python) per l'app Volantini.
+"""Cloud Functions (Python) per l'app Sottocosto.
 
 Dati su Firestore, tutti sotto users/{uid}:
   products/{id}  lista della spesa     flyers/{id}  volantini caricati (+ file su Storage)

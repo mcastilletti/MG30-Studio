@@ -1,4 +1,4 @@
-# Volantini
+# Sottocosto
 
 Carichi i volantini (PDF o foto) dei negozi che frequenti, l'app ne estrae le offerte con **Gemini** e le confronta con la tua **lista dei prodotti abituali**, mostrando per ciascuno l'offerta più conveniente (anche al kg/litro) e quelle alternative.
 

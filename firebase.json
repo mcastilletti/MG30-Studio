@@ -4,7 +4,7 @@
   "functions": [
     {
       "source": "functions",
-      "codebase": "volantini",
+      "codebase": "sottocosto",
       "runtime": "python312",
       "ignore": ["venv", "__pycache__", "tests", ".pytest_cache", "requirements-dev.txt"]
     }
