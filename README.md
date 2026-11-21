@@ -27,7 +27,7 @@ firebase functions:secrets:set GEMINI_API_KEY
 npm --prefix web run build
 firebase deploy
 ```
-**Regione**: le funzioni usano `europe-west1` (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web). Il bucket Storage deve essere nella stessa regione/area (es. `eur3`), altrimenti cambia entrambe.
+**Regione**: le funzioni usano `us-west1` (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web). Il bucket Storage deve essere nella stessa regione/area (es. `eur3`), altrimenti cambia entrambe.
 
 ## Test
 ```bash

@@ -17,7 +17,7 @@ from volantini.matcher import compute_matches
 from volantini.parser import parse_flyer
 from volantini.scraper import discover_pdf_urls, download_pdfs
 
-REGION = "europe-west1"  # deve coincidere con la regione del bucket Storage e con VITE_FUNCTIONS_REGION
+REGION = "us-west1"  # deve coincidere con la regione del bucket Storage e con VITE_FUNCTIONS_REGION
 GEMINI_API_KEY = SecretParam("GEMINI_API_KEY")
 
 options.set_global_options(region=REGION, max_instances=5)

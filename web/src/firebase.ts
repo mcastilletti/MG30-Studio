@@ -16,5 +16,5 @@ const app = initializeApp({
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app, import.meta.env.VITE_FUNCTIONS_REGION || "europe-west1");
+export const functions = getFunctions(app, import.meta.env.VITE_FUNCTIONS_REGION || "us-west1");
 export const googleProvider = new GoogleAuthProvider();
