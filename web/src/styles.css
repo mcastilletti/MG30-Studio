@@ -1,0 +1,31 @@
+:root { --accent: #e63946; --bg: #f7f7f9; --card: #fff; --text: #1d1d1f; --muted: #6b7280; --ok: #1a7f37; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #111214; --card: #1c1d20; --text: #f2f2f3; --muted: #9ca3af; --ok: #4ade80; } }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+header { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: var(--card); position: sticky; top: 0; flex-wrap: wrap; }
+header h1 { font-size: 1.1rem; margin: 0; }
+nav { display: flex; gap: 4px; flex: 1; }
+nav button { padding: 6px 12px; border: 0; background: none; border-radius: 8px; color: inherit; font: inherit; cursor: pointer; }
+nav .active { background: var(--accent); color: #fff; }
+main { max-width: 720px; margin: 0 auto; padding: 16px; }
+.center { text-align: center; padding: 20vh 16px 0; }
+.card { background: var(--card); border-radius: 12px; padding: 12px 14px; margin: 10px 0; box-shadow: 0 1px 3px #0001; }
+.form { display: grid; gap: 8px; }
+.row { display: flex; gap: 8px; } .row > * { flex: 1; }
+label { display: grid; font-size: .8rem; color: var(--muted); }
+input, select { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font: inherit; background: transparent; color: inherit; min-width: 0; }
+button.primary { background: var(--accent); color: #fff; border: 0; padding: 10px 14px; border-radius: 8px; font: inherit; cursor: pointer; }
+button:disabled { opacity: .6; }
+button.link { background: none; border: 0; color: var(--muted); cursor: pointer; font: inherit; }
+button.danger { color: var(--accent); }
+.list { list-style: none; padding: 0; margin: 0; }
+.list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+small { display: block; color: var(--muted); }
+.muted { color: var(--muted); } a { color: var(--accent); cursor: pointer; }
+.error { color: var(--accent); }
+h2 { margin: 8px 0; } h3 { margin: 0 0 6px; }
+.offer { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; }
+.offer.best { border-left: 4px solid var(--ok); padding-left: 10px; }
+.price { font-weight: 700; text-align: right; white-space: nowrap; } .price s { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+.badge { background: var(--ok); color: #fff; font-size: .7rem; padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
+details { border-top: 1px solid #8883; margin-top: 6px; padding-top: 6px; } summary { cursor: pointer; color: var(--muted); }
