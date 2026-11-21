@@ -1,17 +1,40 @@
 {
-  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
-  "storage": { "rules": "storage.rules" },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": [
+    {
+      "bucket": "studio-7805098640-5b1fc-eu",
+      "rules": "storage.rules"
+    }
+  ],
   "functions": [
     {
       "source": "functions",
       "codebase": "sottocosto",
       "runtime": "python312",
-      "ignore": ["venv", "__pycache__", "tests", ".pytest_cache", "requirements-dev.txt"]
+      "ignore": [
+        "venv",
+        "__pycache__",
+        "tests",
+        ".pytest_cache",
+        "requirements-dev.txt"
+      ]
     }
   ],
   "hosting": {
     "public": "web/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }]
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

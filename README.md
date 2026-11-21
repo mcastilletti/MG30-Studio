@@ -27,7 +27,7 @@ firebase functions:secrets:set GEMINI_API_KEY
 npm --prefix web run build
 firebase deploy
 ```
-**Regione**: le funzioni usano `us-west1` (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web). Il bucket Storage deve essere nella stessa regione/area (es. `eur3`), altrimenti cambia entrambe.
+**Regione**: funzioni (`REGION` in `functions/main.py`, `VITE_FUNCTIONS_REGION` nel web) e bucket Storage dei volantini sono in `europe-west1`. Il bucket predefinito del progetto non si può spostare: crea un bucket aggiuntivo in Firebase Console → Storage → Aggiungi bucket, con il nome in `BUCKET` (`functions/main.py`) e lo stesso in `storageBucket` / `firebase.json`.
 
 ## Test
 ```bash

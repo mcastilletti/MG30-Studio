@@ -17,7 +17,8 @@ from volantini.matcher import compute_matches
 from volantini.parser import parse_flyer
 from volantini.scraper import discover_pdf_urls, download_pdfs
 
-REGION = "us-west1"  # deve coincidere con la regione del bucket Storage e con VITE_FUNCTIONS_REGION
+REGION = "europe-west1"  # deve coincidere con VITE_FUNCTIONS_REGION
+BUCKET = "studio-7805098640-5b1fc-eu"  # bucket Storage dei volantini, creato in europe-west1 (vedi README)
 GEMINI_API_KEY = SecretParam("GEMINI_API_KEY")
 
 options.set_global_options(region=REGION, max_instances=5)
@@ -66,7 +67,7 @@ def rematch(req: https_fn.CallableRequest) -> dict:
     return {"products": rematch_user(req.auth.uid)}
 
 
-@storage_fn.on_object_finalized(secrets=[GEMINI_API_KEY], memory=options.MemoryOption.GB_1, timeout_sec=540)
+@storage_fn.on_object_finalized(bucket=BUCKET, secrets=[GEMINI_API_KEY], memory=options.MemoryOption.GB_1, timeout_sec=540)
 def process_flyer(event: storage_fn.CloudEvent[storage_fn.StorageObjectData]) -> None:
     """Si attiva su flyers/{uid}/{flyerId}/{file}: legge il volantino e salva le offerte."""
     parts = event.data.name.split("/")
@@ -114,7 +115,7 @@ def cleanup_flyer(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None
     """Elimina offerte e file collegati quando un volantino viene rimosso dall'app."""
     uid, flyer_id = event.params["uid"], event.params["flyerId"]
     _batched_delete([d.reference for d in _user(uid).collection("offers").where("flyerId", "==", flyer_id).stream()])
-    for blob in storage.bucket().list_blobs(prefix=f"flyers/{uid}/{flyer_id}/"):
+    for blob in storage.bucket(BUCKET).list_blobs(prefix=f"flyers/{uid}/{flyer_id}/"):
         blob.delete()
     rematch_user(uid)
 
@@ -130,7 +131,7 @@ def scan_store_for(uid: str, store_id: str) -> dict:
     try:
         pdf_urls = discover_pdf_urls(urls, log=logs.append)
         found = download_pdfs(pdf_urls, log=logs.append)
-        bucket = storage.bucket()
+        bucket = storage.bucket(BUCKET)
         for f in found:
             flyer_ref = _user(uid).collection("flyers").document(f.flyer_id)
             prev = flyer_ref.get()
