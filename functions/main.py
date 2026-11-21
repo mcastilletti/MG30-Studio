@@ -1,7 +1,8 @@
 """Cloud Functions (Python) per l'app Sottocosto.
 
 Dati su Firestore, tutti sotto users/{uid}:
-  products/{id}  lista della spesa     flyers/{id}  volantini caricati (+ file su Storage)
+  products/{id}  lista della spesa     stores/{id}  negozi + link alle pagine dei volantini
+  flyers/{id}    volantini (trovati dallo scraping o caricati a mano, file su Storage)
   offers/{id}    offerte estratte      matches/{productId}  miglior offerta per prodotto
 """
 from __future__ import annotations
@@ -9,11 +10,12 @@ from __future__ import annotations
 import mimetypes
 
 from firebase_admin import firestore, initialize_app, storage
-from firebase_functions import firestore_fn, https_fn, options, storage_fn
+from firebase_functions import firestore_fn, https_fn, options, scheduler_fn, storage_fn
 from firebase_functions.params import SecretParam
 
 from volantini.matcher import compute_matches
 from volantini.parser import parse_flyer
+from volantini.scraper import discover_pdf_urls, download_pdfs
 
 REGION = "europe-west1"  # deve coincidere con la regione del bucket Storage e con VITE_FUNCTIONS_REGION
 GEMINI_API_KEY = SecretParam("GEMINI_API_KEY")
@@ -115,3 +117,61 @@ def cleanup_flyer(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None
     for blob in storage.bucket().list_blobs(prefix=f"flyers/{uid}/{flyer_id}/"):
         blob.delete()
     rematch_user(uid)
+
+
+def scan_store_for(uid: str, store_id: str) -> dict:
+    """Cerca i PDF nelle pagine del negozio e, se nuovi o cambiati, li carica su Storage:
+    da lì `process_flyer` li legge. Ritorna un riepilogo."""
+    store_ref = _user(uid).collection("stores").document(store_id)
+    store = store_ref.get().to_dict() or {}
+    logs: list[str] = []
+    urls = [u for u in store.get("urls", []) if isinstance(u, str) and u.strip()]
+    new = 0
+    try:
+        pdf_urls = discover_pdf_urls(urls, log=logs.append)
+        found = download_pdfs(pdf_urls, log=logs.append)
+        bucket = storage.bucket()
+        for f in found:
+            flyer_ref = _user(uid).collection("flyers").document(f.flyer_id)
+            prev = flyer_ref.get()
+            if prev.exists and (prev.to_dict() or {}).get("contentHash") == f.sha256:
+                continue  # già analizzato, contenuto invariato
+            flyer_ref.set({
+                "storeId": store_id, "storeName": store.get("name", ""), "fileName": f.url.rsplit("/", 1)[-1][:120],
+                "sourceUrl": f.url, "contentHash": f.sha256, "validFrom": None, "validTo": None,
+                "status": "uploading", "createdAt": firestore.SERVER_TIMESTAMP,
+            })  # prima il documento, poi il file: l'upload fa partire process_flyer
+            bucket.blob(f"flyers/{uid}/{f.flyer_id}/flyer.pdf").upload_from_string(f.data, content_type="application/pdf")
+            new += 1
+        if not urls:
+            status, msg = "empty", "Nessun link configurato."
+        elif not found:
+            status, msg = "empty", "Nessun PDF trovato: il sito potrebbe usare un visualizzatore JavaScript. " + " ".join(logs[:2])
+        else:
+            status, msg = "ok", f"{len(found)} volantini trovati, {new} nuovi o aggiornati."
+    except Exception as exc:  # noqa: BLE001
+        status, msg = "error", str(exc)[:300]
+    store_ref.set({"lastScanAt": firestore.SERVER_TIMESTAMP, "lastScanStatus": status, "lastScanMessage": msg}, merge=True)
+    return {"status": status, "message": msg, "new": new}
+
+
+@https_fn.on_call(timeout_sec=300, memory=options.MemoryOption.MB_512)
+def scan_store(req: https_fn.CallableRequest) -> dict:
+    """Scansione manuale di un negozio (storeId) o di tutti (senza storeId)."""
+    if req.auth is None:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode.UNAUTHENTICATED, "Login richiesto")
+    uid = req.auth.uid
+    store_id = (req.data or {}).get("storeId")
+    ids = [store_id] if store_id else [d.id for d in _user(uid).collection("stores").stream()]
+    return {"results": {i: scan_store_for(uid, i) for i in ids}}
+
+
+@scheduler_fn.on_schedule(schedule="every day 06:00", timezone=scheduler_fn.Timezone("Europe/Rome"), timeout_sec=540, memory=options.MemoryOption.MB_512)
+def scan_all(event: scheduler_fn.ScheduledEvent) -> None:
+    """Ogni mattina ricontrolla i siti di tutti i negozi."""
+    for d in firestore.client().collection_group("stores").stream():
+        try:
+            scan_store_for(d.reference.parent.parent.id, d.id)
+        except Exception:  # noqa: BLE001  un negozio rotto non ferma gli altri
+            import logging
+            logging.exception("Scansione fallita: %s", d.reference.path)

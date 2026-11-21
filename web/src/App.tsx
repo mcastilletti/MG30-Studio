@@ -1,12 +1,12 @@
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "./firebase";
-import FlyersTab from "./tabs/FlyersTab";
+import StoresTab from "./tabs/StoresTab";
 import ListTab from "./tabs/ListTab";
 import OffersTab from "./tabs/OffersTab";
 
-type Tab = "offers" | "list" | "flyers";
-const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["flyers", "Volantini"]];
+type Tab = "offers" | "list" | "stores";
+const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["stores", "Negozi"]];
 
 export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -41,7 +41,7 @@ export default function App() {
       <main>
         {tab === "offers" && <OffersTab uid={user.uid} goTo={setTab} />}
         {tab === "list" && <ListTab uid={user.uid} />}
-        {tab === "flyers" && <FlyersTab uid={user.uid} />}
+        {tab === "stores" && <StoresTab uid={user.uid} />}
       </main>
     </>
   );

@@ -22,7 +22,7 @@ function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
   );
 }
 
-export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "flyers") => void }) {
+export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "stores") => void }) {
   const matches = useUserCollection<Match & { id: string }>(uid, "matches");
   const withOffers = matches.filter((m) => m.best).sort((a, b) => Number(b.belowTarget) - Number(a.belowTarget) || a.productName.localeCompare(b.productName));
   const without = matches.filter((m) => !m.best);
@@ -30,7 +30,7 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
   if (!matches.length)
     return (
       <p className="muted">
-        Aggiungi i prodotti alla <a onClick={() => goTo("list")}>lista</a> e carica almeno un <a onClick={() => goTo("flyers")}>volantino</a>: qui vedrai le offerte migliori.
+        Aggiungi i prodotti alla <a onClick={() => goTo("list")}>lista</a> e aggiungi almeno un <a onClick={() => goTo("stores")}>negozio</a>: qui vedrai le offerte migliori.
       </p>
     );
 
