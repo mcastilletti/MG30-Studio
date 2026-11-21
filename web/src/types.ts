@@ -7,9 +7,20 @@ export interface Product {
   unit: "kg" | "l" | "pz" | null;
 }
 
+export interface Store {
+  id: string;
+  name: string;
+  urls: string[];
+  lastScanStatus?: "ok" | "empty" | "error";
+  lastScanMessage?: string;
+  lastScanAt?: { toDate(): Date } | null;
+}
+
 export interface Flyer {
   id: string;
   storeName: string;
+  storeId?: string;
+  sourceUrl?: string;
   fileName: string;
   validFrom: string | null;
   validTo: string | null;
