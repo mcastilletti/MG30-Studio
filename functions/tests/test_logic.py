@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from volantini.matcher import compute_matches, match_score, normalize
+from volantini.matcher import compute_matches, match_score, merge_products, normalize
 from volantini.parser import clean_offers, parse_flyer
 from volantini.units import parse_quantity, unit_price
 
@@ -114,3 +114,13 @@ def test_keywords_are_alternatives_words_inside_one_keyword_are_all_required():
     assert match_score({"name": "x", "keywords": ["latte", "yogurt"]}, {"title": "Yogurt greco"}) > 0
     # le esclusioni valgono sempre
     assert match_score({"name": "x", "keywords": ["latte", "yogurt"], "excludes": ["soia"]}, {"title": "Latte di soia"}) == 0
+
+
+def test_merge_favorites_and_shopping_list():
+    fav = [{"id": "f1", "name": "Latte", "keywords": ["latte uht"]}]
+    lst = [{"id": "a", "name": "latte", "keywords": []}, {"id": "b", "name": "Pasta", "keywords": ["spaghetti"]}]
+    merged = merge_products(fav, lst)
+    assert [p["id"] for p in merged] == ["f1", "list_b"]  # "latte" duplicato: vince il preferito
+    assert merged[1]["inList"] is True
+    [r1, r2] = compute_matches(merged, [{"id": "o", "title": "Spaghetti Barilla", "price": 1.0}], TODAY)
+    assert r1["best"] is None and r2["best"]["offerId"] == "o" and r2["inList"] is True

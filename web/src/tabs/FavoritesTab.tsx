@@ -8,7 +8,7 @@ import CatalogPicker from "./CatalogPicker";
 
 const split = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
-export default function ListTab({ uid }: { uid: string }) {
+export default function FavoritesTab({ uid }: { uid: string }) {
   const products = useUserCollection<Product>(uid, "products");
   const [editing, setEditing] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
@@ -45,12 +45,12 @@ export default function ListTab({ uid }: { uid: string }) {
   return (
     <section>
       <div className="between">
-        <h2>I prodotti che compro</h2>
+        <h2>Preferiti</h2>
         <button className="link" onClick={() => setPicker(!picker)}>{picker ? "Chiudi catalogo" : "📚 Scegli dal catalogo"}</button>
       </div>
       {picker && <CatalogPicker uid={uid} products={products} onClose={() => setPicker(false)} />}
       <form onSubmit={save} className="card form">
-        <strong>{editing ? "Modifica prodotto" : "Nuovo prodotto"}</strong>
+        <strong>{editing ? "Modifica preferito" : "Nuovo preferito"}</strong>
         <input placeholder="Prodotto (es. latte parzialmente scremato)" value={name} onChange={(e) => setName(e.target.value)} required />
         <input placeholder="Parole chiave alternative, separate da virgola: ne basta una (opz.)" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
         <input placeholder="Escludi se contiene (es. soia, senza lattosio) (opz.)" value={excludes} onChange={(e) => setExcludes(e.target.value)} />
@@ -83,7 +83,7 @@ export default function ListTab({ uid }: { uid: string }) {
             </span>
           </li>
         ))}
-        {!products.length && <p className="muted">Nessun prodotto: aggiungine uno per iniziare.</p>}
+        {!products.length && <p className="muted">Nessun preferito: aggiungine uno per iniziare.</p>}
       </ul>
     </section>
   );

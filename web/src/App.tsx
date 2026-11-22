@@ -2,12 +2,13 @@ import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebas
 import { useEffect, useState } from "react";
 import { auth, googleProvider } from "./firebase";
 import StoresTab from "./tabs/StoresTab";
-import ListTab from "./tabs/ListTab";
+import FavoritesTab from "./tabs/FavoritesTab";
+import ShoppingTab from "./tabs/ShoppingTab";
 import OffersTab from "./tabs/OffersTab";
 import ProductsTab from "./tabs/ProductsTab";
 
-type Tab = "offers" | "list" | "products" | "stores";
-const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["products", "Prodotti"], ["stores", "Negozi"]];
+type Tab = "offers" | "list" | "favorites" | "flyers" | "stores";
+const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["favorites", "Preferiti"], ["flyers", "Volantini"], ["stores", "Negozi"]];
 
 export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -41,8 +42,9 @@ export default function App() {
       </header>
       <main>
         {tab === "offers" && <OffersTab uid={user.uid} goTo={setTab} />}
-        {tab === "list" && <ListTab uid={user.uid} />}
-        {tab === "products" && <ProductsTab uid={user.uid} />}
+        {tab === "list" && <ShoppingTab uid={user.uid} />}
+        {tab === "favorites" && <FavoritesTab uid={user.uid} />}
+        {tab === "flyers" && <ProductsTab uid={user.uid} />}
         {tab === "stores" && <StoresTab uid={user.uid} />}
       </main>
     </>

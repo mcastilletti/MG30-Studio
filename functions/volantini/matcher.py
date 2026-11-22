@@ -106,6 +106,20 @@ def _sort_key(item: dict[str, Any]) -> tuple:
     return (item["unitPrice"] is None, item["unitPrice"] if item["unitPrice"] is not None else item["price"])
 
 
+def merge_products(favorites: list[dict[str, Any]], list_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Prodotti da cercare = Preferiti + voci della Lista della spesa.
+    Se una voce della Lista ha lo stesso nome di un Preferito vince il Preferito (ha parole chiave e obiettivi suoi)."""
+    seen = {normalize(f.get("name", "")).strip() for f in favorites}
+    extra = []
+    for it in list_items:
+        key = normalize(it.get("name", "")).strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        extra.append({**it, "id": f"list_{it['id']}", "inList": True})
+    return favorites + extra
+
+
 def compute_matches(
     products: list[dict[str, Any]],
     offers: list[dict[str, Any]],
@@ -139,5 +153,6 @@ def compute_matches(
             "alternatives": active[1:],
             "upcoming": future[:MAX_UPCOMING_PER_PRODUCT],  # offerte non ancora iniziate, sempre segnalate
             "belowTarget": bool(best and max_price and best["price"] <= float(max_price)),
+            "inList": bool(p.get("inList")),
         })
     return results

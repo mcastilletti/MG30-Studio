@@ -61,5 +61,14 @@ export interface Match {
   best: Offer | null;
   alternatives: Offer[];
   upcoming?: Offer[];
+  inList?: boolean;
   belowTarget: boolean;
+}
+
+/** Voce della lista della spesa (si aggiunge e si toglie con un tocco). */
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  keywords: string[];
+  category?: string;
 }

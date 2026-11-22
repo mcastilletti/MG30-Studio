@@ -13,7 +13,7 @@ from firebase_admin import firestore, initialize_app, storage
 from firebase_functions import firestore_fn, https_fn, options, scheduler_fn, storage_fn
 from firebase_functions.params import SecretParam
 
-from volantini.matcher import compute_matches
+from volantini.matcher import compute_matches, merge_products
 from volantini.parser import parse_flyer
 from volantini.scraper import discover_flyers, download_pdfs
 
@@ -45,7 +45,9 @@ def _batched_delete(refs) -> None:
 
 def rematch_user(uid: str) -> int:
     user = _user(uid)
-    products = [{**d.to_dict(), "id": d.id} for d in user.collection("products").stream()]
+    favorites = [{**d.to_dict(), "id": d.id} for d in user.collection("products").stream()]
+    shopping = [{**d.to_dict(), "id": d.id} for d in user.collection("shoppingList").stream()]
+    products = merge_products(favorites, shopping)
     offers = [{**d.to_dict(), "id": d.id} for d in user.collection("offers").stream()]
     results = compute_matches(products, offers)
     db = firestore.client()

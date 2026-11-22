@@ -58,7 +58,7 @@ export default function CatalogPicker({ uid, products, onClose }: { uid: string;
               return (
                 <label key={i.name} className={`check pick ${have ? "muted" : ""}`}>
                   <input type="checkbox" disabled={have} checked={have || picked.has(i.name)} onChange={() => toggle(i.name)} />
-                  <span>{i.name}{have && " · già in lista"}</span>
+                  <span>{i.name}{have && " · già nei preferiti"}</span>
                 </label>
               );
             })}
@@ -67,7 +67,7 @@ export default function CatalogPicker({ uid, products, onClose }: { uid: string;
         {!groups.length && <p className="muted">Nessun prodotto corrisponde. Puoi aggiungerlo a mano dal modulo qui sotto.</p>}
       </div>
       <button className="primary" disabled={!picked.size || busy} onClick={add}>
-        {busy ? "Aggiungo…" : picked.size ? `Aggiungi ${picked.size} alla lista` : "Seleziona dei prodotti"}
+        {busy ? "Aggiungo…" : picked.size ? `Aggiungi ${picked.size} ai preferiti` : "Seleziona dei prodotti"}
       </button>
     </div>
   );

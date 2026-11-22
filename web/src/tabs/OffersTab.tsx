@@ -28,7 +28,7 @@ function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
   );
 }
 
-export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "stores") => void }) {
+export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "favorites" | "stores") => void }) {
   const matches = useUserCollection<Match & { id: string }>(uid, "matches");
   const [busy, setBusy] = useState(false);
   const refresh = async () => {
@@ -42,7 +42,7 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
   if (!matches.length)
     return (
       <p className="muted">
-        Aggiungi i prodotti alla <a onClick={() => goTo("list")}>lista</a> e aggiungi almeno un <a onClick={() => goTo("stores")}>negozio</a>: qui vedrai le offerte migliori.
+        Scegli i prodotti nella <a onClick={() => goTo("list")}>lista</a> (o tra i <a onClick={() => goTo("favorites")}>preferiti</a>) e aggiungi almeno un <a onClick={() => goTo("stores")}>negozio</a>: qui vedrai le offerte migliori.
       </p>
     );
 
@@ -54,7 +54,7 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
       </div>
       {withOffers.map((m) => (
         <article key={m.id} className="card">
-          <h3>{m.productName} {m.belowTarget && <span className="badge">sotto obiettivo</span>}</h3>
+          <h3>{m.productName} {m.inList && <span className="badge list">in lista</span>} {m.belowTarget && <span className="badge">sotto obiettivo</span>}</h3>
           {m.best && <OfferLine o={m.best} best />}
           {m.upcoming?.map((u, i) => <OfferLine key={`u${i}`} o={u} />)}
           {m.alternatives.length > 0 && (

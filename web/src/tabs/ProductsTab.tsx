@@ -86,7 +86,7 @@ export default function ProductsTab({ uid }: { uid: string }) {
   async function addToList() {
     if (!draft || !draft.name.trim() || inList(draft.name)) return;
     await addDoc(collection(db, "users", uid, "products"), { name: draft.name.trim(), keywords: [], excludes: [], maxPrice: null, unit: null });
-    setAdded(`"${draft.name.trim()}" aggiunto alla lista`);
+    setAdded(`"${draft.name.trim()}" aggiunto ai preferiti`);
     setDraft(null);
     rematch();
   }
@@ -96,7 +96,7 @@ export default function ProductsTab({ uid }: { uid: string }) {
   return (
     <section>
       <div className="between">
-        <h2>Prodotti nei volantini</h2>
+        <h2>Volantini</h2>
         <button className="link" onClick={openNew}>+ Aggiungi a mano</button>
       </div>
 
@@ -154,16 +154,16 @@ export default function ProductsTab({ uid }: { uid: string }) {
             {draft?.id === o.id && (
               <div className="draft">
                 <input autoFocus value={draft.name} onChange={(e) => setDraft({ id: o.id, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addToList()} />
-                <small className={inList(draft.name) ? "error" : "muted"}>{inList(draft.name) ? "Già in lista" : "Nome nella lista: i confronti cercheranno queste parole"}</small>
+                <small className={inList(draft.name) ? "error" : "muted"}>{inList(draft.name) ? "Già nei preferiti" : "Nome tra i preferiti: i confronti cercheranno queste parole"}</small>
                 <div className="row">
-                  <button className="primary" disabled={!draft.name.trim() || inList(draft.name)} onClick={addToList}>Aggiungi alla lista</button>
+                  <button className="primary" disabled={!draft.name.trim() || inList(draft.name)} onClick={addToList}>Aggiungi ai preferiti</button>
                   <button className="link" onClick={() => setDraft(null)}>Annulla</button>
                 </div>
               </div>
             )}
             <div className="price">
               {eur(o.price)}
-              <button className="link" onClick={() => { setAdded(""); setDraft({ id: o.id, name: listName(o) }); }}>+ Lista</button>
+              <button className="link" onClick={() => { setAdded(""); setDraft({ id: o.id, name: listName(o) }); }}>+ Preferiti</button>
               <button className="link" onClick={() => openEdit(o)}>Modifica</button>
               <button className="link danger" onClick={() => remove(o)}>Elimina</button>
             </div>
