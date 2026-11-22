@@ -15,6 +15,7 @@ const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", curren
 const LONG_PRESS_MS = 480;
 
 type Generic = { id: string; name: string; keywords: string[]; category?: string; fav?: boolean };
+type GridItem = Generic & { icon?: string; favoriteId?: string; text: string };
 type Link = { id: string; favoriteIds?: string[] };
 type ListEntry = ShoppingItem & { favoriteId?: string; parentId?: string };
 type Deal = { kind: "active" | "future"; productId: string; price?: number; store?: string };
@@ -23,7 +24,6 @@ type Fields = { quantity: string; description: string; notes: string };
 const ITEMS = catalog.flatMap((g) => g.items.map((i) => ({ id: slug(i.name), name: i.name, keywords: i.keywords, category: g.category, icon: i.icon })));
 const CATALOG_IDS = new Set(ITEMS.map((i) => i.id));
 const ICON_BY_ID = new Map(ITEMS.map((i) => [i.id, i.icon]));
-const hasDetails = (e?: ListEntry) => !!(e && (e.photoUrl || e.notes || e.description || (e.quantity && e.quantity.trim() !== "1")));
 
 /** Riduce la foto (max 1024 px, JPEG) prima del caricamento: risparmia dati e rispetta l'orientamento. */
 async function compress(file: File, max = 1024): Promise<Blob> {
@@ -109,6 +109,8 @@ function DetailDialog({ target, entry, products, linked, onSave, onRemove, onClo
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const set = (k: keyof Fields) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
 
+  const anyDetail = !!(f.quantity.trim() || f.description.trim() || f.notes.trim() || file);
+
   async function save() {
     setBusy(true); setErr("");
     try { await onSave(f, [...picked], file, dropPhoto); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); setBusy(false); }
@@ -128,6 +130,7 @@ function DetailDialog({ target, entry, products, linked, onSave, onRemove, onClo
             {preview && <button type="button" className="link danger" onClick={() => { setFile(null); setDropPhoto(true); }}>Rimuovi foto</button>}
           </div>
         </div>
+        <small className="muted">Quantità, note e foto valgono solo finché il prodotto è in lista.</small>
         <label>Quantità da comprare<input value={f.quantity} onChange={set("quantity")} placeholder="es. 2, 500 g, 3 confezioni" /></label>
         <label>Descrizione<input value={f.description} onChange={set("description")} placeholder="es. senza lattosio, formato famiglia" /></label>
         <label>Note<textarea rows={3} value={f.notes} onChange={set("notes")} placeholder="es. prendere quelli in offerta, controllare la scadenza" /></label>
@@ -135,7 +138,7 @@ function DetailDialog({ target, entry, products, linked, onSave, onRemove, onClo
         {!target.fav && (
           <div className="link-box">
             <strong className="small">Preferiti agganciati</strong>
-            <small className="muted">In lista vedrai il prodotto generico e, accanto, i preferiti scelti qui.</small>
+            <small className="muted">Cercando «{target.name}» compariranno anche questi preferiti, come card a parte. In lista va solo ciò che scegli tu.</small>
             {products.length > 5 && <input type="search" placeholder="Cerca tra i preferiti…" value={q} onChange={(e) => setQ(e.target.value)} />}
             <div className="pick-list">
               {shown.map((p) => (
@@ -151,7 +154,7 @@ function DetailDialog({ target, entry, products, linked, onSave, onRemove, onClo
         )}
         {err && <p className="error">{err}</p>}
         <div className="row">
-          <button className="primary" disabled={busy} onClick={save}>{busy ? "Salvo…" : entry ? "Salva" : "Salva e aggiungi alla lista"}</button>
+          <button className="primary" disabled={busy} onClick={save}>{busy ? "Salvo…" : !entry && anyDetail ? "Salva e aggiungi alla lista" : "Salva"}</button>
           <button className="link" disabled={busy} onClick={onClose}>Annulla</button>
         </div>
         {onRemove && <button className="link danger" disabled={busy} onClick={onRemove}>Togli dalla lista</button>}
@@ -160,7 +163,7 @@ function DetailDialog({ target, entry, products, linked, onSave, onRemove, onClo
   );
 }
 
-/** Lista della spesa: card quadrate ordinate per uso. Tocco = aggiungi/togli. Pressione prolungata = dettagli. */
+/** Lista della spesa: card quadrate ordinate per uso. Tocco = aggiungi/togli. Pressione prolungata = dettagli e preferiti. */
 export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (productId: string) => void }) {
   const shopping = useUserCollection<ListEntry>(uid, "shoppingList");
   const usage = useUserCollection<{ id: string; count: number }>(uid, "catalogUsage");
@@ -171,15 +174,26 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
   const [detail, setDetail] = useState<Generic | null>(null);
 
   const prodById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
-  const generics = useMemo(() => shopping.filter((s) => !s.favoriteId), [shopping]);
-  const favEntries = useMemo(() => shopping.filter((s) => s.favoriteId && prodById.has(s.favoriteId)), [shopping, prodById]);
   const entryById = useMemo(() => new Map(shopping.map((s) => [s.id, s])), [shopping]);
-  const inList = useMemo(() => new Set(generics.map((s) => s.id)), [generics]);
+  /** Voci in lista valide (un preferito eliminato dai Preferiti sparisce anche dalla lista). */
+  const entries = useMemo(() => shopping.filter((s) => !s.favoriteId || prodById.has(s.favoriteId)), [shopping, prodById]);
   const counts = useMemo(() => new Map(usage.map((u) => [u.id, u.count])), [usage]);
   const linkMap = useMemo(
     () => new Map(links.map((l) => [l.id, (l.favoriteIds ?? []).filter((id) => prodById.has(id))])),
     [links, prodById],
   );
+
+  /** Preferiti agganciati: diventano card a sé nella griglia, trovabili cercando il generico o il loro nome. */
+  const favCards = useMemo<GridItem[]>(() => {
+    const parents = new Map<string, string[]>();
+    for (const [gid, favIds] of linkMap) for (const fid of favIds) parents.set(fid, [...(parents.get(fid) ?? []), gid]);
+    return [...parents].map(([favId, gids]) => {
+      const p = prodById.get(favId)!;
+      const parentText = gids.map((gid) => { const it = ITEMS.find((i) => i.id === gid); return it ? `${it.name} ${it.keywords.join(" ")}` : entryById.get(gid)?.name ?? ""; }).join(" ");
+      return { id: `fav_${favId}`, favoriteId: favId, name: p.name, keywords: p.keywords, fav: true, icon: ICON_BY_ID.get(gids[0]) ?? "Star", text: `${p.name} ${p.keywords.join(" ")} ${parentText}` };
+    });
+  }, [linkMap, prodById, entryById]);
+  const favIcon = useMemo(() => new Map(favCards.map((c) => [c.id, c.icon])), [favCards]);
 
   /** Offerta per una voce della lista: dal confronto con i volantini (match del generico, o del preferito omonimo). */
   const matchById = useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches]);
@@ -193,63 +207,44 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
     return null;
   };
 
-  const sorted = useMemo(
-    () => [...ITEMS].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || a.name.localeCompare(b.name, "it")),
-    [counts],
-  );
+  const sorted = useMemo<GridItem[]>(() => {
+    const all: GridItem[] = [...ITEMS.map((i) => ({ ...i, text: `${i.name} ${i.keywords.join(" ")}` })), ...favCards];
+    return all.sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || a.name.localeCompare(b.name, "it"));
+  }, [counts, favCards]);
 
   const shown = useMemo(() => {
     const words = norm(q).split(/\s+/).filter(Boolean);
     if (!words.length) return sorted;
-    // ogni parola cercata deve essere l'inizio di una parola del prodotto ("pa" → pane, pasta; non "coppa")
+    // ogni parola cercata deve essere l'inizio di una parola ("pa" → pane, pasta; non "coppa")
     return sorted.filter((i) => {
-      const parts = norm(`${i.name} ${i.keywords.join(" ")}`).split(/[^a-z0-9]+/).filter(Boolean);
+      const parts = norm(i.text).split(/[^a-z0-9]+/).filter(Boolean);
       return words.every((w) => parts.some((h) => h.startsWith(w)));
     });
   }, [sorted, q]);
 
-  /** "In lista": ogni generico seguito dai suoi preferiti agganciati. */
-  const groups = useMemo(() => {
-    const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, "it");
-    const out = [...generics].sort(byName).map((g) => ({ g, favs: favEntries.filter((f) => f.parentId === g.id).sort(byName) }));
-    const orphans = favEntries.filter((f) => !f.parentId || !inList.has(f.parentId)).sort(byName);
-    return { out, orphans };
-  }, [generics, favEntries, inList]);
-  const total = generics.length + favEntries.length;
+  const inListSorted = useMemo(() => [...entries].sort((a, b) => a.name.localeCompare(b.name, "it")), [entries]);
 
   const entryRef = (id: string) => doc(db, "users", uid, "shoppingList", id);
-  const favEntryRef = (g: Generic, favId: string, batch: ReturnType<typeof writeBatch>) => {
-    const p = prodById.get(favId)!;
-    batch.set(entryRef(`fav_${favId}`), { name: p.name, keywords: [], favoriteId: favId, parentId: g.id, addedAt: serverTimestamp() }, { merge: true });
+  const countUse = (id: string, name: string, batch: ReturnType<typeof writeBatch>) => {
+    if (CATALOG_IDS.has(id) || id.startsWith("fav_")) batch.set(doc(db, "users", uid, "catalogUsage", id), { name, count: increment(1) }, { merge: true });
   };
-  const genericRef = (g: Generic, batch: ReturnType<typeof writeBatch>) => {
-    batch.set(entryRef(g.id), { name: g.name, keywords: g.keywords, category: g.category ?? null, addedAt: serverTimestamp() }, { merge: true });
-    if (CATALOG_IDS.has(g.id)) batch.set(doc(db, "users", uid, "catalogUsage", g.id), { name: g.name, count: increment(1) }, { merge: true });
+  const newEntry = (t: Generic, batch: ReturnType<typeof writeBatch>) => {
+    const favId = t.id.startsWith("fav_") ? t.id.slice(4) : undefined;
+    batch.set(entryRef(t.id), { name: t.name, keywords: t.keywords, category: t.category ?? null, ...(favId ? { favoriteId: favId } : {}), addedAt: serverTimestamp() }, { merge: true });
+    countUse(t.id, t.name, batch);
   };
   const dropPhotoFile = (e?: ListEntry) => { if (e?.photoPath) deleteObject(ref(storage, e.photoPath)).catch(() => {}); };
 
-  async function add(g: Generic) {
+  async function add(t: Generic) {
     const batch = writeBatch(db);
-    genericRef(g, batch);
-    for (const favId of linkMap.get(g.id) ?? []) favEntryRef(g, favId, batch); // insieme al generico, i preferiti agganciati
+    newEntry(t, batch);
     await batch.commit();
     rematchSoon();
   }
 
-  async function removeGeneric(id: string) {
-    const mine = [entryById.get(id), ...shopping.filter((f) => f.parentId === id)];
-    if (mine.some(hasDetails) && !confirm("Questa voce ha quantità, note o foto che andranno perse. Toglierla dalla lista?")) return;
-    const batch = writeBatch(db);
-    batch.delete(entryRef(id));
-    for (const f of shopping) if (f.parentId === id) batch.delete(entryRef(f.id));
-    await batch.commit();
-    mine.forEach(dropPhotoFile);
-    rematchSoon();
-  }
-
-  async function removeFavEntry(id: string) {
+  /** Togliere dalla lista cancella anche quantità, note e foto: sono informazioni solo per questo acquisto. */
+  async function remove(id: string) {
     const e = entryById.get(id);
-    if (hasDetails(e) && !confirm("Questa voce ha quantità, note o foto che andranno perse. Toglierla dalla lista?")) return;
     await deleteDoc(entryRef(id));
     dropPhotoFile(e);
     rematchSoon();
@@ -257,6 +252,7 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
 
   async function saveDetail(t: Generic, f: Fields, linkIds: string[], file: File | null, dropPhoto: boolean) {
     const existing = entryById.get(t.id);
+    const anyDetail = !!(f.quantity.trim() || f.description.trim() || f.notes.trim() || file);
     let photoUrl = existing?.photoUrl ?? null;
     let photoPath = existing?.photoPath ?? null;
     if ((file || dropPhoto) && photoPath) { dropPhotoFile(existing); photoUrl = null; photoPath = null; }
@@ -269,42 +265,33 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
       photoUrl = await getDownloadURL(r);
     }
     const batch = writeBatch(db);
-    if (!existing) genericRef(t, batch); // dettagli su un prodotto non ancora in lista: lo aggiunge
-    batch.set(entryRef(t.id), {
-      quantity: f.quantity.trim() || null, description: f.description.trim() || null, notes: f.notes.trim() || null, photoUrl, photoPath,
-    }, { merge: true });
-    if (!t.fav) {
-      batch.set(doc(db, "users", uid, "catalogLinks", t.id), { favoriteIds: linkIds });
-      for (const id of linkIds) favEntryRef(t, id, batch);
-      for (const e of shopping) if (e.parentId === t.id && e.favoriteId && !linkIds.includes(e.favoriteId)) batch.delete(entryRef(e.id));
+    if (existing || anyDetail) { // i dettagli esistono solo per un prodotto in lista: se ne ha, lo aggiunge
+      if (!existing) newEntry(t, batch);
+      batch.set(entryRef(t.id), {
+        quantity: f.quantity.trim() || null, description: f.description.trim() || null, notes: f.notes.trim() || null, photoUrl, photoPath,
+      }, { merge: true });
     }
+    if (!t.fav && (linkIds.length || linkMap.get(t.id)?.length)) batch.set(doc(db, "users", uid, "catalogLinks", t.id), { favoriteIds: linkIds }); // l'aggancio non mette nulla in lista
     await batch.commit();
     setDetail(null);
     rematchSoon();
   }
 
-  const toggle = (g: Generic) => (inList.has(g.id) ? removeGeneric(g.id) : add(g));
-  const openFav = (f: ListEntry): Generic => ({ id: f.id, name: f.name, keywords: [], fav: true });
-
   const typed = q.trim();
   const customId = `custom-${slug(typed)}`;
-  const canCustom = typed.length > 1 && !ITEMS.some((i) => norm(i.name) === norm(typed)) && !inList.has(customId);
+  const canCustom = typed.length > 1 && !shown.length && !entryById.has(customId); // voce libera solo se nulla corrisponde
   const detailEntry = detail ? entryById.get(detail.id) : undefined;
 
-  const tileFor = (g: Generic & { icon?: string }, withCount: boolean) => {
-    const e = entryById.get(g.id);
+  const tileFor = (t: Generic & { icon?: string }, withCount: boolean) => {
+    const e = entryById.get(t.id);
+    const on = !!e && (!t.fav || prodById.has(e.favoriteId ?? ""));
+    const d = on ? dealFor(e) : null;
     return (
-      <Tile key={g.id} name={g.name} icon={g.icon ?? ICON_BY_ID.get(g.id)} on={inList.has(g.id)} count={withCount ? counts.get(g.id) : undefined}
-        linked={linkMap.get(g.id)?.length} photo={e?.photoUrl} qty={e?.quantity} note={!!(e?.notes || e?.description)}
-        deal={inList.has(g.id) ? dealFor(e) : null} onDeal={() => { const d = dealFor(e); if (d) onOffer(d.productId); }}
-        onClick={() => toggle(g)} onLongPress={() => setDetail(g)} />
-    );
-  };
-  const favTile = (f: ListEntry) => {
-    const d = dealFor(f);
-    return (
-      <Tile key={f.id} name={f.name} icon="Star" on fav photo={f.photoUrl} qty={f.quantity} note={!!(f.notes || f.description)}
-        deal={d} onDeal={() => d && onOffer(d.productId)} onClick={() => removeFavEntry(f.id)} onLongPress={() => setDetail(openFav(f))} />
+      <Tile key={t.id} name={t.name} icon={t.icon ?? favIcon.get(t.id) ?? ICON_BY_ID.get(t.id) ?? (t.fav ? "Star" : undefined)} on={on} fav={t.fav}
+        count={withCount ? counts.get(t.id) : undefined} linked={t.fav ? undefined : linkMap.get(t.id)?.length}
+        photo={on ? e?.photoUrl : undefined} qty={on ? e?.quantity : undefined} note={on && !!(e?.notes || e?.description)}
+        deal={d} onDeal={() => d && onOffer(d.productId)}
+        onClick={() => (on ? remove(t.id) : add(t))} onLongPress={() => setDetail(t)} />
     );
   };
 
@@ -314,17 +301,11 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
       <input type="search" className="search" placeholder="Cerca un prodotto…" value={q} onChange={(e) => setQ(e.target.value)} />
       <small className="muted hint">Tocca per aggiungere o togliere · tieni premuto per quantità, note, foto e preferiti</small>
 
-      {total > 0 && (
+      {entries.length > 0 && (
         <>
-          <h3 className="sub-title">In lista ({total})</h3>
+          <h3 className="sub-title">In lista ({entries.length})</h3>
           <div className="tiles">
-            {groups.out.map(({ g, favs }) => (
-              <div key={g.id} className="group">
-                {tileFor(g, false)}
-                {favs.map(favTile)}
-              </div>
-            ))}
-            {groups.orphans.map(favTile)}
+            {inListSorted.map((e) => tileFor({ id: e.id, name: e.name, keywords: e.keywords, category: e.category, fav: !!e.favoriteId }, false))}
           </div>
         </>
       )}
@@ -342,7 +323,7 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
         <DetailDialog
           target={detail} entry={detailEntry} products={products} linked={linkMap.get(detail.id) ?? []}
           onSave={(f, ids, file, drop) => saveDetail(detail, f, ids, file, drop)}
-          onRemove={detailEntry ? async () => { setDetail(null); await (detail.fav ? removeFavEntry(detail.id) : removeGeneric(detail.id)); } : undefined}
+          onRemove={detailEntry ? async () => { setDetail(null); await remove(detail.id); } : undefined}
           onClose={() => setDetail(null)}
         />
       )}
