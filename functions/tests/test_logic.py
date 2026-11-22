@@ -135,3 +135,23 @@ def test_attached_favorite_counts_as_in_list_without_duplicating():
     merged = merge_products(fav, lst)
     assert [p["id"] for p in merged] == ["f1", "f2", "list_biscotti-al-cioccolato"]
     assert merged[0].get("inList") is True and not merged[1].get("inList")
+
+
+def test_a_word_that_merely_starts_like_another_is_not_a_match():
+    assert match_score({"name": "fusilli"}, {"title": "Fusi di Ali di Tacchino Conad 750 g"}) == 0
+    assert match_score({"name": "fusilli"}, {"title": "Pennette rigate, spaghetti n.5, fusilli o tortiglioni BARILLA"}) > 0
+    assert match_score({"name": "riso"}, {"title": "Risotto ai funghi"}) == 0
+    assert match_score({"name": "pasta"}, {"title": "Pastiglie lavastoviglie"}) == 0
+    # forme tronche o con una lettera di scarto continuano a funzionare
+    assert match_score({"name": "biscott"}, {"title": "Biscotti frollini"}) > 0
+    assert match_score({"name": "formaggi"}, {"title": "Formaggio grattugiato"}) > 0
+
+
+def test_no_fuzzy_false_friends_but_doubled_letters_are_forgiven():
+    for name, title in [("pesce", "Pesche gialle 1 kg"), ("cotto", "Cotton fioc 200 pz"), ("aceto balsamico", "Balsamo capelli"),
+                        ("patate", "Patatine Pringles"), ("mela", "Melone"), ("acqua gassata", "Passata di pomodoro Cirio"),
+                        ("finocchi", "Fiocchi d'avena")]:
+        assert match_score({"name": name}, {"title": title}) == 0, (name, title)
+    assert match_score({"name": "mozzarella"}, {"title": "Mozarella di bufala"}) > 0   # refuso
+    assert match_score({"name": "prosciutto cotto"}, {"title": "Prosciutto cotto alta qualità"}) > 0
+    assert match_score({"name": "pesce"}, {"title": "Pesce spada"}) > 0

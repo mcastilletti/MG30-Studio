@@ -4,7 +4,6 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import date
-from difflib import SequenceMatcher
 from typing import Any
 
 from .units import parse_quantity, unit_price
@@ -35,15 +34,33 @@ def _stem(t: str) -> str:
     return t[:-1] if len(t) >= 4 and t[-1] in "aeio" else t
 
 
+_VOWELS = set("aeiou")
+
+
+def _close_prefix(a: str, b: str) -> bool:
+    """Una parola è l'inizio dell'altra e le lettere in più sono solo vocali, al massimo 2 ("biscott"/"biscotti").
+    "fusi" non è "fusilli", "riso" non è "risotto", "cotto" non è "cotton"."""
+    short, long_ = sorted((a, b), key=len)
+    extra = long_[len(short):]
+    return len(short) >= 4 and long_.startswith(short) and 0 < len(extra) <= 2 and set(extra) <= _VOWELS
+
+
+def _collapse(w: str) -> str:
+    """Toglie le lettere doppie: "mozarella" e "mozzarella" diventano uguali."""
+    return re.sub(r"(.)\1+", r"\1", w)
+
+
 def _token_score(needle: str, haystack: list[str]) -> float:
+    """1.0 stessa parola (anche singolare/plurale), 0.9 forma tronca, 0.88 doppia lettera mancante o in più, altrimenti 0.
+    Niente somiglianze più larghe: pesce/pesche, cotto/cotton o balsamico/balsamo sono cose diverse."""
     best = 0.0
     for h in haystack:
         if needle == h or (len(needle) >= 4 and _stem(needle) == _stem(h)):
             return 1.0
-        if len(needle) >= 4 and (h.startswith(needle) or needle.startswith(h) and len(h) >= 4):
-            best = max(best, 0.9)  # singolare/plurale, prefissi ("biscott" ~ "biscotti")
-        else:
-            best = max(best, SequenceMatcher(None, needle, h).ratio())
+        if _close_prefix(needle, h):
+            best = max(best, 0.9)
+        elif len(needle) >= 6 and len(h) >= 6 and _collapse(needle) == _collapse(h):
+            best = max(best, 0.88)
     return best
 
 
