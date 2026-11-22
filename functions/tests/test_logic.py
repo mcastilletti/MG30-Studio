@@ -65,3 +65,10 @@ def test_clean_and_parse_with_fake_llm():
 
 def test_normalize():
     assert normalize("Caffè  Lavazza!") == "caffe  lavazza "
+
+
+def test_retry_delay():
+    from volantini.parser import _retry_delay
+    assert _retry_delay(RuntimeError("429 RESOURCE_EXHAUSTED ... retryDelay: 27s")) == 28
+    assert _retry_delay(RuntimeError("429 quota")) == 20
+    assert _retry_delay(RuntimeError("404 NOT_FOUND")) is None

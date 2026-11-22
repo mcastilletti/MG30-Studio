@@ -5,6 +5,8 @@ import io
 import json
 import logging
 import os
+import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
@@ -50,7 +52,30 @@ _SCHEMA = {
 LLMCall = Callable[[bytes, str, str], str]
 
 
+def _retry_delay(exc: Exception) -> float | None:
+    """Secondi di attesa suggeriti da un 429 di Gemini; None se l'errore non è un limite di quota."""
+    msg = str(exc)
+    if "429" not in msg and "RESOURCE_EXHAUSTED" not in msg:
+        return None
+    m = re.search(r"retry(?:Delay)?\D{0,12}(\d+(?:\.\d+)?)\s*s", msg, re.I)
+    return min(float(m.group(1)) + 1, 60) if m else 20.0
+
+
 def _gemini_call(data: bytes, mime: str, prompt: str) -> str:
+    """Chiamata a Gemini con nuovi tentativi quando si supera il limite di richieste al minuto."""
+    for attempt in range(4):
+        try:
+            return _gemini_once(data, mime, prompt)
+        except Exception as exc:  # noqa: BLE001
+            wait = _retry_delay(exc)
+            if wait is None or attempt == 3 or "limit: 0" in str(exc):  # limit: 0 = nessuna quota, inutile riprovare
+                raise
+            logging.warning("Quota Gemini superata, riprovo tra %.0f s", wait)
+            time.sleep(wait)
+    raise RuntimeError("unreachable")
+
+
+def _gemini_once(data: bytes, mime: str, prompt: str) -> str:
     from google import genai
     from google.genai import types
 
@@ -112,6 +137,6 @@ def parse_flyer(data: bytes, mime: str, llm: LLMCall = _gemini_call) -> list[dic
                 raise
             return []
 
-    with ThreadPoolExecutor(max_workers=min(4, len(parts))) as pool:  # blocchi in parallelo, ordine conservato
+    with ThreadPoolExecutor(max_workers=min(int(os.environ.get("GEMINI_WORKERS", "2")), len(parts))) as pool:  # blocchi in parallelo, ordine conservato
         offers = [o for chunk in pool.map(one, range(len(parts))) for o in chunk]
     return clean_offers(offers)
