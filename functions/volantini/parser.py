@@ -8,6 +8,7 @@ import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from typing import Any, Callable
 
 PAGES_PER_CHUNK = 4
@@ -24,7 +25,8 @@ Per ogni offerta restituisci:
 - originalPrice: prezzo pieno barrato, o null
 - quantity: formato/peso della confezione come scritto ("500 g", "1,5 l", "6x33 cl"), o null
 - discountPercent: percentuale di sconto indicata o null
-- validFrom / validTo: date di validità in formato YYYY-MM-DD se indicate nel volantino, altrimenti null
+- validFrom / validTo: date di validità in formato YYYY-MM-DD se indicate nel volantino, altrimenti null.
+  Se l'anno non è scritto usa l'anno più vicino alla data di oggi ({today})
 - notes: condizioni (es. "con carta fedeltà", "min. 2 pezzi"), o null
 Ignora pagine non commerciali, coupon generici e prodotti senza prezzo. Non inventare dati."""
 
@@ -130,7 +132,7 @@ def parse_flyer(data: bytes, mime: str, llm: LLMCall = _gemini_call) -> list[dic
     def one(i: int) -> list[dict[str, Any]]:
         blob, m = parts[i]
         try:
-            return json.loads(llm(blob, m, PROMPT))
+            return json.loads(llm(blob, m, PROMPT.replace('{today}', date.today().isoformat())))
         except Exception:  # un blocco fallito non deve perdere gli altri
             logging.exception("Errore nel blocco %d/%d del volantino", i + 1, len(parts))
             if len(parts) == 1:

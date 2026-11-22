@@ -41,6 +41,7 @@ export interface Offer {
   unitPrice: number | null;
   unitLabel: string | null;
   validTo?: string | null;
+  startsOn?: string | null;
   notes?: string | null;
 }
 

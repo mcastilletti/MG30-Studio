@@ -72,3 +72,14 @@ def test_retry_delay():
     assert _retry_delay(RuntimeError("429 RESOURCE_EXHAUSTED ... retryDelay: 27s")) == 28
     assert _retry_delay(RuntimeError("429 quota")) == 20
     assert _retry_delay(RuntimeError("404 NOT_FOUND")) is None
+
+
+def test_upcoming_offers_included_but_flagged():
+    products = [{"id": "p", "name": "latte"}]
+    offers = [
+        {"id": "a", "title": "Latte", "price": 1.0, "validFrom": "2026-11-23", "validTo": "2026-11-29"},  # domani
+        {"id": "b", "title": "Latte", "price": 1.0, "validFrom": "2027-03-01", "validTo": "2027-03-07"},  # troppo lontana
+    ]
+    [res] = compute_matches(products, offers, TODAY)
+    assert res["best"]["offerId"] == "a" and res["best"]["startsOn"] == "2026-11-23"
+    assert res["alternatives"] == []

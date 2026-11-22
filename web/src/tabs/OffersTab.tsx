@@ -1,3 +1,6 @@
+import { httpsCallable } from "firebase/functions";
+import { useState } from "react";
+import { functions } from "../firebase";
 import { useUserCollection } from "../hooks";
 import type { Match, Offer } from "../types";
 
@@ -11,7 +14,7 @@ function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
         <span> {o.title}{o.quantity ? ` · ${o.quantity}` : ""}</span>
         <small>
           {o.unitPrice != null && `${eur(o.unitPrice)} ${o.unitLabel?.replace("€", "")}`}
-          {o.validTo ? ` · fino al ${o.validTo}` : ""}{o.notes ? ` · ${o.notes}` : ""}
+          {o.startsOn ? ` · dal ${o.startsOn.slice(8)}/${o.startsOn.slice(5, 7)}` : ""}{o.validTo ? ` · fino al ${o.validTo}` : ""}{o.notes ? ` · ${o.notes}` : ""}
         </small>
       </div>
       <div className="price">
@@ -24,6 +27,12 @@ function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
 
 export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "stores") => void }) {
   const matches = useUserCollection<Match & { id: string }>(uid, "matches");
+  const [busy, setBusy] = useState(false);
+  const refresh = async () => {
+    setBusy(true);
+    try { await httpsCallable(functions, "rematch")(); } catch (e) { console.error(e); }
+    setBusy(false);
+  };
   const withOffers = matches.filter((m) => m.best).sort((a, b) => Number(b.belowTarget) - Number(a.belowTarget) || a.productName.localeCompare(b.productName));
   const without = matches.filter((m) => !m.best);
 
@@ -36,7 +45,10 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
 
   return (
     <section>
-      <h2>Offerte migliori</h2>
+      <div className="between">
+        <h2>Offerte migliori</h2>
+        <button className="link" disabled={busy} onClick={refresh}>{busy ? "Aggiorno…" : "↻ Aggiorna confronto"}</button>
+      </div>
       {withOffers.map((m) => (
         <article key={m.id} className="card">
           <h3>{m.productName} {m.belowTarget && <span className="badge">sotto obiettivo</span>}</h3>

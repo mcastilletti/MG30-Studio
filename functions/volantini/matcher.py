@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import date
+from datetime import date, timedelta
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -15,6 +15,7 @@ _STOPWORDS = {
 }
 _TOKEN_SIMILARITY = 0.84
 MAX_RESULTS_PER_PRODUCT = 6
+UPCOMING_DAYS = 14  # include offerte che iniziano entro due settimane
 
 
 def normalize(text: str) -> str:
@@ -68,7 +69,11 @@ def enrich_offer(offer: dict[str, Any]) -> dict[str, Any]:
 
 
 def is_valid_on(offer: dict[str, Any], today: date) -> bool:
-    for key, cmp in (("validFrom", lambda d: d <= today), ("validTo", lambda d: d >= today)):
+    """Non scaduta e non troppo lontana nel futuro. Le offerte in arrivo si mostrano con la data di inizio."""
+    for key, cmp in (
+        ("validFrom", lambda d: d <= today + timedelta(days=UPCOMING_DAYS)),
+        ("validTo", lambda d: d >= today),
+    ):
         raw = offer.get(key)
         if raw:
             try:
@@ -77,6 +82,15 @@ def is_valid_on(offer: dict[str, Any], today: date) -> bool:
             except ValueError:
                 pass
     return True
+
+
+def starts_later(offer: dict[str, Any], today: date) -> str | None:
+    """Data di inizio (ISO) se l'offerta non è ancora iniziata."""
+    raw = offer.get("validFrom")
+    try:
+        return raw if raw and date.fromisoformat(raw) > today else None
+    except ValueError:
+        return None
 
 
 def _sort_key(item: dict[str, Any]) -> tuple:
@@ -99,7 +113,7 @@ def compute_matches(
             score = match_score(p, o)
             if score <= 0:
                 continue
-            found.append({**o, "offerId": o.get("id"), "score": round(score, 3)})
+            found.append({**o, "offerId": o.get("id"), "score": round(score, 3), "startsOn": starts_later(o, today)})
         if p.get("unit") and found:  # l'utente fissa l'unità (es. "kg"): confronta solo offerte comparabili
             want = {"kg": "€/kg", "l": "€/l", "pz": "€/pz"}.get(p["unit"])
             comparable = [f for f in found if f["unitLabel"] == want]
