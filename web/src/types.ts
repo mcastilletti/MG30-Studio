@@ -45,6 +45,16 @@ export interface Offer {
   notes?: string | null;
 }
 
+/** Prodotto/offerta nel catalogo (letto da un volantino o inserito a mano). */
+export interface CatalogOffer extends Offer {
+  id: string;
+  flyerId?: string;
+  storeId?: string | null;
+  category?: string | null;
+  validFrom?: string | null;
+  manual?: boolean;
+}
+
 export interface Match {
   productId: string;
   productName: string;

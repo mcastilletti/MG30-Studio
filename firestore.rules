@@ -13,7 +13,11 @@ service cloud.firestore {
       allow update: if false;
     }
     match /users/{uid}/offers/{id} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      // correzioni e prodotti aggiunti a mano
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.title is string && request.resource.data.title.size() > 0
+        && request.resource.data.price is number && request.resource.data.price > 0;
     }
     match /users/{uid}/matches/{id} {
       allow read: if request.auth != null && request.auth.uid == uid;

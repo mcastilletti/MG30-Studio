@@ -4,9 +4,10 @@ import { auth, googleProvider } from "./firebase";
 import StoresTab from "./tabs/StoresTab";
 import ListTab from "./tabs/ListTab";
 import OffersTab from "./tabs/OffersTab";
+import ProductsTab from "./tabs/ProductsTab";
 
-type Tab = "offers" | "list" | "stores";
-const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["stores", "Negozi"]];
+type Tab = "offers" | "list" | "products" | "stores";
+const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["products", "Prodotti"], ["stores", "Negozi"]];
 
 export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -41,6 +42,7 @@ export default function App() {
       <main>
         {tab === "offers" && <OffersTab uid={user.uid} goTo={setTab} />}
         {tab === "list" && <ListTab uid={user.uid} />}
+        {tab === "products" && <ProductsTab uid={user.uid} />}
         {tab === "stores" && <StoresTab uid={user.uid} />}
       </main>
     </>

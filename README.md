@@ -4,7 +4,7 @@ Indichi i negozi che frequenti con il link alle pagine dei loro volantini: l'app
 
 - `web/` — React + TypeScript + Vite (Firebase Auth con Google, Firestore in tempo reale, Storage)
 - `functions/` — Cloud Functions in **Python**: lettura volantini (`parser.py`), normalizzazione quantità/prezzo unitario (`units.py`), abbinamento prodotti↔offerte (`matcher.py`)
-- Firestore/Storage rules: accesso solo ai propri dati (`users/{uid}/…`)
+- Firestore/Storage rules: accesso solo ai propri dati (`users/{uid}/…`). Dalla web app si gestiscono (crea, modifica, elimina) negozi, lista della spesa e catalogo prodotti dei volantini
 
 ## Flusso
 1. Tab **Lista**: aggiungi i prodotti (parole chiave, esclusioni, prezzo obiettivo, unità di confronto).

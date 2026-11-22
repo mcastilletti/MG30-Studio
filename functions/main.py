@@ -95,6 +95,7 @@ def process_flyer(event: storage_fn.CloudEvent[storage_fn.StorageObjectData]) ->
             batch.set(_user(uid).collection("offers").document(f"{flyer_id}_{i}"), {
                 **o,
                 "flyerId": flyer_id,
+                "storeId": meta.get("storeId"),
                 "storeName": meta.get("storeName", ""),
                 "validFrom": o.get("validFrom") or meta.get("validFrom") or None,
                 "validTo": o.get("validTo") or meta.get("validTo") or None,
@@ -117,6 +118,44 @@ def cleanup_flyer(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None
     _batched_delete([d.reference for d in _user(uid).collection("offers").where("flyerId", "==", flyer_id).stream()])
     for blob in storage.bucket(BUCKET).list_blobs(prefix=f"flyers/{uid}/{flyer_id}/"):
         blob.delete()
+    rematch_user(uid)
+
+
+def _batched_update(refs, data: dict) -> None:
+    db = firestore.client()
+    batch, n = db.batch(), 0
+    for ref in refs:
+        batch.update(ref, data)
+        n += 1
+        if n % 400 == 0:
+            batch.commit()
+            batch = db.batch()
+    batch.commit()
+
+
+@firestore_fn.on_document_updated(document="users/{uid}/stores/{storeId}")
+def store_renamed(event: firestore_fn.Event[firestore_fn.Change[firestore_fn.DocumentSnapshot]]) -> None:
+    """Se cambia il nome del negozio, aggiorna il nome copiato su volantini e prodotti."""
+    before, after = event.data.before.to_dict() or {}, event.data.after.to_dict() or {}
+    if before.get("name") == after.get("name"):
+        return
+    uid, store_id, name = event.params["uid"], event.params["storeId"], after.get("name", "")
+    user = _user(uid)
+    flyers = list(user.collection("flyers").where("storeId", "==", store_id).stream())
+    _batched_update([f.reference for f in flyers], {"storeName": name})
+    refs = {d.reference.path: d.reference for d in user.collection("offers").where("storeId", "==", store_id).stream()}
+    for f in flyers:  # offerte vecchie senza storeId, collegate tramite il volantino
+        for d in user.collection("offers").where("flyerId", "==", f.id).stream():
+            refs[d.reference.path] = d.reference
+    _batched_update(list(refs.values()), {"storeName": name})
+    rematch_user(uid)
+
+
+@firestore_fn.on_document_deleted(document="users/{uid}/stores/{storeId}")
+def store_deleted(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None]) -> None:
+    """Elimina i prodotti inseriti a mano per il negozio rimosso (quelli dei volantini li toglie cleanup_flyer)."""
+    uid, store_id = event.params["uid"], event.params["storeId"]
+    _batched_delete([d.reference for d in _user(uid).collection("offers").where("storeId", "==", store_id).stream()])
     rematch_user(uid)
 
 

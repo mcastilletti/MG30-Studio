@@ -19,6 +19,7 @@ export default function StoresTab({ uid }: { uid: string }) {
   const [name, setName] = useState("");
   const [urls, setUrls] = useState("");
   const [exclude, setExclude] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
   const [scanning, setScanning] = useState<string | null>(null);
   const [err, setErr] = useState("");
 
@@ -70,10 +71,11 @@ export default function StoresTab({ uid }: { uid: string }) {
               <h3>{s.name}</h3>
               <span>
                 <button className="link" disabled={!!scanning} onClick={() => run(s.id, s.id)}>{scanning === s.id ? "Scansione…" : "↻ Scansiona"}</button>
+                <button className="link" onClick={() => setEditId(editId === s.id ? null : s.id)}>{editId === s.id ? "Chiudi" : "Modifica"}</button>
                 <button className="link danger" onClick={() => removeStore(s)}>Rimuovi</button>
               </span>
             </div>
-            <small>{s.urls.join(" · ")}</small>
+            {editId === s.id ? <StoreEditor uid={uid} store={s} onDone={() => setEditId(null)} /> : <small>{s.urls.join(" · ")}</small>}
             <FilterEditor uid={uid} store={s} flyers={mine} />
             {s.lastScanStatus && (
               <small className={s.lastScanStatus === "ok" ? "" : "error"}>
@@ -99,6 +101,32 @@ export default function StoresTab({ uid }: { uid: string }) {
       })}
       {!stores.length && <p className="muted">Nessun negozio: aggiungine uno con il link alla pagina dei suoi volantini.</p>}
     </section>
+  );
+}
+
+/** Modifica nome e link del negozio. Il nuovo nome si propaga a volantini e prodotti (Cloud Function). */
+function StoreEditor({ uid, store, onDone }: { uid: string; store: Store; onDone: () => void }) {
+  const [name, setName] = useState(store.name);
+  const [urls, setUrls] = useState(store.urls.join("\n"));
+  const [err, setErr] = useState("");
+
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    const list = parseUrls(urls);
+    if (!name.trim() || !list.length) return setErr("Servono un nome e almeno un link.");
+    const bad = list.find((u) => !/^https?:\/\//i.test(u));
+    if (bad) return setErr(`Link non valido (deve iniziare con http): ${bad}`);
+    await updateDoc(doc(db, "users", uid, "stores", store.id), { name: name.trim(), urls: list });
+    onDone();
+  }
+
+  return (
+    <form onSubmit={save} className="form">
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome negozio" required />
+      <textarea rows={3} value={urls} onChange={(e) => setUrls(e.target.value)} placeholder="Un link per riga" required />
+      {err && <p className="error">{err}</p>}
+      <div className="row"><button className="primary">Salva</button><button type="button" className="link" onClick={onDone}>Annulla</button></div>
+    </form>
   );
 }
 
