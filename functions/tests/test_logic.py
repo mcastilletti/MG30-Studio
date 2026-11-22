@@ -91,3 +91,15 @@ def test_only_future_offers():
     [res] = compute_matches([{"id": "p", "name": "latte"}],
                             [{"id": "a", "title": "Latte", "price": 1.0, "validFrom": "2026-11-23"}], TODAY)
     assert res["best"] is None and len(res["upcoming"]) == 1
+
+
+def test_italian_plurals_and_attached_quantities():
+    for name, title in [
+        ("mela", "Mele Golden 1 kg"), ("uova", "Uovo fresco"), ("latte 1l", "Latte intero 1 l"),
+        ("pasta 500g", "Pasta penne Barilla 500 g"), ("biscotti", "Biscotto frollino"), ("pomodori", "Pomodoro ciliegino"),
+    ]:
+        assert match_score({"name": name}, {"title": title}) > 0, (name, title)
+    # niente falsi positivi
+    assert match_score({"name": "mela"}, {"title": "Melone"}) == 0
+    assert match_score({"name": "pasta"}, {"title": "Pastiglie lavastoviglie"}) == 0
+    assert match_score({"name": "1 kg"}, {"title": "Mele 1 kg"}) == 0  # solo quantità: nessun termine utile

@@ -12,6 +12,7 @@ from .units import parse_quantity, unit_price
 _STOPWORDS = {
     "di", "da", "del", "della", "dei", "con", "senza", "per", "al", "alla", "e", "il", "lo", "la",
     "le", "i", "un", "una", "in", "a", "gusti", "vari", "assortiti", "conf", "confezione",
+    "kg", "g", "gr", "hg", "mg", "l", "lt", "dl", "cl", "ml", "pz", "x",  # unità di misura
 }
 _TOKEN_SIMILARITY = 0.84
 MAX_RESULTS_PER_PRODUCT = 6
@@ -25,13 +26,19 @@ def normalize(text: str) -> str:
 
 
 def tokens(text: str) -> list[str]:
-    return [t for t in normalize(text).split() if t not in _STOPWORDS and not t.isdigit()]
+    """Parole significative: via stopword e quantità ("1", "500g", "1l", "6x33cl"), che non descrivono il prodotto."""
+    return [t for t in normalize(text).split() if t not in _STOPWORDS and not t[0].isdigit()]
+
+
+def _stem(t: str) -> str:
+    """Toglie la vocale finale per unire singolare/plurale: mela/mele, uovo/uova, biscotto/biscotti."""
+    return t[:-1] if len(t) >= 4 and t[-1] in "aeio" else t
 
 
 def _token_score(needle: str, haystack: list[str]) -> float:
     best = 0.0
     for h in haystack:
-        if needle == h:
+        if needle == h or (len(needle) >= 4 and _stem(needle) == _stem(h)):
             return 1.0
         if len(needle) >= 4 and (h.startswith(needle) or needle.startswith(h) and len(h) >= 4):
             best = max(best, 0.9)  # singolare/plurale, prefissi ("biscott" ~ "biscotti")
