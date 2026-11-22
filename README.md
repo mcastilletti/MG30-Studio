@@ -34,6 +34,9 @@ firebase deploy
 
 **Modello Gemini**: di default `gemini-3.8-flash`. Se Google lo ritira, crea `functions/.env` con `GEMINI_MODEL=<nuovo-modello>` e rifai `firebase deploy --only functions`, senza modificare il codice.
 
+## Installazione come app
+Il sito è una PWA (manifest, icone, service worker): da Chrome su Android «Installa app» / «Aggiungi a schermata Home»; da Safari su iPhone Condividi → «Aggiungi a Home». Le icone si rigenerano da `web/public/icons`.
+
 ## Pubblicare da cellulare
 - **Cloud Shell** (nell'app Google Cloud o su console.cloud.google.com): `cd ~/Sottocosto && ./deploy.sh` (oppure `./deploy.sh hosting` / `./deploy.sh functions`). Lo script scarica gli aggiornamenti, compila e pubblica.
 - **Con git (automatico)**: ogni `git push` su `main` o sul ramo di lavoro pubblica da solo sito, regole e funzioni (GitHub Actions, `.github/workflows/deploy.yml`). Serve configurare una volta i segreti `FIREBASE_SERVICE_ACCOUNT` (chiave JSON di un account di servizio) e `WEB_ENV` (contenuto di `web/.env`). Si può anche lanciare a mano da Actions → «Pubblica su Firebase» → Run workflow.
