@@ -38,3 +38,6 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .check input { width: auto; }
 .badge.future { background: #b7791f; }
 .offer.future { border-left: 4px dashed #b7791f; padding-left: 10px; opacity: .92; }
+.ok { color: var(--ok); }
+.list li.card { flex-wrap: wrap; }
+.draft { flex-basis: 100%; display: grid; gap: 6px; order: 3; }

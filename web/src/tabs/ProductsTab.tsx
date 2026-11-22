@@ -3,12 +3,20 @@ import { useMemo, useState, type FormEvent } from "react";
 import { rematch } from "../api";
 import { db } from "../firebase";
 import { useUserCollection } from "../hooks";
-import type { CatalogOffer, Store } from "../types";
+import type { CatalogOffer, Product, Store } from "../types";
 
 const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const num = (s: string) => { const n = parseFloat(s.replace(",", ".")); return Number.isFinite(n) ? n : null; };
 const PAGE = 100;
+
+/** Nome adatto alla lista: toglie marca e formato dal titolo ("Latte p.s. Granarolo 1 l" → "Latte p.s."). */
+function listName(o: CatalogOffer): string {
+  let n = o.title;
+  if (o.brand) n = n.replace(new RegExp(o.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), " ");
+  n = n.replace(/\b\d+\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:kg|g|gr|l|lt|ml|cl|dl|pz)\b/gi, " ").replace(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|gr|l|lt|ml|cl|dl|pz)\b/gi, " ");
+  return n.replace(/\s+/g, " ").trim() || o.title;
+}
 const EMPTY = { storeId: "", title: "", brand: "", price: "", originalPrice: "", quantity: "", validFrom: "", validTo: "" };
 
 /** Catalogo di tutti i prodotti letti dai volantini (o inseriti a mano): cerca, correggi, aggiungi, elimina. */
@@ -22,6 +30,9 @@ export default function ProductsTab({ uid }: { uid: string }) {
   const [form, setForm] = useState<typeof EMPTY | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [err, setErr] = useState("");
+  const products = useUserCollection<Product>(uid, "products");
+  const [draft, setDraft] = useState<{ id: string; name: string } | null>(null);
+  const [added, setAdded] = useState("");
   const today = new Date().toISOString().slice(0, 10);
 
   const shown = useMemo(() => {
@@ -67,6 +78,16 @@ export default function ProductsTab({ uid }: { uid: string }) {
   async function remove(o: CatalogOffer) {
     if (!confirm(`Eliminare "${o.title}"?`)) return;
     await deleteDoc(doc(db, "users", uid, "offers", o.id));
+    rematch();
+  }
+
+  const inList = (name: string) => products.some((p) => norm(p.name) === norm(name.trim()));
+
+  async function addToList() {
+    if (!draft || !draft.name.trim() || inList(draft.name)) return;
+    await addDoc(collection(db, "users", uid, "products"), { name: draft.name.trim(), keywords: [], excludes: [], maxPrice: null, unit: null });
+    setAdded(`"${draft.name.trim()}" aggiunto alla lista`);
+    setDraft(null);
     rematch();
   }
 
@@ -116,6 +137,7 @@ export default function ProductsTab({ uid }: { uid: string }) {
           </select>
           <label className="check"><input type="checkbox" checked={hideExpired} onChange={(e) => setHideExpired(e.target.checked)} /> Nascondi scaduti</label>
         </div>
+        {added && <small className="ok">✓ {added}</small>}
         <small className="muted">{shown.length} prodotti{offers.length !== shown.length ? ` (su ${offers.length})` : ""}</small>
       </div>
 
@@ -129,8 +151,19 @@ export default function ProductsTab({ uid }: { uid: string }) {
                 {o.unitPrice != null ? ` · ${eur(o.unitPrice)}${o.unitLabel?.replace("€", "")}` : ""}
               </small>
             </div>
+            {draft?.id === o.id && (
+              <div className="draft">
+                <input autoFocus value={draft.name} onChange={(e) => setDraft({ id: o.id, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && addToList()} />
+                <small className={inList(draft.name) ? "error" : "muted"}>{inList(draft.name) ? "Già in lista" : "Nome nella lista: i confronti cercheranno queste parole"}</small>
+                <div className="row">
+                  <button className="primary" disabled={!draft.name.trim() || inList(draft.name)} onClick={addToList}>Aggiungi alla lista</button>
+                  <button className="link" onClick={() => setDraft(null)}>Annulla</button>
+                </div>
+              </div>
+            )}
             <div className="price">
               {eur(o.price)}
+              <button className="link" onClick={() => { setAdded(""); setDraft({ id: o.id, name: listName(o) }); }}>+ Lista</button>
               <button className="link" onClick={() => openEdit(o)}>Modifica</button>
               <button className="link danger" onClick={() => remove(o)}>Elimina</button>
             </div>
