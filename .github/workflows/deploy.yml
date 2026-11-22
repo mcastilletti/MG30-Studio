@@ -4,7 +4,7 @@
 # Richiede due segreti nel repository (Settings → Secrets and variables → Actions):
 #   FIREBASE_SERVICE_ACCOUNT  contenuto JSON della chiave di un account di servizio con i permessi per il deploy
 #   WEB_ENV                   contenuto del file web/.env (config Firebase del sito)
-# Finché i segreti mancano, i push non pubblicano nulla (avviso giallo, nessun errore).
+# Se i segreti mancano l'esecuzione fallisce (croce rossa) con le istruzioni: una spunta verde significa sempre «pubblicato».
 name: Pubblica su Firebase
 
 on:
@@ -37,13 +37,12 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           if [ -z "$SA" ] || [ -z "$WEB" ]; then
-            MSG="Mancano i segreti FIREBASE_SERVICE_ACCOUNT e/o WEB_ENV (vedi le istruzioni in cima a .github/workflows/deploy.yml)."
-            if [ "$EVENT" = "workflow_dispatch" ]; then echo "::error::$MSG"; exit 1; fi
-            echo "::warning::$MSG Nessuna pubblicazione eseguita."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
+            MSG="NON PUBBLICATO: mancano i segreti FIREBASE_SERVICE_ACCOUNT e/o WEB_ENV. Aggiungili in Settings → Secrets and variables → Actions (istruzioni in cima a .github/workflows/deploy.yml)."
+            echo "::error::$MSG"
+            echo "### ❌ $MSG" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v4
         if: steps.cfg.outputs.ok == 'true'
