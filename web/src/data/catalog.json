@@ -1,0 +1,1714 @@
+[
+ {
+  "category": "Latticini e uova",
+  "items": [
+   {
+    "name": "Latte intero",
+    "keywords": [
+     "latte intero"
+    ]
+   },
+   {
+    "name": "Latte parzialmente scremato",
+    "keywords": [
+     "latte parzialmente scremato",
+     "latte p.s.",
+     "latte pastorizzato"
+    ]
+   },
+   {
+    "name": "Latte scremato",
+    "keywords": [
+     "latte scremato"
+    ]
+   },
+   {
+    "name": "Latte senza lattosio",
+    "keywords": [
+     "latte senza lattosio",
+     "latte delattosato",
+     "latte zymil"
+    ]
+   },
+   {
+    "name": "Latte UHT",
+    "keywords": [
+     "latte uht"
+    ]
+   },
+   {
+    "name": "Latte di soia",
+    "keywords": [
+     "latte soia",
+     "bevanda soia"
+    ]
+   },
+   {
+    "name": "Latte di avena",
+    "keywords": [
+     "latte avena",
+     "bevanda avena"
+    ]
+   },
+   {
+    "name": "Latte di mandorla",
+    "keywords": [
+     "latte mandorla",
+     "bevanda mandorla"
+    ]
+   },
+   {
+    "name": "Panna da cucina",
+    "keywords": [
+     "panna cucina",
+     "panna uht"
+    ]
+   },
+   {
+    "name": "Panna fresca",
+    "keywords": [
+     "panna fresca"
+    ]
+   },
+   {
+    "name": "Burro",
+    "keywords": [
+     "burro"
+    ]
+   },
+   {
+    "name": "Yogurt bianco",
+    "keywords": [
+     "yogurt bianco",
+     "yogurt naturale"
+    ]
+   },
+   {
+    "name": "Yogurt alla frutta",
+    "keywords": [
+     "yogurt frutta"
+    ]
+   },
+   {
+    "name": "Yogurt greco",
+    "keywords": [
+     "yogurt greco"
+    ]
+   },
+   {
+    "name": "Yogurt da bere",
+    "keywords": [
+     "yogurt bere"
+    ]
+   },
+   {
+    "name": "Mozzarella",
+    "keywords": [
+     "mozzarella"
+    ]
+   },
+   {
+    "name": "Mozzarella di bufala",
+    "keywords": [
+     "mozzarella bufala"
+    ]
+   },
+   {
+    "name": "Parmigiano Reggiano",
+    "keywords": [
+     "parmigiano reggiano",
+     "parmigiano"
+    ]
+   },
+   {
+    "name": "Grana Padano",
+    "keywords": [
+     "grana padano",
+     "grana"
+    ]
+   },
+   {
+    "name": "Pecorino",
+    "keywords": [
+     "pecorino"
+    ]
+   },
+   {
+    "name": "Formaggio spalmabile",
+    "keywords": [
+     "formaggio spalmabile",
+     "philadelphia"
+    ]
+   },
+   {
+    "name": "Ricotta",
+    "keywords": [
+     "ricotta"
+    ]
+   },
+   {
+    "name": "Mascarpone",
+    "keywords": [
+     "mascarpone"
+    ]
+   },
+   {
+    "name": "Stracchino",
+    "keywords": [
+     "stracchino",
+     "crescenza"
+    ]
+   },
+   {
+    "name": "Scamorza",
+    "keywords": [
+     "scamorza"
+    ]
+   },
+   {
+    "name": "Provola",
+    "keywords": [
+     "provola",
+     "provolone"
+    ]
+   },
+   {
+    "name": "Gorgonzola",
+    "keywords": [
+     "gorgonzola"
+    ]
+   },
+   {
+    "name": "Formaggio a fette",
+    "keywords": [
+     "formaggio fette",
+     "sottilette"
+    ]
+   },
+   {
+    "name": "Formaggio grattugiato",
+    "keywords": [
+     "formaggio grattugiato",
+     "grana grattugiato"
+    ]
+   },
+   {
+    "name": "Feta",
+    "keywords": [
+     "feta"
+    ]
+   },
+   {
+    "name": "Uova",
+    "keywords": [
+     "uova"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Carne",
+  "items": [
+   {
+    "name": "Pollo petto",
+    "keywords": [
+     "petto pollo",
+     "fesa pollo"
+    ]
+   },
+   {
+    "name": "Pollo intero",
+    "keywords": [
+     "pollo intero"
+    ]
+   },
+   {
+    "name": "Cosce di pollo",
+    "keywords": [
+     "cosce pollo",
+     "sovracosce pollo"
+    ]
+   },
+   {
+    "name": "Fettine di pollo",
+    "keywords": [
+     "fettine pollo"
+    ]
+   },
+   {
+    "name": "Petto di tacchino",
+    "keywords": [
+     "petto tacchino",
+     "fesa tacchino"
+    ]
+   },
+   {
+    "name": "Fettine di tacchino",
+    "keywords": [
+     "fettine tacchino"
+    ]
+   },
+   {
+    "name": "Macinato di manzo",
+    "keywords": [
+     "macinato manzo",
+     "carne macinata"
+    ]
+   },
+   {
+    "name": "Macinato misto",
+    "keywords": [
+     "macinato misto",
+     "macinato maiale"
+    ]
+   },
+   {
+    "name": "Bistecca di manzo",
+    "keywords": [
+     "bistecca manzo",
+     "fettine manzo"
+    ]
+   },
+   {
+    "name": "Hamburger",
+    "keywords": [
+     "hamburger"
+    ]
+   },
+   {
+    "name": "Spezzatino",
+    "keywords": [
+     "spezzatino"
+    ]
+   },
+   {
+    "name": "Arrosto",
+    "keywords": [
+     "arrosto"
+    ]
+   },
+   {
+    "name": "Salsiccia",
+    "keywords": [
+     "salsiccia"
+    ]
+   },
+   {
+    "name": "Cotolette",
+    "keywords": [
+     "cotoletta",
+     "cotolette"
+    ]
+   },
+   {
+    "name": "Braciole di maiale",
+    "keywords": [
+     "braciole maiale",
+     "costine maiale",
+     "lonza"
+    ]
+   },
+   {
+    "name": "Pancetta",
+    "keywords": [
+     "pancetta"
+    ]
+   },
+   {
+    "name": "Wurstel",
+    "keywords": [
+     "wurstel"
+    ]
+   },
+   {
+    "name": "Agnello",
+    "keywords": [
+     "agnello"
+    ]
+   },
+   {
+    "name": "Coniglio",
+    "keywords": [
+     "coniglio"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Pesce",
+  "items": [
+   {
+    "name": "Salmone",
+    "keywords": [
+     "salmone"
+    ]
+   },
+   {
+    "name": "Tonno in scatola",
+    "keywords": [
+     "tonno scatola",
+     "tonno olio",
+     "tonno naturale"
+    ]
+   },
+   {
+    "name": "Tonno fresco",
+    "keywords": [
+     "tonno fresco"
+    ]
+   },
+   {
+    "name": "Merluzzo",
+    "keywords": [
+     "merluzzo"
+    ]
+   },
+   {
+    "name": "Platessa",
+    "keywords": [
+     "platessa"
+    ]
+   },
+   {
+    "name": "Orata",
+    "keywords": [
+     "orata"
+    ]
+   },
+   {
+    "name": "Branzino",
+    "keywords": [
+     "branzino",
+     "spigola"
+    ]
+   },
+   {
+    "name": "Gamberi",
+    "keywords": [
+     "gamberi",
+     "gamberetti"
+    ]
+   },
+   {
+    "name": "Calamari",
+    "keywords": [
+     "calamari"
+    ]
+   },
+   {
+    "name": "Cozze",
+    "keywords": [
+     "cozze"
+    ]
+   },
+   {
+    "name": "Vongole",
+    "keywords": [
+     "vongole"
+    ]
+   },
+   {
+    "name": "Bastoncini di pesce",
+    "keywords": [
+     "bastoncini pesce"
+    ]
+   },
+   {
+    "name": "Sgombro",
+    "keywords": [
+     "sgombro"
+    ]
+   },
+   {
+    "name": "Alici",
+    "keywords": [
+     "alici",
+     "acciughe"
+    ]
+   },
+   {
+    "name": "Sardine",
+    "keywords": [
+     "sardine"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Salumi",
+  "items": [
+   {
+    "name": "Prosciutto cotto",
+    "keywords": [
+     "prosciutto cotto"
+    ]
+   },
+   {
+    "name": "Prosciutto crudo",
+    "keywords": [
+     "prosciutto crudo"
+    ]
+   },
+   {
+    "name": "Mortadella",
+    "keywords": [
+     "mortadella"
+    ]
+   },
+   {
+    "name": "Salame",
+    "keywords": [
+     "salame"
+    ]
+   },
+   {
+    "name": "Speck",
+    "keywords": [
+     "speck"
+    ]
+   },
+   {
+    "name": "Bresaola",
+    "keywords": [
+     "bresaola"
+    ]
+   },
+   {
+    "name": "Coppa",
+    "keywords": [
+     "coppa"
+    ]
+   },
+   {
+    "name": "Pancetta affumicata",
+    "keywords": [
+     "pancetta affumicata"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Frutta",
+  "items": [
+   {
+    "name": "Mele",
+    "keywords": [
+     "mele",
+     "mela"
+    ]
+   },
+   {
+    "name": "Pere",
+    "keywords": [
+     "pere",
+     "pera"
+    ]
+   },
+   {
+    "name": "Banane",
+    "keywords": [
+     "banane",
+     "banana"
+    ]
+   },
+   {
+    "name": "Arance",
+    "keywords": [
+     "arance"
+    ]
+   },
+   {
+    "name": "Mandarini",
+    "keywords": [
+     "mandarini",
+     "clementine"
+    ]
+   },
+   {
+    "name": "Limoni",
+    "keywords": [
+     "limoni"
+    ]
+   },
+   {
+    "name": "Kiwi",
+    "keywords": [
+     "kiwi"
+    ]
+   },
+   {
+    "name": "Fragole",
+    "keywords": [
+     "fragole"
+    ]
+   },
+   {
+    "name": "Uva",
+    "keywords": [
+     "uva"
+    ]
+   },
+   {
+    "name": "Pesche",
+    "keywords": [
+     "pesche",
+     "nettarine"
+    ]
+   },
+   {
+    "name": "Albicocche",
+    "keywords": [
+     "albicocche"
+    ]
+   },
+   {
+    "name": "Ciliegie",
+    "keywords": [
+     "ciliegie"
+    ]
+   },
+   {
+    "name": "Anguria",
+    "keywords": [
+     "anguria",
+     "cocomero"
+    ]
+   },
+   {
+    "name": "Melone",
+    "keywords": [
+     "melone"
+    ]
+   },
+   {
+    "name": "Ananas",
+    "keywords": [
+     "ananas"
+    ]
+   },
+   {
+    "name": "Avocado",
+    "keywords": [
+     "avocado"
+    ]
+   },
+   {
+    "name": "Frutti di bosco",
+    "keywords": [
+     "frutti bosco",
+     "mirtilli",
+     "lamponi"
+    ]
+   },
+   {
+    "name": "Frutta secca",
+    "keywords": [
+     "frutta secca",
+     "noci",
+     "mandorle",
+     "nocciole",
+     "anacardi"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Verdura",
+  "items": [
+   {
+    "name": "Patate",
+    "keywords": [
+     "patate"
+    ]
+   },
+   {
+    "name": "Cipolle",
+    "keywords": [
+     "cipolle"
+    ]
+   },
+   {
+    "name": "Aglio",
+    "keywords": [
+     "aglio"
+    ]
+   },
+   {
+    "name": "Carote",
+    "keywords": [
+     "carote"
+    ]
+   },
+   {
+    "name": "Pomodori",
+    "keywords": [
+     "pomodori",
+     "pomodorini"
+    ]
+   },
+   {
+    "name": "Insalata",
+    "keywords": [
+     "insalata",
+     "lattuga"
+    ]
+   },
+   {
+    "name": "Insalata in busta",
+    "keywords": [
+     "insalata busta",
+     "valeriana",
+     "rucola"
+    ]
+   },
+   {
+    "name": "Zucchine",
+    "keywords": [
+     "zucchine"
+    ]
+   },
+   {
+    "name": "Melanzane",
+    "keywords": [
+     "melanzane"
+    ]
+   },
+   {
+    "name": "Peperoni",
+    "keywords": [
+     "peperoni"
+    ]
+   },
+   {
+    "name": "Broccoli",
+    "keywords": [
+     "broccoli"
+    ]
+   },
+   {
+    "name": "Cavolfiore",
+    "keywords": [
+     "cavolfiore"
+    ]
+   },
+   {
+    "name": "Spinaci",
+    "keywords": [
+     "spinaci"
+    ]
+   },
+   {
+    "name": "Funghi",
+    "keywords": [
+     "funghi",
+     "champignon"
+    ]
+   },
+   {
+    "name": "Sedano",
+    "keywords": [
+     "sedano"
+    ]
+   },
+   {
+    "name": "Finocchi",
+    "keywords": [
+     "finocchi"
+    ]
+   },
+   {
+    "name": "Cetrioli",
+    "keywords": [
+     "cetrioli"
+    ]
+   },
+   {
+    "name": "Zucca",
+    "keywords": [
+     "zucca"
+    ]
+   },
+   {
+    "name": "Carciofi",
+    "keywords": [
+     "carciofi"
+    ]
+   },
+   {
+    "name": "Legumi in scatola",
+    "keywords": [
+     "legumi scatola",
+     "fagioli",
+     "ceci",
+     "lenticchie"
+    ]
+   },
+   {
+    "name": "Verdure surgelate",
+    "keywords": [
+     "verdure surgelate",
+     "minestrone surgelato"
+    ]
+   },
+   {
+    "name": "Erbe aromatiche",
+    "keywords": [
+     "basilico",
+     "prezzemolo",
+     "rosmarino"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Pane e forno",
+  "items": [
+   {
+    "name": "Pane",
+    "keywords": [
+     "pane"
+    ]
+   },
+   {
+    "name": "Pane in cassetta",
+    "keywords": [
+     "pane cassetta",
+     "pancarré"
+    ]
+   },
+   {
+    "name": "Pane grattugiato",
+    "keywords": [
+     "pane grattugiato",
+     "pangrattato"
+    ]
+   },
+   {
+    "name": "Grissini",
+    "keywords": [
+     "grissini"
+    ]
+   },
+   {
+    "name": "Cracker",
+    "keywords": [
+     "cracker",
+     "crackers"
+    ]
+   },
+   {
+    "name": "Fette biscottate",
+    "keywords": [
+     "fette biscottate"
+    ]
+   },
+   {
+    "name": "Piadina",
+    "keywords": [
+     "piadina",
+     "piadine"
+    ]
+   },
+   {
+    "name": "Tortillas",
+    "keywords": [
+     "tortillas",
+     "wrap"
+    ]
+   },
+   {
+    "name": "Pizza surgelata",
+    "keywords": [
+     "pizza surgelata"
+    ]
+   },
+   {
+    "name": "Pizza fresca",
+    "keywords": [
+     "pizza fresca"
+    ]
+   },
+   {
+    "name": "Pasta sfoglia",
+    "keywords": [
+     "pasta sfoglia",
+     "pasta brisée"
+    ]
+   },
+   {
+    "name": "Farina",
+    "keywords": [
+     "farina"
+    ]
+   },
+   {
+    "name": "Lievito",
+    "keywords": [
+     "lievito"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Pasta, riso e cereali",
+  "items": [
+   {
+    "name": "Spaghetti",
+    "keywords": [
+     "spaghetti"
+    ]
+   },
+   {
+    "name": "Penne",
+    "keywords": [
+     "penne"
+    ]
+   },
+   {
+    "name": "Fusilli",
+    "keywords": [
+     "fusilli"
+    ]
+   },
+   {
+    "name": "Rigatoni",
+    "keywords": [
+     "rigatoni"
+    ]
+   },
+   {
+    "name": "Pasta all'uovo",
+    "keywords": [
+     "pasta uovo",
+     "tagliatelle"
+    ]
+   },
+   {
+    "name": "Pasta fresca ripiena",
+    "keywords": [
+     "tortellini",
+     "ravioli",
+     "tortelloni"
+    ]
+   },
+   {
+    "name": "Gnocchi",
+    "keywords": [
+     "gnocchi"
+    ]
+   },
+   {
+    "name": "Riso",
+    "keywords": [
+     "riso"
+    ]
+   },
+   {
+    "name": "Riso basmati",
+    "keywords": [
+     "riso basmati"
+    ]
+   },
+   {
+    "name": "Couscous",
+    "keywords": [
+     "couscous"
+    ]
+   },
+   {
+    "name": "Farro",
+    "keywords": [
+     "farro"
+    ]
+   },
+   {
+    "name": "Orzo",
+    "keywords": [
+     "orzo"
+    ]
+   },
+   {
+    "name": "Polenta",
+    "keywords": [
+     "polenta"
+    ]
+   },
+   {
+    "name": "Cereali colazione",
+    "keywords": [
+     "cereali colazione",
+     "corn flakes",
+     "muesli"
+    ]
+   },
+   {
+    "name": "Fiocchi d'avena",
+    "keywords": [
+     "fiocchi avena"
+    ]
+   },
+   {
+    "name": "Pasta integrale",
+    "keywords": [
+     "pasta integrale"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Conserve e sughi",
+  "items": [
+   {
+    "name": "Passata di pomodoro",
+    "keywords": [
+     "passata pomodoro",
+     "passata"
+    ]
+   },
+   {
+    "name": "Pelati",
+    "keywords": [
+     "pelati",
+     "polpa pomodoro"
+    ]
+   },
+   {
+    "name": "Concentrato di pomodoro",
+    "keywords": [
+     "concentrato pomodoro"
+    ]
+   },
+   {
+    "name": "Sugo pronto",
+    "keywords": [
+     "sugo pronto",
+     "sugo"
+    ]
+   },
+   {
+    "name": "Pesto",
+    "keywords": [
+     "pesto"
+    ]
+   },
+   {
+    "name": "Ragù",
+    "keywords": [
+     "ragù",
+     "ragu"
+    ]
+   },
+   {
+    "name": "Olive",
+    "keywords": [
+     "olive"
+    ]
+   },
+   {
+    "name": "Capperi",
+    "keywords": [
+     "capperi"
+    ]
+   },
+   {
+    "name": "Sottaceti",
+    "keywords": [
+     "sottaceti",
+     "giardiniera"
+    ]
+   },
+   {
+    "name": "Mais in scatola",
+    "keywords": [
+     "mais scatola"
+    ]
+   },
+   {
+    "name": "Carciofini",
+    "keywords": [
+     "carciofini"
+    ]
+   },
+   {
+    "name": "Piselli",
+    "keywords": [
+     "piselli"
+    ]
+   },
+   {
+    "name": "Brodo",
+    "keywords": [
+     "brodo",
+     "dado"
+    ]
+   },
+   {
+    "name": "Maionese",
+    "keywords": [
+     "maionese"
+    ]
+   },
+   {
+    "name": "Ketchup",
+    "keywords": [
+     "ketchup"
+    ]
+   },
+   {
+    "name": "Senape",
+    "keywords": [
+     "senape"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Condimenti e dispensa",
+  "items": [
+   {
+    "name": "Olio extravergine di oliva",
+    "keywords": [
+     "olio extravergine",
+     "olio extra vergine"
+    ]
+   },
+   {
+    "name": "Olio di semi",
+    "keywords": [
+     "olio semi",
+     "olio girasole",
+     "olio arachide"
+    ]
+   },
+   {
+    "name": "Aceto",
+    "keywords": [
+     "aceto"
+    ]
+   },
+   {
+    "name": "Aceto balsamico",
+    "keywords": [
+     "aceto balsamico"
+    ]
+   },
+   {
+    "name": "Sale",
+    "keywords": [
+     "sale"
+    ]
+   },
+   {
+    "name": "Pepe",
+    "keywords": [
+     "pepe"
+    ]
+   },
+   {
+    "name": "Zucchero",
+    "keywords": [
+     "zucchero"
+    ]
+   },
+   {
+    "name": "Spezie",
+    "keywords": [
+     "spezie",
+     "origano",
+     "paprika"
+    ]
+   },
+   {
+    "name": "Miele",
+    "keywords": [
+     "miele"
+    ]
+   },
+   {
+    "name": "Marmellata",
+    "keywords": [
+     "marmellata",
+     "confettura"
+    ]
+   },
+   {
+    "name": "Crema spalmabile",
+    "keywords": [
+     "crema nocciole",
+     "nutella"
+    ]
+   },
+   {
+    "name": "Burro di arachidi",
+    "keywords": [
+     "burro arachidi"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Dolci e colazione",
+  "items": [
+   {
+    "name": "Biscotti frollini",
+    "keywords": [
+     "biscotti frollini",
+     "frollini"
+    ]
+   },
+   {
+    "name": "Biscotti secchi",
+    "keywords": [
+     "biscotti secchi",
+     "biscotti"
+    ]
+   },
+   {
+    "name": "Biscotti al cioccolato",
+    "keywords": [
+     "biscotti cioccolato"
+    ]
+   },
+   {
+    "name": "Merendine",
+    "keywords": [
+     "merendine",
+     "brioche"
+    ]
+   },
+   {
+    "name": "Cornetti",
+    "keywords": [
+     "cornetti",
+     "croissant"
+    ]
+   },
+   {
+    "name": "Torta",
+    "keywords": [
+     "torta",
+     "plumcake"
+    ]
+   },
+   {
+    "name": "Cioccolato",
+    "keywords": [
+     "cioccolato",
+     "tavoletta cioccolato"
+    ]
+   },
+   {
+    "name": "Cioccolatini",
+    "keywords": [
+     "cioccolatini",
+     "praline"
+    ]
+   },
+   {
+    "name": "Caramelle",
+    "keywords": [
+     "caramelle"
+    ]
+   },
+   {
+    "name": "Gelato",
+    "keywords": [
+     "gelato"
+    ]
+   },
+   {
+    "name": "Budino",
+    "keywords": [
+     "budino"
+    ]
+   },
+   {
+    "name": "Caffè in capsule",
+    "keywords": [
+     "caffè capsule",
+     "capsule caffè"
+    ]
+   },
+   {
+    "name": "Caffè macinato",
+    "keywords": [
+     "caffè macinato",
+     "caffè moka"
+    ]
+   },
+   {
+    "name": "Caffè in grani",
+    "keywords": [
+     "caffè grani"
+    ]
+   },
+   {
+    "name": "Caffè solubile",
+    "keywords": [
+     "caffè solubile"
+    ]
+   },
+   {
+    "name": "Tè",
+    "keywords": [
+     "tè",
+     "the",
+     "infuso",
+     "tisana"
+    ]
+   },
+   {
+    "name": "Orzo solubile",
+    "keywords": [
+     "orzo solubile"
+    ]
+   },
+   {
+    "name": "Cacao",
+    "keywords": [
+     "cacao"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Snack",
+  "items": [
+   {
+    "name": "Patatine",
+    "keywords": [
+     "patatine"
+    ]
+   },
+   {
+    "name": "Salatini",
+    "keywords": [
+     "salatini",
+     "snack salati"
+    ]
+   },
+   {
+    "name": "Popcorn",
+    "keywords": [
+     "popcorn"
+    ]
+   },
+   {
+    "name": "Barrette",
+    "keywords": [
+     "barrette",
+     "barretta"
+    ]
+   },
+   {
+    "name": "Taralli",
+    "keywords": [
+     "taralli"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Bevande",
+  "items": [
+   {
+    "name": "Acqua naturale",
+    "keywords": [
+     "acqua naturale",
+     "acqua minerale"
+    ]
+   },
+   {
+    "name": "Acqua frizzante",
+    "keywords": [
+     "acqua frizzante",
+     "acqua gassata"
+    ]
+   },
+   {
+    "name": "Coca Cola",
+    "keywords": [
+     "coca cola"
+    ]
+   },
+   {
+    "name": "Cola",
+    "keywords": [
+     "cola"
+    ]
+   },
+   {
+    "name": "Aranciata",
+    "keywords": [
+     "aranciata"
+    ]
+   },
+   {
+    "name": "Gazzosa",
+    "keywords": [
+     "gazzosa",
+     "limonata"
+    ]
+   },
+   {
+    "name": "Tè freddo",
+    "keywords": [
+     "tè freddo",
+     "the freddo"
+    ]
+   },
+   {
+    "name": "Succo di frutta",
+    "keywords": [
+     "succo frutta",
+     "succhi"
+    ]
+   },
+   {
+    "name": "Spremuta",
+    "keywords": [
+     "spremuta"
+    ]
+   },
+   {
+    "name": "Birra",
+    "keywords": [
+     "birra"
+    ]
+   },
+   {
+    "name": "Vino rosso",
+    "keywords": [
+     "vino rosso"
+    ]
+   },
+   {
+    "name": "Vino bianco",
+    "keywords": [
+     "vino bianco"
+    ]
+   },
+   {
+    "name": "Prosecco",
+    "keywords": [
+     "prosecco",
+     "spumante"
+    ]
+   },
+   {
+    "name": "Aperitivo",
+    "keywords": [
+     "aperitivo",
+     "spritz"
+    ]
+   },
+   {
+    "name": "Liquore",
+    "keywords": [
+     "liquore",
+     "amaro"
+    ]
+   },
+   {
+    "name": "Energy drink",
+    "keywords": [
+     "energy drink",
+     "redbull"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Surgelati",
+  "items": [
+   {
+    "name": "Gelato in vaschetta",
+    "keywords": [
+     "gelato vaschetta"
+    ]
+   },
+   {
+    "name": "Spinaci surgelati",
+    "keywords": [
+     "spinaci surgelati"
+    ]
+   },
+   {
+    "name": "Patatine surgelate",
+    "keywords": [
+     "patatine surgelate",
+     "patate surgelate"
+    ]
+   },
+   {
+    "name": "Pesce surgelato",
+    "keywords": [
+     "pesce surgelato",
+     "filetti surgelati"
+    ]
+   },
+   {
+    "name": "Piatti pronti surgelati",
+    "keywords": [
+     "piatti pronti",
+     "lasagne"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Casa e pulizia",
+  "items": [
+   {
+    "name": "Detersivo lavatrice",
+    "keywords": [
+     "detersivo lavatrice",
+     "detersivo bucato"
+    ]
+   },
+   {
+    "name": "Ammorbidente",
+    "keywords": [
+     "ammorbidente"
+    ]
+   },
+   {
+    "name": "Detersivo piatti",
+    "keywords": [
+     "detersivo piatti"
+    ]
+   },
+   {
+    "name": "Pastiglie lavastoviglie",
+    "keywords": [
+     "pastiglie lavastoviglie",
+     "tablet lavastoviglie"
+    ]
+   },
+   {
+    "name": "Sgrassatore",
+    "keywords": [
+     "sgrassatore"
+    ]
+   },
+   {
+    "name": "Detergente pavimenti",
+    "keywords": [
+     "detergente pavimenti"
+    ]
+   },
+   {
+    "name": "Detergente bagno",
+    "keywords": [
+     "detergente bagno",
+     "anticalcare"
+    ]
+   },
+   {
+    "name": "Candeggina",
+    "keywords": [
+     "candeggina",
+     "ammoniaca"
+    ]
+   },
+   {
+    "name": "Carta igienica",
+    "keywords": [
+     "carta igienica"
+    ]
+   },
+   {
+    "name": "Carta da cucina",
+    "keywords": [
+     "carta cucina",
+     "rotoloni",
+     "scottex"
+    ]
+   },
+   {
+    "name": "Fazzoletti",
+    "keywords": [
+     "fazzoletti"
+    ]
+   },
+   {
+    "name": "Tovaglioli",
+    "keywords": [
+     "tovaglioli"
+    ]
+   },
+   {
+    "name": "Sacchetti spazzatura",
+    "keywords": [
+     "sacchetti spazzatura"
+    ]
+   },
+   {
+    "name": "Pellicola",
+    "keywords": [
+     "pellicola",
+     "alluminio",
+     "carta forno"
+    ]
+   },
+   {
+    "name": "Spugne",
+    "keywords": [
+     "spugne",
+     "spugna"
+    ]
+   },
+   {
+    "name": "Pile",
+    "keywords": [
+     "pile",
+     "batterie"
+    ]
+   },
+   {
+    "name": "Lampadine",
+    "keywords": [
+     "lampadine"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Cura della persona",
+  "items": [
+   {
+    "name": "Shampoo",
+    "keywords": [
+     "shampoo"
+    ]
+   },
+   {
+    "name": "Balsamo",
+    "keywords": [
+     "balsamo"
+    ]
+   },
+   {
+    "name": "Bagnoschiuma",
+    "keywords": [
+     "bagnoschiuma",
+     "doccia schiuma"
+    ]
+   },
+   {
+    "name": "Sapone",
+    "keywords": [
+     "sapone",
+     "sapone liquido"
+    ]
+   },
+   {
+    "name": "Dentifricio",
+    "keywords": [
+     "dentifricio"
+    ]
+   },
+   {
+    "name": "Spazzolino",
+    "keywords": [
+     "spazzolino"
+    ]
+   },
+   {
+    "name": "Deodorante",
+    "keywords": [
+     "deodorante"
+    ]
+   },
+   {
+    "name": "Rasoi",
+    "keywords": [
+     "rasoi",
+     "lamette"
+    ]
+   },
+   {
+    "name": "Assorbenti",
+    "keywords": [
+     "assorbenti"
+    ]
+   },
+   {
+    "name": "Cotone",
+    "keywords": [
+     "cotone",
+     "cotton fioc"
+    ]
+   },
+   {
+    "name": "Crema viso",
+    "keywords": [
+     "crema viso"
+    ]
+   },
+   {
+    "name": "Crema corpo",
+    "keywords": [
+     "crema corpo"
+    ]
+   },
+   {
+    "name": "Protezione solare",
+    "keywords": [
+     "crema solare",
+     "protezione solare"
+    ]
+   },
+   {
+    "name": "Salviette umide",
+    "keywords": [
+     "salviette umide"
+    ]
+   }
+  ]
+ },
+ {
+  "category": "Bimbi e animali",
+  "items": [
+   {
+    "name": "Pannolini",
+    "keywords": [
+     "pannolini"
+    ]
+   },
+   {
+    "name": "Latte in polvere",
+    "keywords": [
+     "latte polvere",
+     "latte crescita"
+    ]
+   },
+   {
+    "name": "Omogeneizzati",
+    "keywords": [
+     "omogeneizzati"
+    ]
+   },
+   {
+    "name": "Cibo per cani",
+    "keywords": [
+     "cibo cani",
+     "crocchette cani"
+    ]
+   },
+   {
+    "name": "Cibo per gatti",
+    "keywords": [
+     "cibo gatti",
+     "crocchette gatti"
+    ]
+   },
+   {
+    "name": "Lettiera",
+    "keywords": [
+     "lettiera"
+    ]
+   }
+  ]
+ }
+]

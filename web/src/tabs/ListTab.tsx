@@ -4,12 +4,14 @@ import { rematch } from "../api";
 import { db } from "../firebase";
 import { useUserCollection } from "../hooks";
 import type { Product } from "../types";
+import CatalogPicker from "./CatalogPicker";
 
 const split = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
 export default function ListTab({ uid }: { uid: string }) {
   const products = useUserCollection<Product>(uid, "products");
   const [editing, setEditing] = useState<string | null>(null);
+  const [picker, setPicker] = useState(false);
   const [name, setName] = useState("");
   const [keywords, setKeywords] = useState("");
   const [excludes, setExcludes] = useState("");
@@ -42,7 +44,11 @@ export default function ListTab({ uid }: { uid: string }) {
 
   return (
     <section>
-      <h2>I prodotti che compro</h2>
+      <div className="between">
+        <h2>I prodotti che compro</h2>
+        <button className="link" onClick={() => setPicker(!picker)}>{picker ? "Chiudi catalogo" : "📚 Scegli dal catalogo"}</button>
+      </div>
+      {picker && <CatalogPicker uid={uid} products={products} onClose={() => setPicker(false)} />}
       <form onSubmit={save} className="card form">
         <strong>{editing ? "Modifica prodotto" : "Nuovo prodotto"}</strong>
         <input placeholder="Prodotto (es. latte parzialmente scremato)" value={name} onChange={(e) => setName(e.target.value)} required />

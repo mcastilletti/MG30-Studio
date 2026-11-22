@@ -41,3 +41,6 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .ok { color: var(--ok); }
 .list li.card { flex-wrap: wrap; }
 .draft { flex-basis: 100%; display: grid; gap: 6px; order: 3; }
+.catalog { max-height: 50vh; overflow-y: auto; border: 1px solid #8883; border-radius: 8px; padding: 4px 10px; }
+.catalog h4 { margin: 10px 0 2px; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.check.pick { padding: 6px 0; }
