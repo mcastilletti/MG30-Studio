@@ -1,5 +1,5 @@
 import { httpsCallable } from "firebase/functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { functions } from "../firebase";
 import { useUserCollection } from "../hooks";
 import type { Match, Offer } from "../types";
@@ -28,9 +28,22 @@ function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
   );
 }
 
-export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list" | "favorites" | "stores") => void }) {
+export default function OffersTab({ uid, goTo, focus, onFocusDone }: { uid: string; goTo: (t: "list" | "favorites" | "stores") => void; focus?: string | null; onFocusDone?: () => void }) {
   const matches = useUserCollection<Match & { id: string }>(uid, "matches");
   const [busy, setBusy] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+  // arrivo da una card della Lista: scorre fino all'offerta di quel prodotto e la evidenzia per qualche secondo
+  useEffect(() => {
+    if (!focus || !matches.some((m) => m.id === focus)) return;
+    const el = document.getElementById(`offer-${focus}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setFlash(focus);
+    onFocusDone?.();
+    const t = setTimeout(() => setFlash(null), 3000);
+    return () => clearTimeout(t);
+  }, [focus, matches]);
+
   const refresh = async () => {
     setBusy(true);
     try { await httpsCallable(functions, "rematch")(); } catch (e) { console.error(e); }
@@ -53,7 +66,7 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
         <button className="link" disabled={busy} onClick={refresh}>{busy ? "Aggiorno…" : "↻ Aggiorna confronto"}</button>
       </div>
       {withOffers.map((m) => (
-        <article key={m.id} className="card">
+        <article key={m.id} id={`offer-${m.id}`} className={`card ${flash === m.id ? "flash" : ""}`}>
           <h3>{m.productName} {m.inList && <span className="badge list">in lista</span>} {m.belowTarget && <span className="badge">sotto obiettivo</span>}</h3>
           {m.best && <OfferLine o={m.best} best />}
           {m.upcoming?.map((u, i) => <OfferLine key={`u${i}`} o={u} />)}

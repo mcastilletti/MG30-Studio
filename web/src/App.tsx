@@ -13,6 +13,7 @@ const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["favor
 export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("offers");
+  const [focus, setFocus] = useState<string | null>(null);
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
   if (user === undefined) return <p className="center">Caricamento…</p>;
@@ -41,8 +42,8 @@ export default function App() {
         <button className="link" onClick={() => signOut(auth)}>Esci</button>
       </header>
       <main>
-        {tab === "offers" && <OffersTab uid={user.uid} goTo={setTab} />}
-        {tab === "list" && <ShoppingTab uid={user.uid} />}
+        {tab === "offers" && <OffersTab uid={user.uid} goTo={setTab} focus={focus} onFocusDone={() => setFocus(null)} />}
+        {tab === "list" && <ShoppingTab uid={user.uid} onOffer={(id) => { setFocus(id); setTab("offers"); }} />}
         {tab === "favorites" && <FavoritesTab uid={user.uid} />}
         {tab === "flyers" && <ProductsTab uid={user.uid} />}
         {tab === "stores" && <StoresTab uid={user.uid} />}

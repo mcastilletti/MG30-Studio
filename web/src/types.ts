@@ -71,4 +71,10 @@ export interface ShoppingItem {
   name: string;
   keywords: string[];
   category?: string;
+  /** Dettagli della voce in lista. */
+  quantity?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  photoUrl?: string | null;
+  photoPath?: string | null;
 }
