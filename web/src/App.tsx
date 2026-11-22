@@ -8,6 +8,12 @@ import OffersTab from "./tabs/OffersTab";
 import ProductsTab from "./tabs/ProductsTab";
 
 type Tab = "offers" | "list" | "favorites" | "flyers" | "stores";
+const Version = () => (
+  <footer className="build" title="Versione del sito pubblicato">
+    Versione {__BUILD__.sha} · {new Date(__BUILD__.at).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+  </footer>
+);
+
 const TABS: [Tab, string][] = [["offers", "Offerte"], ["list", "Lista"], ["favorites", "Preferiti"], ["flyers", "Volantini"], ["stores", "Negozi"]];
 
 export default function App() {
@@ -25,6 +31,7 @@ export default function App() {
         <button className="primary" onClick={() => signInWithPopup(auth, googleProvider)}>
           Accedi con Google
         </button>
+        <Version />
       </main>
     );
 
@@ -47,6 +54,7 @@ export default function App() {
         {tab === "favorites" && <FavoritesTab uid={user.uid} />}
         {tab === "flyers" && <ProductsTab uid={user.uid} />}
         {tab === "stores" && <StoresTab uid={user.uid} />}
+        <Version />
       </main>
     </>
   );

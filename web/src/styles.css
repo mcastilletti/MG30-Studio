@@ -101,3 +101,4 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .choice .choice-btn { margin: 0; }
 .choice-btn.on { background: #9a8cff; color: #120d33; border-color: #9a8cff; font-weight: 700; }
 .nomain { margin: 6px 0; font-size: .9rem; }
+.build { margin: 28px 0 8px; text-align: center; font-size: .72rem; color: var(--muted); }
