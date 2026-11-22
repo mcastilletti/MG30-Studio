@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import date, timedelta
+from datetime import date
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -15,7 +15,7 @@ _STOPWORDS = {
 }
 _TOKEN_SIMILARITY = 0.84
 MAX_RESULTS_PER_PRODUCT = 6
-UPCOMING_DAYS = 14  # include offerte che iniziano entro due settimane
+MAX_UPCOMING_PER_PRODUCT = 3
 
 
 def normalize(text: str) -> str:
@@ -69,19 +69,12 @@ def enrich_offer(offer: dict[str, Any]) -> dict[str, Any]:
 
 
 def is_valid_on(offer: dict[str, Any], today: date) -> bool:
-    """Non scaduta e non troppo lontana nel futuro. Le offerte in arrivo si mostrano con la data di inizio."""
-    for key, cmp in (
-        ("validFrom", lambda d: d <= today + timedelta(days=UPCOMING_DAYS)),
-        ("validTo", lambda d: d >= today),
-    ):
-        raw = offer.get(key)
-        if raw:
-            try:
-                if not cmp(date.fromisoformat(raw)):
-                    return False
-            except ValueError:
-                pass
-    return True
+    """Esclude solo le offerte scadute. Quelle future restano e vengono segnalate (vedi starts_later)."""
+    raw = offer.get("validTo")
+    try:
+        return not (raw and date.fromisoformat(raw) < today)
+    except ValueError:
+        return True
 
 
 def starts_later(offer: dict[str, Any], today: date) -> str | None:
@@ -118,17 +111,18 @@ def compute_matches(
             want = {"kg": "€/kg", "l": "€/l", "pz": "€/pz"}.get(p["unit"])
             comparable = [f for f in found if f["unitLabel"] == want]
             found = comparable or found
-        found.sort(key=_sort_key)
-        found = found[:MAX_RESULTS_PER_PRODUCT]
-        for f in found:
+        active = sorted((f for f in found if not f["startsOn"]), key=_sort_key)[:MAX_RESULTS_PER_PRODUCT]
+        future = sorted((f for f in found if f["startsOn"]), key=lambda f: (f["startsOn"], _sort_key(f)))
+        for f in active + future:
             f.pop("id", None)
-        best = found[0] if found else None
+        best = active[0] if active else None
         max_price = p.get("maxPrice")
         results.append({
             "productId": p["id"],
             "productName": p.get("name", ""),
             "best": best,
-            "alternatives": found[1:],
+            "alternatives": active[1:],
+            "upcoming": future[:MAX_UPCOMING_PER_PRODUCT],  # offerte non ancora iniziate, sempre segnalate
             "belowTarget": bool(best and max_price and best["price"] <= float(max_price)),
         })
     return results

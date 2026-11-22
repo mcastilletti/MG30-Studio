@@ -36,3 +36,5 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .price button { display: block; margin-left: auto; font-size: .8rem; padding: 2px 0; }
 .check { display: flex; align-items: center; gap: 6px; font-size: .9rem; color: var(--text); }
 .check input { width: auto; }
+.badge.future { background: #b7791f; }
+.offer.future { border-left: 4px dashed #b7791f; padding-left: 10px; opacity: .92; }

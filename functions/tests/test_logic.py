@@ -74,12 +74,20 @@ def test_retry_delay():
     assert _retry_delay(RuntimeError("404 NOT_FOUND")) is None
 
 
-def test_upcoming_offers_included_but_flagged():
+def test_future_offers_are_found_and_flagged_separately():
     products = [{"id": "p", "name": "latte"}]
     offers = [
-        {"id": "a", "title": "Latte", "price": 1.0, "validFrom": "2026-11-23", "validTo": "2026-11-29"},  # domani
-        {"id": "b", "title": "Latte", "price": 1.0, "validFrom": "2027-03-01", "validTo": "2027-03-07"},  # troppo lontana
+        {"id": "now", "title": "Latte", "price": 1.5, "validTo": "2026-11-25"},
+        {"id": "tomorrow", "title": "Latte", "price": 1.0, "validFrom": "2026-11-23", "validTo": "2026-11-29"},
+        {"id": "spring", "title": "Latte", "price": 0.9, "validFrom": "2027-03-01", "validTo": "2027-03-07"},
     ]
     [res] = compute_matches(products, offers, TODAY)
-    assert res["best"]["offerId"] == "a" and res["best"]["startsOn"] == "2026-11-23"
-    assert res["alternatives"] == []
+    assert res["best"]["offerId"] == "now" and res["best"]["startsOn"] is None  # la migliore valida adesso
+    assert [u["offerId"] for u in res["upcoming"]] == ["tomorrow", "spring"]  # per data di inizio
+    assert res["upcoming"][0]["startsOn"] == "2026-11-23"
+
+
+def test_only_future_offers():
+    [res] = compute_matches([{"id": "p", "name": "latte"}],
+                            [{"id": "a", "title": "Latte", "price": 1.0, "validFrom": "2026-11-23"}], TODAY)
+    assert res["best"] is None and len(res["upcoming"]) == 1

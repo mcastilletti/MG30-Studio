@@ -60,5 +60,6 @@ export interface Match {
   productName: string;
   best: Offer | null;
   alternatives: Offer[];
+  upcoming?: Offer[];
   belowTarget: boolean;
 }

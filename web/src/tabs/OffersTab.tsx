@@ -6,15 +6,18 @@ import type { Match, Offer } from "../types";
 
 const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
+const dayMonth = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+
 function OfferLine({ o, best }: { o: Offer; best?: boolean }) {
   return (
-    <div className={`offer ${best ? "best" : ""}`}>
+    <div className={`offer ${best ? "best" : ""} ${o.startsOn ? "future" : ""}`}>
       <div>
+        {o.startsOn && <span className="badge future">Futura · dal {dayMonth(o.startsOn)}</span>}{" "}
         <strong>{o.storeName}</strong>
         <span> {o.title}{o.quantity ? ` · ${o.quantity}` : ""}</span>
         <small>
           {o.unitPrice != null && `${eur(o.unitPrice)} ${o.unitLabel?.replace("€", "")}`}
-          {o.startsOn ? ` · dal ${o.startsOn.slice(8)}/${o.startsOn.slice(5, 7)}` : ""}{o.validTo ? ` · fino al ${o.validTo}` : ""}{o.notes ? ` · ${o.notes}` : ""}
+          {o.validTo ? ` · fino al ${o.validTo}` : ""}{o.notes ? ` · ${o.notes}` : ""}
         </small>
       </div>
       <div className="price">
@@ -33,8 +36,8 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
     try { await httpsCallable(functions, "rematch")(); } catch (e) { console.error(e); }
     setBusy(false);
   };
-  const withOffers = matches.filter((m) => m.best).sort((a, b) => Number(b.belowTarget) - Number(a.belowTarget) || a.productName.localeCompare(b.productName));
-  const without = matches.filter((m) => !m.best);
+  const withOffers = matches.filter((m) => m.best || m.upcoming?.length).sort((a, b) => Number(b.belowTarget) - Number(a.belowTarget) || a.productName.localeCompare(b.productName));
+  const without = matches.filter((m) => !m.best && !m.upcoming?.length);
 
   if (!matches.length)
     return (
@@ -52,7 +55,8 @@ export default function OffersTab({ uid, goTo }: { uid: string; goTo: (t: "list"
       {withOffers.map((m) => (
         <article key={m.id} className="card">
           <h3>{m.productName} {m.belowTarget && <span className="badge">sotto obiettivo</span>}</h3>
-          <OfferLine o={m.best!} best />
+          {m.best && <OfferLine o={m.best} best />}
+          {m.upcoming?.map((u, i) => <OfferLine key={`u${i}`} o={u} />)}
           {m.alternatives.length > 0 && (
             <details>
               <summary>Altre {m.alternatives.length} offerte</summary>
