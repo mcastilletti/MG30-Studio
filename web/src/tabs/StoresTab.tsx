@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { ref, uploadBytes } from "firebase/storage";
 import { useState, type FormEvent } from "react";
@@ -74,7 +74,7 @@ export default function StoresTab({ uid }: { uid: string }) {
               </span>
             </div>
             <small>{s.urls.join(" · ")}</small>
-            {!!s.exclude?.length && <small>Ignora: {s.exclude.join(", ")}</small>}
+            <FilterEditor uid={uid} store={s} flyers={mine} />
             {s.lastScanStatus && (
               <small className={s.lastScanStatus === "ok" ? "" : "error"}>
                 {s.lastScanAt ? `Ultima scansione ${s.lastScanAt.toDate().toLocaleString("it-IT")}: ` : ""}{s.lastScanMessage}
@@ -99,6 +99,37 @@ export default function StoresTab({ uid }: { uid: string }) {
       })}
       {!stores.length && <p className="muted">Nessun negozio: aggiungine uno con il link alla pagina dei suoi volantini.</p>}
     </section>
+  );
+}
+
+const isExcluded = (f: Flyer, words: string[]) => {
+  const hay = `${f.fileName} ${f.sourceUrl ?? ""}`.toLowerCase();
+  return words.some((w) => hay.includes(w.toLowerCase()));
+};
+
+/** Modifica il filtro del negozio e lo applica subito ai volantini già scaricati. */
+function FilterEditor({ uid, store, flyers }: { uid: string; store: Store; flyers: Flyer[] }) {
+  const saved = (store.exclude ?? []).join(", ");
+  const [value, setValue] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  const words = parseWords(value);
+  const hits = flyers.filter((f) => isExcluded(f, words));
+
+  async function save() {
+    if (hits.length && !confirm(`Verranno eliminati ${hits.length} volantini già scaricati:\n\n${hits.map((f) => `• ${f.fileName}`).join("\n")}\n\nContinuare?`)) return;
+    setBusy(true);
+    await updateDoc(doc(db, "users", uid, "stores", store.id), { exclude: words });
+    await Promise.all(hits.map((f) => deleteDoc(doc(db, "users", uid, "flyers", f.id))));
+    setBusy(false);
+  }
+
+  return (
+    <div className="row filter">
+      <input placeholder="Ignora volantini che contengono… (es. giocattolo, manuale)" value={value} onChange={(e) => setValue(e.target.value)} />
+      <button className="link" disabled={busy || value === saved} onClick={save}>
+        {busy ? "…" : hits.length ? `Salva ed elimina ${hits.length}` : "Salva filtro"}
+      </button>
+    </div>
   );
 }
 

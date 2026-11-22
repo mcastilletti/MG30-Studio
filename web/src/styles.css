@@ -31,3 +31,5 @@ h2 { margin: 8px 0; } h3 { margin: 0 0 6px; }
 details { border-top: 1px solid #8883; margin-top: 6px; padding-top: 6px; } summary { cursor: pointer; color: var(--muted); }
 textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font: inherit; background: transparent; color: inherit; resize: vertical; }
 .between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.filter { margin: 8px 0 0; align-items: center; } .filter input { flex: 1; } .filter button { flex: none; }
