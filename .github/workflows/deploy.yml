@@ -1,0 +1,85 @@
+# Pubblica Sottocosto su Firebase senza terminale: GitHub → Actions → "Pubblica su Firebase" → Run workflow.
+# Richiede due segreti nel repository (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT  contenuto JSON della chiave di un account di servizio con i permessi per il deploy
+#   WEB_ENV                   contenuto del file web/.env (config Firebase del sito)
+# Per pubblicare automaticamente a ogni push sul ramo di lavoro, togli il commento al blocco "push".
+name: Pubblica su Firebase
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Cosa pubblicare"
+        type: choice
+        default: all
+        options: [all, hosting, functions]
+  # push:
+  #   branches: [ccr-06ea5088-ecx2rv]
+
+concurrency: deploy-firebase
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TARGET: ${{ inputs.target || 'all' }}
+      PROJECT: studio-7805098640-5b1fc
+    steps:
+      - name: Controllo segreti
+        id: cfg
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          WEB: ${{ secrets.WEB_ENV }}
+        run: |
+          if [ -z "$SA" ] || [ -z "$WEB" ]; then
+            echo "::error::Mancano i segreti FIREBASE_SERVICE_ACCOUNT e/o WEB_ENV (vedi le istruzioni in cima a questo file)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test (funzioni)
+        if: env.TARGET != 'hosting'
+        run: |
+          pip install -q -r functions/requirements.txt pytest
+          python -m pytest -q functions
+
+      - name: Compila il sito
+        if: env.TARGET != 'functions'
+        env:
+          WEB_ENV: ${{ secrets.WEB_ENV }}
+        run: |
+          printf '%s\n' "$WEB_ENV" > web/.env
+          npm ci --prefix web
+          npm run build --prefix web
+
+      - name: Ambiente Python per le funzioni
+        if: env.TARGET != 'hosting'
+        run: |
+          python -m venv functions/venv
+          functions/venv/bin/pip install -q -r functions/requirements.txt
+
+      - name: Pubblica
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          export PATH="$PWD/functions/venv/bin:$PATH"
+          case "$TARGET" in
+            all)       npx -y firebase-tools@latest deploy --project "$PROJECT" --non-interactive ;;
+            hosting)   npx -y firebase-tools@latest deploy --project "$PROJECT" --non-interactive --only hosting,firestore,storage ;;
+            functions) npx -y firebase-tools@latest deploy --project "$PROJECT" --non-interactive --only functions ;;
+          esac
+          rm -f "$RUNNER_TEMP/sa.json"

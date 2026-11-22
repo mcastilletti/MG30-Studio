@@ -34,6 +34,10 @@ firebase deploy
 
 **Modello Gemini**: di default `gemini-3.8-flash`. Se Google lo ritira, crea `functions/.env` con `GEMINI_MODEL=<nuovo-modello>` e rifai `firebase deploy --only functions`, senza modificare il codice.
 
+## Pubblicare da cellulare
+- **Cloud Shell** (nell'app Google Cloud o su console.cloud.google.com): `cd ~/Sottocosto && ./deploy.sh` (oppure `./deploy.sh hosting` / `./deploy.sh functions`). Lo script scarica gli aggiornamenti, compila e pubblica.
+- **Pulsante su GitHub**: Actions → «Pubblica su Firebase» → Run workflow. Richiede i segreti `FIREBASE_SERVICE_ACCOUNT` (chiave JSON di un account di servizio) e `WEB_ENV` (contenuto di `web/.env`); vedi `.github/workflows/deploy.yml`.
+
 ## Test
 ```bash
 cd functions && python -m venv venv && . venv/bin/activate
