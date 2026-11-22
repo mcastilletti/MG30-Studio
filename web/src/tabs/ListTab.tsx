@@ -46,7 +46,7 @@ export default function ListTab({ uid }: { uid: string }) {
       <form onSubmit={save} className="card form">
         <strong>{editing ? "Modifica prodotto" : "Nuovo prodotto"}</strong>
         <input placeholder="Prodotto (es. latte parzialmente scremato)" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input placeholder="Parole chiave obbligatorie, separate da virgola (opz.)" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
+        <input placeholder="Parole chiave alternative, separate da virgola: ne basta una (opz.)" value={keywords} onChange={(e) => setKeywords(e.target.value)} />
         <input placeholder="Escludi se contiene (es. soia, senza lattosio) (opz.)" value={excludes} onChange={(e) => setExcludes(e.target.value)} />
         <div className="row">
           <input placeholder="Prezzo obiettivo €" inputMode="decimal" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
@@ -68,7 +68,7 @@ export default function ListTab({ uid }: { uid: string }) {
             <div>
               <strong>{p.name}</strong>
               <small>
-                {[p.keywords.length ? `cerca: ${p.keywords.join(", ")}` : "", p.excludes.length ? `escludi: ${p.excludes.join(", ")}` : "", p.maxPrice ? `obiettivo ≤ ${p.maxPrice.toFixed(2)} €` : "", p.unit ? `€/${p.unit}` : ""].filter(Boolean).join(" · ")}
+                {[p.keywords.length ? `cerca: ${p.keywords.join(" oppure ")}` : "", p.excludes.length ? `escludi: ${p.excludes.join(", ")}` : "", p.maxPrice ? `obiettivo ≤ ${p.maxPrice.toFixed(2)} €` : "", p.unit ? `€/${p.unit}` : ""].filter(Boolean).join(" · ")}
               </small>
             </div>
             <span>

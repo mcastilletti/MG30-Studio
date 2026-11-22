@@ -48,22 +48,30 @@ def _token_score(needle: str, haystack: list[str]) -> float:
 
 
 def match_score(product: dict[str, Any], offer: dict[str, Any]) -> float:
-    """0 se il prodotto non corrisponde, altrimenti 0..1. Tutti i termini richiesti devono comparire."""
-    wanted = [t for kw in (product.get("keywords") or []) for t in tokens(kw)] or tokens(product.get("name", ""))
-    if not wanted:
-        return 0.0
+    """0 se il prodotto non corrisponde, altrimenti 0..1.
+
+    Le parole chiave (separate da virgola) sono ALTERNATIVE: basta che ne corrisponda una.
+    Dentro una stessa voce ("latte uht") tutte le parole devono comparire.
+    Senza parole chiave si usa il nome del prodotto come unica alternativa."""
+    alternatives = [t for t in (tokens(kw) for kw in (product.get("keywords") or [])) if t] or [tokens(product.get("name", ""))]
     haystack = tokens(f"{offer.get('title', '')} {offer.get('brand') or ''} {offer.get('category') or ''}")
     if not haystack:
         return 0.0
-    scores = [_token_score(w, haystack) for w in wanted]
-    if min(scores) < _TOKEN_SIMILARITY:
+    best = 0.0
+    for wanted in alternatives:
+        if not wanted:
+            continue
+        scores = [_token_score(w, haystack) for w in wanted]
+        if min(scores) >= _TOKEN_SIMILARITY:
+            best = max(best, sum(scores) / len(scores))
+    if best == 0.0:
         return 0.0
-    # "evita" termini che l'utente non vuole (es. "senza lattosio" -> excludes)
+    # termini da evitare (anche questi alternativi: ne basta uno per scartare l'offerta)
     for ex in (product.get("excludes") or []):
         for t in tokens(ex):
             if _token_score(t, haystack) >= 0.95:
                 return 0.0
-    return sum(scores) / len(scores)
+    return best
 
 
 def enrich_offer(offer: dict[str, Any]) -> dict[str, Any]:

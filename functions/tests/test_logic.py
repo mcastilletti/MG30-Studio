@@ -103,3 +103,14 @@ def test_italian_plurals_and_attached_quantities():
     assert match_score({"name": "mela"}, {"title": "Melone"}) == 0
     assert match_score({"name": "pasta"}, {"title": "Pastiglie lavastoviglie"}) == 0
     assert match_score({"name": "1 kg"}, {"title": "Mele 1 kg"}) == 0  # solo quantità: nessun termine utile
+
+
+def test_keywords_are_alternatives_words_inside_one_keyword_are_all_required():
+    p = {"name": "latte", "keywords": ["latte fresco", "latte uht", "bevanda"]}
+    assert match_score(p, {"title": "Latte UHT Milbona 1 l"}) > 0      # basta la seconda voce
+    assert match_score(p, {"title": "Latte fresco intero"}) > 0       # o la prima
+    assert match_score(p, {"title": "Bevanda di avena"}) > 0          # o la terza
+    assert match_score(p, {"title": "Latte in polvere"}) == 0         # "latte" da solo non basta: le voci hanno due parole
+    assert match_score({"name": "x", "keywords": ["latte", "yogurt"]}, {"title": "Yogurt greco"}) > 0
+    # le esclusioni valgono sempre
+    assert match_score({"name": "x", "keywords": ["latte", "yogurt"], "excludes": ["soia"]}, {"title": "Latte di soia"}) == 0
