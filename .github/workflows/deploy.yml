@@ -1,8 +1,10 @@
-# Pubblica Sottocosto su Firebase senza terminale: GitHub → Actions → "Pubblica su Firebase" → Run workflow.
+# Pubblica Sottocosto su Firebase.
+#   • Automatico: ogni push su `main` o sul ramo di lavoro pubblica tutto (sito, regole, funzioni).
+#   • Manuale:    GitHub → Actions → "Pubblica su Firebase" → Run workflow (si può scegliere cosa pubblicare).
 # Richiede due segreti nel repository (Settings → Secrets and variables → Actions):
 #   FIREBASE_SERVICE_ACCOUNT  contenuto JSON della chiave di un account di servizio con i permessi per il deploy
 #   WEB_ENV                   contenuto del file web/.env (config Firebase del sito)
-# Per pubblicare automaticamente a ogni push sul ramo di lavoro, togli il commento al blocco "push".
+# Finché i segreti mancano, i push non pubblicano nulla (avviso giallo, nessun errore).
 name: Pubblica su Firebase
 
 on:
@@ -13,8 +15,9 @@ on:
         type: choice
         default: all
         options: [all, hosting, functions]
-  # push:
-  #   branches: [ccr-06ea5088-ecx2rv]
+  push:
+    branches: [main, ccr-06ea5088-ecx2rv]
+    paths-ignore: ["README.md", "docs/**", "**/*.md"]
 
 concurrency: deploy-firebase
 
@@ -31,32 +34,40 @@ jobs:
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           WEB: ${{ secrets.WEB_ENV }}
+          EVENT: ${{ github.event_name }}
         run: |
           if [ -z "$SA" ] || [ -z "$WEB" ]; then
-            echo "::error::Mancano i segreti FIREBASE_SERVICE_ACCOUNT e/o WEB_ENV (vedi le istruzioni in cima a questo file)."
-            exit 1
+            MSG="Mancano i segreti FIREBASE_SERVICE_ACCOUNT e/o WEB_ENV (vedi le istruzioni in cima a .github/workflows/deploy.yml)."
+            if [ "$EVENT" = "workflow_dispatch" ]; then echo "::error::$MSG"; exit 1; fi
+            echo "::warning::$MSG Nessuna pubblicazione eseguita."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ok == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.ok == 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
 
       - uses: actions/setup-python@v5
+        if: steps.cfg.outputs.ok == 'true'
         with:
           python-version: "3.12"
 
       - name: Test (funzioni)
-        if: env.TARGET != 'hosting'
+        if: steps.cfg.outputs.ok == 'true' && env.TARGET != 'hosting'
         run: |
           pip install -q -r functions/requirements.txt pytest
           python -m pytest -q functions
 
       - name: Compila il sito
-        if: env.TARGET != 'functions'
+        if: steps.cfg.outputs.ok == 'true' && env.TARGET != 'functions'
         env:
           WEB_ENV: ${{ secrets.WEB_ENV }}
         run: |
@@ -65,12 +76,13 @@ jobs:
           npm run build --prefix web
 
       - name: Ambiente Python per le funzioni
-        if: env.TARGET != 'hosting'
+        if: steps.cfg.outputs.ok == 'true' && env.TARGET != 'hosting'
         run: |
           python -m venv functions/venv
           functions/venv/bin/pip install -q -r functions/requirements.txt
 
       - name: Pubblica
+        if: steps.cfg.outputs.ok == 'true'
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
