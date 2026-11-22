@@ -108,16 +108,21 @@ def _sort_key(item: dict[str, Any]) -> tuple:
 
 def merge_products(favorites: list[dict[str, Any]], list_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Prodotti da cercare = Preferiti + voci della Lista della spesa.
-    Se una voce della Lista ha lo stesso nome di un Preferito vince il Preferito (ha parole chiave e obiettivi suoi)."""
+
+    - Una voce di lista che rappresenta un preferito agganciato (`favoriteId`) non si duplica: il Preferito stesso
+      risulta "in lista".
+    - Se una voce generica ha lo stesso nome di un Preferito vince il Preferito (ha parole chiave e obiettivi suoi)."""
+    on_list = {it["favoriteId"] for it in list_items if it.get("favoriteId")}
+    merged = [{**f, "inList": True} if f.get("id") in on_list else f for f in favorites]
     seen = {normalize(f.get("name", "")).strip() for f in favorites}
     extra = []
     for it in list_items:
         key = normalize(it.get("name", "")).strip()
-        if not key or key in seen:
+        if it.get("favoriteId") or not key or key in seen:
             continue
         seen.add(key)
         extra.append({**it, "id": f"list_{it['id']}", "inList": True})
-    return favorites + extra
+    return merged + extra
 
 
 def compute_matches(

@@ -124,3 +124,14 @@ def test_merge_favorites_and_shopping_list():
     assert merged[1]["inList"] is True
     [r1, r2] = compute_matches(merged, [{"id": "o", "title": "Spaghetti Barilla", "price": 1.0}], TODAY)
     assert r1["best"] is None and r2["best"]["offerId"] == "o" and r2["inList"] is True
+
+
+def test_attached_favorite_counts_as_in_list_without_duplicating():
+    fav = [{"id": "f1", "name": "Gocciole Pavesi", "keywords": ["gocciole"]}, {"id": "f2", "name": "Altro", "keywords": ["altro"]}]
+    lst = [
+        {"id": "biscotti-al-cioccolato", "name": "Biscotti al cioccolato", "keywords": ["biscotti cioccolato"]},
+        {"id": "fav_f1", "name": "Gocciole Pavesi", "favoriteId": "f1", "parentId": "biscotti-al-cioccolato", "keywords": []},
+    ]
+    merged = merge_products(fav, lst)
+    assert [p["id"] for p in merged] == ["f1", "f2", "list_biscotti-al-cioccolato"]
+    assert merged[0].get("inList") is True and not merged[1].get("inList")
