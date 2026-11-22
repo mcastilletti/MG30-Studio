@@ -2,6 +2,7 @@ import { collection, deleteDoc, doc, increment, serverTimestamp, writeBatch } fr
 import { useMemo, useState } from "react";
 import { rematchSoon } from "../api";
 import catalog from "../data/catalog.json";
+import { iconFor } from "../data/icons";
 import { db } from "../firebase";
 import { useUserCollection } from "../hooks";
 import type { ShoppingItem } from "../types";
@@ -9,22 +10,17 @@ import type { ShoppingItem } from "../types";
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const slug = (s: string) => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const EMOJI: [string, string][] = [
-  ["latticini", "🥛"], ["carne", "🥩"], ["pesce", "🐟"], ["salumi", "🥓"], ["frutta", "🍎"], ["verdura", "🥦"],
-  ["pane", "🍞"], ["pasta", "🍝"], ["conserve", "🥫"], ["condimenti", "🫒"], ["dolci", "🍪"], ["snack", "🥨"],
-  ["bevande", "🥤"], ["surgelati", "🧊"], ["casa", "🧽"], ["cura", "🧴"], ["bimbi", "🐾"],
-];
-const emojiFor = (cat?: string) => EMOJI.find(([k]) => norm(cat ?? "").startsWith(k))?.[1] ?? "🛒";
-
-const ITEMS = catalog.flatMap((g) => g.items.map((i) => ({ id: slug(i.name), name: i.name, keywords: i.keywords, category: g.category })));
+const ITEMS = catalog.flatMap((g) => g.items.map((i) => ({ id: slug(i.name), name: i.name, keywords: i.keywords, category: g.category, icon: i.icon })));
+const ICON_BY_ID = new Map(ITEMS.map((i) => [i.id, i.icon]));
 const CATALOG_IDS = new Set(ITEMS.map((i) => i.id));
 
-function Tile({ name, category, on, count, onClick }: { name: string; category?: string; on: boolean; count?: number; onClick: () => void }) {
+function Tile({ name, icon, on, count, onClick }: { name: string; icon?: string; on: boolean; count?: number; onClick: () => void }) {
+  const Icon = iconFor(icon);
   return (
     <button className={`tile ${on ? "on" : ""}`} onClick={onClick} aria-pressed={on} title={on ? "Tocca per togliere dalla lista" : "Tocca per aggiungere alla lista"}>
       {on && <span className="tick">✓</span>}
       {!!count && <span className="uses">×{count}</span>}
-      <span className="emoji">{emojiFor(category)}</span>
+      <Icon className="icon" size={34} strokeWidth={1.6} aria-hidden />
       <span className="name">{name}</span>
     </button>
   );
@@ -47,7 +43,11 @@ export default function ShoppingTab({ uid }: { uid: string }) {
   const shown = useMemo(() => {
     const words = norm(q).split(/\s+/).filter(Boolean);
     if (!words.length) return sorted;
-    return sorted.filter((i) => { const h = norm(`${i.name} ${i.keywords.join(" ")}`); return words.every((w) => h.includes(w)); });
+    // ogni parola cercata deve essere l'inizio di una parola del prodotto ("pa" → pane, pasta; non "coppa")
+    return sorted.filter((i) => {
+      const parts = norm(`${i.name} ${i.keywords.join(" ")}`).split(/[^a-z0-9]+/).filter(Boolean);
+      return words.every((w) => parts.some((h) => h.startsWith(w)));
+    });
   }, [sorted, q]);
 
   const mine = useMemo(() => [...shopping].sort((a, b) => a.name.localeCompare(b.name, "it")), [shopping]);
@@ -82,7 +82,7 @@ export default function ShoppingTab({ uid }: { uid: string }) {
         <>
           <h3 className="sub">In lista ({mine.length})</h3>
           <div className="tiles">
-            {mine.map((s) => <Tile key={s.id} name={s.name} category={s.category} on onClick={() => remove(s.id)} />)}
+            {mine.map((s) => <Tile key={s.id} name={s.name} icon={ICON_BY_ID.get(s.id)} on onClick={() => remove(s.id)} />)}
           </div>
         </>
       )}
@@ -94,7 +94,7 @@ export default function ShoppingTab({ uid }: { uid: string }) {
         </button>
       )}
       <div className="tiles">
-        {shown.map((i) => <Tile key={i.id} name={i.name} category={i.category} on={inList.has(i.id)} count={counts.get(i.id)} onClick={() => toggle(i)} />)}
+        {shown.map((i) => <Tile key={i.id} name={i.name} icon={i.icon} on={inList.has(i.id)} count={counts.get(i.id)} onClick={() => toggle(i)} />)}
       </div>
       {!shown.length && !canCustom && <p className="muted">Nessun prodotto corrisponde a «{typed}».</p>}
     </section>

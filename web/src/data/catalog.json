@@ -6,7 +6,8 @@
     "name": "Latte intero",
     "keywords": [
      "latte intero"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte parzialmente scremato",
@@ -14,13 +15,15 @@
      "latte parzialmente scremato",
      "latte p.s.",
      "latte pastorizzato"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte scremato",
     "keywords": [
      "latte scremato"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte senza lattosio",
@@ -28,181 +31,209 @@
      "latte senza lattosio",
      "latte delattosato",
      "latte zymil"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte UHT",
     "keywords": [
      "latte uht"
-    ]
+    ],
+    "icon": "Carton"
    },
    {
     "name": "Latte di soia",
     "keywords": [
      "latte soia",
      "bevanda soia"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte di avena",
     "keywords": [
      "latte avena",
      "bevanda avena"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Latte di mandorla",
     "keywords": [
      "latte mandorla",
      "bevanda mandorla"
-    ]
+    ],
+    "icon": "Milk"
    },
    {
     "name": "Panna da cucina",
     "keywords": [
      "panna cucina",
      "panna uht"
-    ]
+    ],
+    "icon": "Carton"
    },
    {
     "name": "Panna fresca",
     "keywords": [
      "panna fresca"
-    ]
+    ],
+    "icon": "Carton"
    },
    {
     "name": "Burro",
     "keywords": [
      "burro"
-    ]
+    ],
+    "icon": "Butter"
    },
    {
     "name": "Yogurt bianco",
     "keywords": [
      "yogurt bianco",
      "yogurt naturale"
-    ]
+    ],
+    "icon": "Yogurt"
    },
    {
     "name": "Yogurt alla frutta",
     "keywords": [
      "yogurt frutta"
-    ]
+    ],
+    "icon": "Yogurt"
    },
    {
     "name": "Yogurt greco",
     "keywords": [
      "yogurt greco"
-    ]
+    ],
+    "icon": "Yogurt"
    },
    {
     "name": "Yogurt da bere",
     "keywords": [
      "yogurt bere"
-    ]
+    ],
+    "icon": "Yogurt"
    },
    {
     "name": "Mozzarella",
     "keywords": [
      "mozzarella"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Mozzarella di bufala",
     "keywords": [
      "mozzarella bufala"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Parmigiano Reggiano",
     "keywords": [
      "parmigiano reggiano",
      "parmigiano"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Grana Padano",
     "keywords": [
      "grana padano",
      "grana"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Pecorino",
     "keywords": [
      "pecorino"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Formaggio spalmabile",
     "keywords": [
      "formaggio spalmabile",
      "philadelphia"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Ricotta",
     "keywords": [
      "ricotta"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Mascarpone",
     "keywords": [
      "mascarpone"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Stracchino",
     "keywords": [
      "stracchino",
      "crescenza"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Scamorza",
     "keywords": [
      "scamorza"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Provola",
     "keywords": [
      "provola",
      "provolone"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Gorgonzola",
     "keywords": [
      "gorgonzola"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Formaggio a fette",
     "keywords": [
      "formaggio fette",
      "sottilette"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Formaggio grattugiato",
     "keywords": [
      "formaggio grattugiato",
      "grana grattugiato"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Feta",
     "keywords": [
      "feta"
-    ]
+    ],
+    "icon": "Cheese"
    },
    {
     "name": "Uova",
     "keywords": [
      "uova"
-    ]
+    ],
+    "icon": "Egg"
    }
   ]
  },
@@ -214,91 +245,105 @@
     "keywords": [
      "petto pollo",
      "fesa pollo"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Pollo intero",
     "keywords": [
      "pollo intero"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Cosce di pollo",
     "keywords": [
      "cosce pollo",
      "sovracosce pollo"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Fettine di pollo",
     "keywords": [
      "fettine pollo"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Petto di tacchino",
     "keywords": [
      "petto tacchino",
      "fesa tacchino"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Fettine di tacchino",
     "keywords": [
      "fettine tacchino"
-    ]
+    ],
+    "icon": "Drumstick"
    },
    {
     "name": "Macinato di manzo",
     "keywords": [
      "macinato manzo",
      "carne macinata"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Macinato misto",
     "keywords": [
      "macinato misto",
      "macinato maiale"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Bistecca di manzo",
     "keywords": [
      "bistecca manzo",
      "fettine manzo"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Hamburger",
     "keywords": [
      "hamburger"
-    ]
+    ],
+    "icon": "Hamburger"
    },
    {
     "name": "Spezzatino",
     "keywords": [
      "spezzatino"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Arrosto",
     "keywords": [
      "arrosto"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Salsiccia",
     "keywords": [
      "salsiccia"
-    ]
+    ],
+    "icon": "Sausage"
    },
    {
     "name": "Cotolette",
     "keywords": [
      "cotoletta",
      "cotolette"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Braciole di maiale",
@@ -306,31 +351,36 @@
      "braciole maiale",
      "costine maiale",
      "lonza"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Pancetta",
     "keywords": [
      "pancetta"
-    ]
+    ],
+    "icon": "Bacon"
    },
    {
     "name": "Wurstel",
     "keywords": [
      "wurstel"
-    ]
+    ],
+    "icon": "Sausage"
    },
    {
     "name": "Agnello",
     "keywords": [
      "agnello"
-    ]
+    ],
+    "icon": "Beef"
    },
    {
     "name": "Coniglio",
     "keywords": [
      "coniglio"
-    ]
+    ],
+    "icon": "Beef"
    }
   ]
  },
@@ -341,7 +391,8 @@
     "name": "Salmone",
     "keywords": [
      "salmone"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Tonno in scatola",
@@ -349,88 +400,102 @@
      "tonno scatola",
      "tonno olio",
      "tonno naturale"
-    ]
+    ],
+    "icon": "Can"
    },
    {
     "name": "Tonno fresco",
     "keywords": [
      "tonno fresco"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Merluzzo",
     "keywords": [
      "merluzzo"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Platessa",
     "keywords": [
      "platessa"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Orata",
     "keywords": [
      "orata"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Branzino",
     "keywords": [
      "branzino",
      "spigola"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Gamberi",
     "keywords": [
      "gamberi",
      "gamberetti"
-    ]
+    ],
+    "icon": "Shrimp"
    },
    {
     "name": "Calamari",
     "keywords": [
      "calamari"
-    ]
+    ],
+    "icon": "Squid"
    },
    {
     "name": "Cozze",
     "keywords": [
      "cozze"
-    ]
+    ],
+    "icon": "Shell"
    },
    {
     "name": "Vongole",
     "keywords": [
      "vongole"
-    ]
+    ],
+    "icon": "Shell"
    },
    {
     "name": "Bastoncini di pesce",
     "keywords": [
      "bastoncini pesce"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Sgombro",
     "keywords": [
      "sgombro"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Alici",
     "keywords": [
      "alici",
      "acciughe"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Sardine",
     "keywords": [
      "sardine"
-    ]
+    ],
+    "icon": "Fish"
    }
   ]
  },
@@ -441,49 +506,57 @@
     "name": "Prosciutto cotto",
     "keywords": [
      "prosciutto cotto"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Prosciutto crudo",
     "keywords": [
      "prosciutto crudo"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Mortadella",
     "keywords": [
      "mortadella"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Salame",
     "keywords": [
      "salame"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Speck",
     "keywords": [
      "speck"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Bresaola",
     "keywords": [
      "bresaola"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Coppa",
     "keywords": [
      "coppa"
-    ]
+    ],
+    "icon": "Ham"
    },
    {
     "name": "Pancetta affumicata",
     "keywords": [
      "pancetta affumicata"
-    ]
+    ],
+    "icon": "Bacon"
    }
   ]
  },
@@ -495,102 +568,118 @@
     "keywords": [
      "mele",
      "mela"
-    ]
+    ],
+    "icon": "Apple"
    },
    {
     "name": "Pere",
     "keywords": [
      "pere",
      "pera"
-    ]
+    ],
+    "icon": "Pear"
    },
    {
     "name": "Banane",
     "keywords": [
      "banane",
      "banana"
-    ]
+    ],
+    "icon": "Banana"
    },
    {
     "name": "Arance",
     "keywords": [
      "arance"
-    ]
+    ],
+    "icon": "Citrus"
    },
    {
     "name": "Mandarini",
     "keywords": [
      "mandarini",
      "clementine"
-    ]
+    ],
+    "icon": "Citrus"
    },
    {
     "name": "Limoni",
     "keywords": [
      "limoni"
-    ]
+    ],
+    "icon": "Citrus"
    },
    {
     "name": "Kiwi",
     "keywords": [
      "kiwi"
-    ]
+    ],
+    "icon": "Kiwi"
    },
    {
     "name": "Fragole",
     "keywords": [
      "fragole"
-    ]
+    ],
+    "icon": "Strawberry"
    },
    {
     "name": "Uva",
     "keywords": [
      "uva"
-    ]
+    ],
+    "icon": "Grape"
    },
    {
     "name": "Pesche",
     "keywords": [
      "pesche",
      "nettarine"
-    ]
+    ],
+    "icon": "Peach"
    },
    {
     "name": "Albicocche",
     "keywords": [
      "albicocche"
-    ]
+    ],
+    "icon": "Peach"
    },
    {
     "name": "Ciliegie",
     "keywords": [
      "ciliegie"
-    ]
+    ],
+    "icon": "Cherry"
    },
    {
     "name": "Anguria",
     "keywords": [
      "anguria",
      "cocomero"
-    ]
+    ],
+    "icon": "Watermelon"
    },
    {
     "name": "Melone",
     "keywords": [
      "melone"
-    ]
+    ],
+    "icon": "Watermelon"
    },
    {
     "name": "Ananas",
     "keywords": [
      "ananas"
-    ]
+    ],
+    "icon": "Pineapple"
    },
    {
     "name": "Avocado",
     "keywords": [
      "avocado"
-    ]
+    ],
+    "icon": "Avocado"
    },
    {
     "name": "Frutti di bosco",
@@ -598,7 +687,8 @@
      "frutti bosco",
      "mirtilli",
      "lamponi"
-    ]
+    ],
+    "icon": "Strawberry"
    },
    {
     "name": "Frutta secca",
@@ -608,7 +698,8 @@
      "mandorle",
      "nocciole",
      "anacardi"
-    ]
+    ],
+    "icon": "Nut"
    }
   ]
  },
@@ -619,39 +710,45 @@
     "name": "Patate",
     "keywords": [
      "patate"
-    ]
+    ],
+    "icon": "Potato"
    },
    {
     "name": "Cipolle",
     "keywords": [
      "cipolle"
-    ]
+    ],
+    "icon": "Onion"
    },
    {
     "name": "Aglio",
     "keywords": [
      "aglio"
-    ]
+    ],
+    "icon": "Onion"
    },
    {
     "name": "Carote",
     "keywords": [
      "carote"
-    ]
+    ],
+    "icon": "Carrot"
    },
    {
     "name": "Pomodori",
     "keywords": [
      "pomodori",
      "pomodorini"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Insalata",
     "keywords": [
      "insalata",
      "lattuga"
-    ]
+    ],
+    "icon": "LeafyGreen"
    },
    {
     "name": "Insalata in busta",
@@ -659,80 +756,93 @@
      "insalata busta",
      "valeriana",
      "rucola"
-    ]
+    ],
+    "icon": "LeafyGreen"
    },
    {
     "name": "Zucchine",
     "keywords": [
      "zucchine"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Melanzane",
     "keywords": [
      "melanzane"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Peperoni",
     "keywords": [
      "peperoni"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Broccoli",
     "keywords": [
      "broccoli"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Cavolfiore",
     "keywords": [
      "cavolfiore"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Spinaci",
     "keywords": [
      "spinaci"
-    ]
+    ],
+    "icon": "LeafyGreen"
    },
    {
     "name": "Funghi",
     "keywords": [
      "funghi",
      "champignon"
-    ]
+    ],
+    "icon": "Mushroom"
    },
    {
     "name": "Sedano",
     "keywords": [
      "sedano"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Finocchi",
     "keywords": [
      "finocchi"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Cetrioli",
     "keywords": [
      "cetrioli"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Zucca",
     "keywords": [
      "zucca"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Carciofi",
     "keywords": [
      "carciofi"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Legumi in scatola",
@@ -741,14 +851,16 @@
      "fagioli",
      "ceci",
      "lenticchie"
-    ]
+    ],
+    "icon": "Bean"
    },
    {
     "name": "Verdure surgelate",
     "keywords": [
      "verdure surgelate",
      "minestrone surgelato"
-    ]
+    ],
+    "icon": "Snowflake"
    },
    {
     "name": "Erbe aromatiche",
@@ -756,7 +868,8 @@
      "basilico",
      "prezzemolo",
      "rosmarino"
-    ]
+    ],
+    "icon": "Sprout"
    }
   ]
  },
@@ -767,85 +880,98 @@
     "name": "Pane",
     "keywords": [
      "pane"
-    ]
+    ],
+    "icon": "Bread"
    },
    {
     "name": "Pane in cassetta",
     "keywords": [
      "pane cassetta",
      "pancarré"
-    ]
+    ],
+    "icon": "Sandwich"
    },
    {
     "name": "Pane grattugiato",
     "keywords": [
      "pane grattugiato",
      "pangrattato"
-    ]
+    ],
+    "icon": "Bread"
    },
    {
     "name": "Grissini",
     "keywords": [
      "grissini"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Cracker",
     "keywords": [
      "cracker",
      "crackers"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Fette biscottate",
     "keywords": [
      "fette biscottate"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Piadina",
     "keywords": [
      "piadina",
      "piadine"
-    ]
+    ],
+    "icon": "Sandwich"
    },
    {
     "name": "Tortillas",
     "keywords": [
      "tortillas",
      "wrap"
-    ]
+    ],
+    "icon": "Sandwich"
    },
    {
     "name": "Pizza surgelata",
     "keywords": [
      "pizza surgelata"
-    ]
+    ],
+    "icon": "Pizza"
    },
    {
     "name": "Pizza fresca",
     "keywords": [
      "pizza fresca"
-    ]
+    ],
+    "icon": "Pizza"
    },
    {
     "name": "Pasta sfoglia",
     "keywords": [
      "pasta sfoglia",
      "pasta brisée"
-    ]
+    ],
+    "icon": "Wheat"
    },
    {
     "name": "Farina",
     "keywords": [
      "farina"
-    ]
+    ],
+    "icon": "Wheat"
    },
    {
     "name": "Lievito",
     "keywords": [
      "lievito"
-    ]
+    ],
+    "icon": "Wheat"
    }
   ]
  },
@@ -856,32 +982,37 @@
     "name": "Spaghetti",
     "keywords": [
      "spaghetti"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Penne",
     "keywords": [
      "penne"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Fusilli",
     "keywords": [
      "fusilli"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Rigatoni",
     "keywords": [
      "rigatoni"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Pasta all'uovo",
     "keywords": [
      "pasta uovo",
      "tagliatelle"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Pasta fresca ripiena",
@@ -889,49 +1020,57 @@
      "tortellini",
      "ravioli",
      "tortelloni"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Gnocchi",
     "keywords": [
      "gnocchi"
-    ]
+    ],
+    "icon": "Pasta"
    },
    {
     "name": "Riso",
     "keywords": [
      "riso"
-    ]
+    ],
+    "icon": "RiceBowl"
    },
    {
     "name": "Riso basmati",
     "keywords": [
      "riso basmati"
-    ]
+    ],
+    "icon": "RiceBowl"
    },
    {
     "name": "Couscous",
     "keywords": [
      "couscous"
-    ]
+    ],
+    "icon": "RiceBowl"
    },
    {
     "name": "Farro",
     "keywords": [
      "farro"
-    ]
+    ],
+    "icon": "RiceBowl"
    },
    {
     "name": "Orzo",
     "keywords": [
      "orzo"
-    ]
+    ],
+    "icon": "RiceBowl"
    },
    {
     "name": "Polenta",
     "keywords": [
      "polenta"
-    ]
+    ],
+    "icon": "Wheat"
    },
    {
     "name": "Cereali colazione",
@@ -939,19 +1078,22 @@
      "cereali colazione",
      "corn flakes",
      "muesli"
-    ]
+    ],
+    "icon": "Wheat"
    },
    {
     "name": "Fiocchi d'avena",
     "keywords": [
      "fiocchi avena"
-    ]
+    ],
+    "icon": "Wheat"
    },
    {
     "name": "Pasta integrale",
     "keywords": [
      "pasta integrale"
-    ]
+    ],
+    "icon": "Pasta"
    }
   ]
  },
@@ -963,102 +1105,118 @@
     "keywords": [
      "passata pomodoro",
      "passata"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Pelati",
     "keywords": [
      "pelati",
      "polpa pomodoro"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Concentrato di pomodoro",
     "keywords": [
      "concentrato pomodoro"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Sugo pronto",
     "keywords": [
      "sugo pronto",
      "sugo"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Pesto",
     "keywords": [
      "pesto"
-    ]
+    ],
+    "icon": "Sprout"
    },
    {
     "name": "Ragù",
     "keywords": [
      "ragù",
      "ragu"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Olive",
     "keywords": [
      "olive"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Capperi",
     "keywords": [
      "capperi"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Sottaceti",
     "keywords": [
      "sottaceti",
      "giardiniera"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Mais in scatola",
     "keywords": [
      "mais scatola"
-    ]
+    ],
+    "icon": "Can"
    },
    {
     "name": "Carciofini",
     "keywords": [
      "carciofini"
-    ]
+    ],
+    "icon": "Salad"
    },
    {
     "name": "Piselli",
     "keywords": [
      "piselli"
-    ]
+    ],
+    "icon": "Bean"
    },
    {
     "name": "Brodo",
     "keywords": [
      "brodo",
      "dado"
-    ]
+    ],
+    "icon": "Soup"
    },
    {
     "name": "Maionese",
     "keywords": [
      "maionese"
-    ]
+    ],
+    "icon": "Droplet"
    },
    {
     "name": "Ketchup",
     "keywords": [
      "ketchup"
-    ]
+    ],
+    "icon": "Tomato"
    },
    {
     "name": "Senape",
     "keywords": [
      "senape"
-    ]
+    ],
+    "icon": "Droplet"
    }
   ]
  },
@@ -1070,7 +1228,8 @@
     "keywords": [
      "olio extravergine",
      "olio extra vergine"
-    ]
+    ],
+    "icon": "Droplet"
    },
    {
     "name": "Olio di semi",
@@ -1078,37 +1237,43 @@
      "olio semi",
      "olio girasole",
      "olio arachide"
-    ]
+    ],
+    "icon": "Droplet"
    },
    {
     "name": "Aceto",
     "keywords": [
      "aceto"
-    ]
+    ],
+    "icon": "Droplets"
    },
    {
     "name": "Aceto balsamico",
     "keywords": [
      "aceto balsamico"
-    ]
+    ],
+    "icon": "Droplets"
    },
    {
     "name": "Sale",
     "keywords": [
      "sale"
-    ]
+    ],
+    "icon": "SaltShaker"
    },
    {
     "name": "Pepe",
     "keywords": [
      "pepe"
-    ]
+    ],
+    "icon": "SaltShaker"
    },
    {
     "name": "Zucchero",
     "keywords": [
      "zucchero"
-    ]
+    ],
+    "icon": "Cuboid"
    },
    {
     "name": "Spezie",
@@ -1116,33 +1281,38 @@
      "spezie",
      "origano",
      "paprika"
-    ]
+    ],
+    "icon": "SaltShaker"
    },
    {
     "name": "Miele",
     "keywords": [
      "miele"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Marmellata",
     "keywords": [
      "marmellata",
      "confettura"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Crema spalmabile",
     "keywords": [
      "crema nocciole",
      "nutella"
-    ]
+    ],
+    "icon": "Jar"
    },
    {
     "name": "Burro di arachidi",
     "keywords": [
      "burro arachidi"
-    ]
+    ],
+    "icon": "Jar"
    }
   ]
  },
@@ -1154,99 +1324,114 @@
     "keywords": [
      "biscotti frollini",
      "frollini"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Biscotti secchi",
     "keywords": [
      "biscotti secchi",
      "biscotti"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Biscotti al cioccolato",
     "keywords": [
      "biscotti cioccolato"
-    ]
+    ],
+    "icon": "Cookie"
    },
    {
     "name": "Merendine",
     "keywords": [
      "merendine",
      "brioche"
-    ]
+    ],
+    "icon": "Cupcake"
    },
    {
     "name": "Cornetti",
     "keywords": [
      "cornetti",
      "croissant"
-    ]
+    ],
+    "icon": "Croissant"
    },
    {
     "name": "Torta",
     "keywords": [
      "torta",
      "plumcake"
-    ]
+    ],
+    "icon": "CakeSlice"
    },
    {
     "name": "Cioccolato",
     "keywords": [
      "cioccolato",
      "tavoletta cioccolato"
-    ]
+    ],
+    "icon": "ChocolateBar"
    },
    {
     "name": "Cioccolatini",
     "keywords": [
      "cioccolatini",
      "praline"
-    ]
+    ],
+    "icon": "ChocolateBar"
    },
    {
     "name": "Caramelle",
     "keywords": [
      "caramelle"
-    ]
+    ],
+    "icon": "Candy"
    },
    {
     "name": "Gelato",
     "keywords": [
      "gelato"
-    ]
+    ],
+    "icon": "IceCream"
    },
    {
     "name": "Budino",
     "keywords": [
      "budino"
-    ]
+    ],
+    "icon": "Dessert"
    },
    {
     "name": "Caffè in capsule",
     "keywords": [
      "caffè capsule",
      "capsule caffè"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Caffè macinato",
     "keywords": [
      "caffè macinato",
      "caffè moka"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Caffè in grani",
     "keywords": [
      "caffè grani"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Caffè solubile",
     "keywords": [
      "caffè solubile"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Tè",
@@ -1255,19 +1440,22 @@
      "the",
      "infuso",
      "tisana"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Orzo solubile",
     "keywords": [
      "orzo solubile"
-    ]
+    ],
+    "icon": "Coffee"
    },
    {
     "name": "Cacao",
     "keywords": [
      "cacao"
-    ]
+    ],
+    "icon": "ChocolateBar"
    }
   ]
  },
@@ -1278,33 +1466,38 @@
     "name": "Patatine",
     "keywords": [
      "patatine"
-    ]
+    ],
+    "icon": "Potato"
    },
    {
     "name": "Salatini",
     "keywords": [
      "salatini",
      "snack salati"
-    ]
+    ],
+    "icon": "Popcorn"
    },
    {
     "name": "Popcorn",
     "keywords": [
      "popcorn"
-    ]
+    ],
+    "icon": "Popcorn"
    },
    {
     "name": "Barrette",
     "keywords": [
      "barrette",
      "barretta"
-    ]
+    ],
+    "icon": "ChocolateBar"
    },
    {
     "name": "Taralli",
     "keywords": [
      "taralli"
-    ]
+    ],
+    "icon": "Donut"
    }
   ]
  },
@@ -1316,105 +1509,121 @@
     "keywords": [
      "acqua naturale",
      "acqua minerale"
-    ]
+    ],
+    "icon": "GlassWater"
    },
    {
     "name": "Acqua frizzante",
     "keywords": [
      "acqua frizzante",
      "acqua gassata"
-    ]
+    ],
+    "icon": "GlassWater"
    },
    {
     "name": "Coca Cola",
     "keywords": [
      "coca cola"
-    ]
+    ],
+    "icon": "CanSoda"
    },
    {
     "name": "Cola",
     "keywords": [
      "cola"
-    ]
+    ],
+    "icon": "CanSoda"
    },
    {
     "name": "Aranciata",
     "keywords": [
      "aranciata"
-    ]
+    ],
+    "icon": "CanSoda"
    },
    {
     "name": "Gazzosa",
     "keywords": [
      "gazzosa",
      "limonata"
-    ]
+    ],
+    "icon": "CanSoda"
    },
    {
     "name": "Tè freddo",
     "keywords": [
      "tè freddo",
      "the freddo"
-    ]
+    ],
+    "icon": "CupSoda"
    },
    {
     "name": "Succo di frutta",
     "keywords": [
      "succo frutta",
      "succhi"
-    ]
+    ],
+    "icon": "Citrus"
    },
    {
     "name": "Spremuta",
     "keywords": [
      "spremuta"
-    ]
+    ],
+    "icon": "Citrus"
    },
    {
     "name": "Birra",
     "keywords": [
      "birra"
-    ]
+    ],
+    "icon": "Beer"
    },
    {
     "name": "Vino rosso",
     "keywords": [
      "vino rosso"
-    ]
+    ],
+    "icon": "Wine"
    },
    {
     "name": "Vino bianco",
     "keywords": [
      "vino bianco"
-    ]
+    ],
+    "icon": "Wine"
    },
    {
     "name": "Prosecco",
     "keywords": [
      "prosecco",
      "spumante"
-    ]
+    ],
+    "icon": "BottleWine"
    },
    {
     "name": "Aperitivo",
     "keywords": [
      "aperitivo",
      "spritz"
-    ]
+    ],
+    "icon": "Martini"
    },
    {
     "name": "Liquore",
     "keywords": [
      "liquore",
      "amaro"
-    ]
+    ],
+    "icon": "Martini"
    },
    {
     "name": "Energy drink",
     "keywords": [
      "energy drink",
      "redbull"
-    ]
+    ],
+    "icon": "CanSoda"
    }
   ]
  },
@@ -1425,34 +1634,39 @@
     "name": "Gelato in vaschetta",
     "keywords": [
      "gelato vaschetta"
-    ]
+    ],
+    "icon": "IceCreamBowl"
    },
    {
     "name": "Spinaci surgelati",
     "keywords": [
      "spinaci surgelati"
-    ]
+    ],
+    "icon": "Snowflake"
    },
    {
     "name": "Patatine surgelate",
     "keywords": [
      "patatine surgelate",
      "patate surgelate"
-    ]
+    ],
+    "icon": "Potato"
    },
    {
     "name": "Pesce surgelato",
     "keywords": [
      "pesce surgelato",
      "filetti surgelati"
-    ]
+    ],
+    "icon": "Fish"
    },
    {
     "name": "Piatti pronti surgelati",
     "keywords": [
      "piatti pronti",
      "lasagne"
-    ]
+    ],
+    "icon": "Snowflake"
    }
   ]
  },
@@ -1464,58 +1678,67 @@
     "keywords": [
      "detersivo lavatrice",
      "detersivo bucato"
-    ]
+    ],
+    "icon": "WashingMachine"
    },
    {
     "name": "Ammorbidente",
     "keywords": [
      "ammorbidente"
-    ]
+    ],
+    "icon": "Droplets"
    },
    {
     "name": "Detersivo piatti",
     "keywords": [
      "detersivo piatti"
-    ]
+    ],
+    "icon": "Bubbles"
    },
    {
     "name": "Pastiglie lavastoviglie",
     "keywords": [
      "pastiglie lavastoviglie",
      "tablet lavastoviglie"
-    ]
+    ],
+    "icon": "Sparkles"
    },
    {
     "name": "Sgrassatore",
     "keywords": [
      "sgrassatore"
-    ]
+    ],
+    "icon": "SprayCan"
    },
    {
     "name": "Detergente pavimenti",
     "keywords": [
      "detergente pavimenti"
-    ]
+    ],
+    "icon": "Mop"
    },
    {
     "name": "Detergente bagno",
     "keywords": [
      "detergente bagno",
      "anticalcare"
-    ]
+    ],
+    "icon": "SprayCan"
    },
    {
     "name": "Candeggina",
     "keywords": [
      "candeggina",
      "ammoniaca"
-    ]
+    ],
+    "icon": "Droplets"
    },
    {
     "name": "Carta igienica",
     "keywords": [
      "carta igienica"
-    ]
+    ],
+    "icon": "Toilet"
    },
    {
     "name": "Carta da cucina",
@@ -1523,25 +1746,29 @@
      "carta cucina",
      "rotoloni",
      "scottex"
-    ]
+    ],
+    "icon": "Scroll"
    },
    {
     "name": "Fazzoletti",
     "keywords": [
      "fazzoletti"
-    ]
+    ],
+    "icon": "Tissues"
    },
    {
     "name": "Tovaglioli",
     "keywords": [
      "tovaglioli"
-    ]
+    ],
+    "icon": "Tissues"
    },
    {
     "name": "Sacchetti spazzatura",
     "keywords": [
      "sacchetti spazzatura"
-    ]
+    ],
+    "icon": "Trash2"
    },
    {
     "name": "Pellicola",
@@ -1549,27 +1776,31 @@
      "pellicola",
      "alluminio",
      "carta forno"
-    ]
+    ],
+    "icon": "Scroll"
    },
    {
     "name": "Spugne",
     "keywords": [
      "spugne",
      "spugna"
-    ]
+    ],
+    "icon": "Brush"
    },
    {
     "name": "Pile",
     "keywords": [
      "pile",
      "batterie"
-    ]
+    ],
+    "icon": "Battery"
    },
    {
     "name": "Lampadine",
     "keywords": [
      "lampadine"
-    ]
+    ],
+    "icon": "Lightbulb"
    }
   ]
  },
@@ -1580,90 +1811,104 @@
     "name": "Shampoo",
     "keywords": [
      "shampoo"
-    ]
+    ],
+    "icon": "ShowerHead"
    },
    {
     "name": "Balsamo",
     "keywords": [
      "balsamo"
-    ]
+    ],
+    "icon": "TubeLotion"
    },
    {
     "name": "Bagnoschiuma",
     "keywords": [
      "bagnoschiuma",
      "doccia schiuma"
-    ]
+    ],
+    "icon": "Bath"
    },
    {
     "name": "Sapone",
     "keywords": [
      "sapone",
      "sapone liquido"
-    ]
+    ],
+    "icon": "SoapDispenserDroplet"
    },
    {
     "name": "Dentifricio",
     "keywords": [
      "dentifricio"
-    ]
+    ],
+    "icon": "TubeLotion"
    },
    {
     "name": "Spazzolino",
     "keywords": [
      "spazzolino"
-    ]
+    ],
+    "icon": "Toothbrush"
    },
    {
     "name": "Deodorante",
     "keywords": [
      "deodorante"
-    ]
+    ],
+    "icon": "SprayCan"
    },
    {
     "name": "Rasoi",
     "keywords": [
      "rasoi",
      "lamette"
-    ]
+    ],
+    "icon": "Sparkles"
    },
    {
     "name": "Assorbenti",
     "keywords": [
      "assorbenti"
-    ]
+    ],
+    "icon": "Sparkles"
    },
    {
     "name": "Cotone",
     "keywords": [
      "cotone",
      "cotton fioc"
-    ]
+    ],
+    "icon": "Sparkles"
    },
    {
     "name": "Crema viso",
     "keywords": [
      "crema viso"
-    ]
+    ],
+    "icon": "TubeLotion"
    },
    {
     "name": "Crema corpo",
     "keywords": [
      "crema corpo"
-    ]
+    ],
+    "icon": "TubeLotion"
    },
    {
     "name": "Protezione solare",
     "keywords": [
      "crema solare",
      "protezione solare"
-    ]
+    ],
+    "icon": "Sun"
    },
    {
     "name": "Salviette umide",
     "keywords": [
      "salviette umide"
-    ]
+    ],
+    "icon": "Tissues"
    }
   ]
  },
@@ -1674,40 +1919,46 @@
     "name": "Pannolini",
     "keywords": [
      "pannolini"
-    ]
+    ],
+    "icon": "Baby"
    },
    {
     "name": "Latte in polvere",
     "keywords": [
      "latte polvere",
      "latte crescita"
-    ]
+    ],
+    "icon": "Baby"
    },
    {
     "name": "Omogeneizzati",
     "keywords": [
      "omogeneizzati"
-    ]
+    ],
+    "icon": "Baby"
    },
    {
     "name": "Cibo per cani",
     "keywords": [
      "cibo cani",
      "crocchette cani"
-    ]
+    ],
+    "icon": "Dog"
    },
    {
     "name": "Cibo per gatti",
     "keywords": [
      "cibo gatti",
      "crocchette gatti"
-    ]
+    ],
+    "icon": "Cat"
    },
    {
     "name": "Lettiera",
     "keywords": [
      "lettiera"
-    ]
+    ],
+    "icon": "Cat"
    }
   ]
  }
