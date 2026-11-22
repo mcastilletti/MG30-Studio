@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from volantini.matcher import compute_matches, match_score, merge_products, normalize
+from volantini.matcher import brand_ok, compute_matches, match_score, merge_products, normalize
 from volantini.parser import clean_offers, parse_flyer
 from volantini.units import parse_quantity, unit_price
 
@@ -155,3 +155,36 @@ def test_no_fuzzy_false_friends_but_doubled_letters_are_forgiven():
     assert match_score({"name": "mozzarella"}, {"title": "Mozarella di bufala"}) > 0   # refuso
     assert match_score({"name": "prosciutto cotto"}, {"title": "Prosciutto cotto alta qualità"}) > 0
     assert match_score({"name": "pesce"}, {"title": "Pesce spada"}) > 0
+
+
+def test_preferred_brands_split_offers_into_main_and_other_brands():
+    product = {"id": "p", "name": "Biscotti frollini", "keywords": ["biscotti frollini"], "brands": ["Pavesi", "Mulino Bianco"]}
+    offers = [
+        {"id": "a", "title": "Biscotti frollini Pavesi", "brand": "Pavesi", "price": 2.0, "quantity": "500 g"},
+        {"id": "b", "title": "Frollini Mulino Bianco Macine biscotti frollini", "price": 1.9, "quantity": "800 g"},
+        {"id": "c", "title": "Biscotti frollini Coop", "brand": "Coop", "price": 1.0, "quantity": "500 g"},
+        {"id": "d", "title": "Biscotti frollini Esselunga", "price": 0.9, "quantity": "500 g", "validFrom": "2026-11-25"},
+    ]
+    [res] = compute_matches([product], offers, TODAY)
+    assert res["best"]["offerId"] == "b"                                  # solo marche preferite (più conveniente al kg)
+    assert [a["offerId"] for a in res["alternatives"]] == ["a"]
+    assert [o["offerId"] for o in res["otherBrands"]] == ["c", "d"]        # altre marche, prima quelle attive
+    assert res["brands"] == ["Pavesi", "Mulino Bianco"]
+
+
+def test_without_preferred_brands_everything_is_main():
+    [res] = compute_matches([{"id": "p", "name": "latte"}], [{"id": "a", "title": "Latte Coop", "price": 1.0}], TODAY)
+    assert res["best"]["offerId"] == "a" and res["otherBrands"] == []
+
+
+def test_only_other_brands_leaves_main_empty():
+    p = {"id": "p", "name": "pasta", "brands": ["Barilla"]}
+    [res] = compute_matches([p], [{"id": "a", "title": "Pasta De Cecco", "price": 1.0}], TODAY)
+    assert res["best"] is None and res["upcoming"] == [] and [o["offerId"] for o in res["otherBrands"]] == ["a"]
+
+
+def test_brand_ok_uses_title_or_brand_field():
+    assert brand_ok({"brands": ["Barilla"]}, {"title": "Penne rigate", "brand": "Barilla"})
+    assert brand_ok({"brands": ["Mulino Bianco"]}, {"title": "Macine Mulino Bianco 800 g"})
+    assert not brand_ok({"brands": ["Mulino"]}, {"title": "Biscotti Coop"})
+    assert brand_ok({"brands": []}, {"title": "qualsiasi"})

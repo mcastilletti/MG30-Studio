@@ -18,7 +18,7 @@ type Generic = { id: string; name: string; keywords: string[]; category?: string
 type GridItem = Generic & { icon?: string; favoriteId?: string; text: string };
 type Link = { id: string; favoriteIds?: string[] };
 type ListEntry = ShoppingItem & { favoriteId?: string; parentId?: string };
-type Deal = { kind: "active" | "future"; productId: string; price?: number; store?: string };
+type Deal = { kind: "active" | "future" | "other"; productId: string; price?: number; store?: string };
 type Fields = { quantity: string; description: string; notes: string };
 
 const ITEMS = catalog.flatMap((g) => g.items.map((i) => ({ id: slug(i.name), name: i.name, keywords: i.keywords, category: g.category, icon: i.icon })));
@@ -42,9 +42,9 @@ async function compress(file: File, max = 1024): Promise<Blob> {
 }
 
 /** Card quadrata: tocco = aggiungi/togli, pressione prolungata (o tasto destro) = dettagli. */
-function Tile({ name, icon, on, count, linked, fav, photo, qty, note, deal, onDeal, onClick, onLongPress }: {
+function Tile({ name, icon, on, count, linked, fav, photo, qty, note, waiting, deal, onDeal, onClick, onLongPress }: {
   name: string; icon?: string; on: boolean; count?: number; linked?: number; fav?: boolean; photo?: string | null; qty?: string | null;
-  note?: boolean; deal?: Deal | null; onDeal?: () => void; onClick: () => void; onLongPress?: () => void;
+  note?: boolean; waiting?: boolean; deal?: Deal | null; onDeal?: () => void; onClick: () => void; onLongPress?: () => void;
 }) {
   const Icon = iconFor(icon);
   const timer = useRef<number>();
@@ -73,6 +73,7 @@ function Tile({ name, icon, on, count, linked, fav, photo, qty, note, deal, onDe
         {!photo && <Icon className="icon" size={34} strokeWidth={1.6} aria-hidden />}
         <span className="name">{name}</span>
         {fav && <span className="sub">preferito</span>}
+        {waiting && <span className="sub wait">⏳ attende la marca</span>}
         {(!!linked || note) && (
           <span className="meta">
             {!!linked && <span>★ {linked}</span>}
@@ -81,8 +82,8 @@ function Tile({ name, icon, on, count, linked, fav, photo, qty, note, deal, onDe
         )}
       </button>
       {deal && (
-        <button className="deal-badge" onClick={onDeal} title={deal.price != null ? `${eur(deal.price)}${deal.store ? ` · ${deal.store}` : ""} — vai all'offerta` : "Vai all'offerta"}>
-          {deal.kind === "active" ? "Offerta" : "Futura"}
+        <button className="deal-badge" onClick={onDeal} title={deal.kind === "other" ? "Offerta solo di altre marche: scegli cosa fare" : deal.price != null ? `${eur(deal.price)}${deal.store ? ` · ${deal.store}` : ""} — vai all'offerta` : "Vai all'offerta"}>
+          {deal.kind === "active" ? "Offerta" : deal.kind === "future" ? "Futura" : "Altre marche"}
         </button>
       )}
     </div>
@@ -204,6 +205,10 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
     if (!m) return null;
     if (m.best) return { kind: "active", productId: m.id, price: m.best.price, store: m.best.storeName };
     if (m.upcoming?.length) return { kind: "future", productId: m.id, price: m.upcoming[0].price, store: m.upcoming[0].storeName };
+    if (m.otherBrands?.length) { // c'è il prodotto in offerta, ma solo di marche non preferite: dipende dalla scelta fatta
+      if (e.altBrand === "use" && e.altOffer) return { kind: "active", productId: m.id, price: e.altOffer.price, store: e.altOffer.storeName };
+      if (!e.altBrand) return { kind: "other", productId: m.id, price: m.otherBrands[0].price, store: m.otherBrands[0].storeName };
+    }
     return null;
   };
 
@@ -290,6 +295,7 @@ export default function ShoppingTab({ uid, onOffer }: { uid: string; onOffer: (p
       <Tile key={t.id} name={t.name} icon={t.icon ?? favIcon.get(t.id) ?? ICON_BY_ID.get(t.id) ?? (t.fav ? "Star" : undefined)} on={on} fav={t.fav}
         count={withCount ? counts.get(t.id) : undefined} linked={t.fav ? undefined : linkMap.get(t.id)?.length}
         photo={on ? e?.photoUrl : undefined} qty={on ? e?.quantity : undefined} note={on && !!(e?.notes || e?.description)}
+        waiting={on && e?.altBrand === "wait" && !d}
         deal={d} onDeal={() => d && onOffer(d.productId)}
         onClick={() => (on ? remove(t.id) : add(t))} onLongPress={() => setDetail(t)} />
     );

@@ -16,6 +16,7 @@ _STOPWORDS = {
 _TOKEN_SIMILARITY = 0.84
 MAX_RESULTS_PER_PRODUCT = 6
 MAX_UPCOMING_PER_PRODUCT = 3
+MAX_OTHER_BRANDS_PER_PRODUCT = 6
 
 
 def normalize(text: str) -> str:
@@ -91,6 +92,16 @@ def match_score(product: dict[str, Any], offer: dict[str, Any]) -> float:
     return best
 
 
+def brand_ok(product: dict[str, Any], offer: dict[str, Any]) -> bool:
+    """Senza marche preferite ogni offerta va bene. Altrimenti la marca (anche di più parole, es. "mulino bianco")
+    deve comparire nel titolo o nel campo marca dell'offerta: ne basta una."""
+    brands = [b for b in (product.get("brands") or []) if tokens(b)]
+    if not brands:
+        return True
+    haystack = tokens(f"{offer.get('brand') or ''} {offer.get('title', '')}")
+    return any(all(_token_score(t, haystack) >= _TOKEN_SIMILARITY for t in tokens(b)) for b in brands)
+
+
 def enrich_offer(offer: dict[str, Any]) -> dict[str, Any]:
     """Aggiunge quantità normalizzata e prezzo al kg/l/pz."""
     out = dict(offer)
@@ -162,18 +173,23 @@ def compute_matches(
             want = {"kg": "€/kg", "l": "€/l", "pz": "€/pz"}.get(p["unit"])
             comparable = [f for f in found if f["unitLabel"] == want]
             found = comparable or found
-        active = sorted((f for f in found if not f["startsOn"]), key=_sort_key)[:MAX_RESULTS_PER_PRODUCT]
-        future = sorted((f for f in found if f["startsOn"]), key=lambda f: (f["startsOn"], _sort_key(f)))
-        for f in active + future:
+        preferred = [f for f in found if brand_ok(p, f)]
+        other = [f for f in found if not brand_ok(p, f)]  # stesso prodotto, ma di una marca non indicata
+        active = sorted((f for f in preferred if not f["startsOn"]), key=_sort_key)[:MAX_RESULTS_PER_PRODUCT]
+        future = sorted((f for f in preferred if f["startsOn"]), key=lambda f: (f["startsOn"], _sort_key(f)))
+        other = sorted(other, key=lambda f: (f["startsOn"] is not None, _sort_key(f)))[:MAX_OTHER_BRANDS_PER_PRODUCT]
+        for f in active + future + other:
             f.pop("id", None)
         best = active[0] if active else None
         max_price = p.get("maxPrice")
         results.append({
             "productId": p["id"],
             "productName": p.get("name", ""),
+            "brands": p.get("brands") or [],
             "best": best,
             "alternatives": active[1:],
             "upcoming": future[:MAX_UPCOMING_PER_PRODUCT],  # offerte non ancora iniziate, sempre segnalate
+            "otherBrands": other,  # "Offerte altre marche": mai mescolate alle marche preferite
             "belowTarget": bool(best and max_price and best["price"] <= float(max_price)),
             "inList": bool(p.get("inList")),
         })

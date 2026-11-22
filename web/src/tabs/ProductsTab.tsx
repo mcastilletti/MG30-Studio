@@ -85,7 +85,8 @@ export default function ProductsTab({ uid }: { uid: string }) {
 
   async function addToList() {
     if (!draft || !draft.name.trim() || inList(draft.name)) return;
-    await addDoc(collection(db, "users", uid, "products"), { name: draft.name.trim(), keywords: [], excludes: [], maxPrice: null, unit: null });
+    const brand = offers.find((o) => o.id === draft.id)?.brand?.trim(); // la marca dell'offerta diventa la marca preferita
+    await addDoc(collection(db, "users", uid, "products"), { name: draft.name.trim(), keywords: [], excludes: [], brands: brand ? [brand] : [], maxPrice: null, unit: null });
     setAdded(`"${draft.name.trim()}" aggiunto ai preferiti`);
     setDraft(null);
     rematch();

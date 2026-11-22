@@ -68,7 +68,7 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .tile .sub { font-size: .6rem; color: #ffffffb3; text-transform: uppercase; letter-spacing: .04em; margin-top: -3px; }
 .tilebox.deal-active .tile { border-color: #ffb020; box-shadow: 0 0 0 2px #ffb02066, 0 0 16px #ffb02088; }
 .tilebox.deal-future .tile { border: 2px dashed #ffb020; }
-.deal-badge { position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); background: #ffb020; color: #1a1200; border: 0; border-radius: 99px; padding: 2px 12px; font: inherit; font-size: .72rem; font-weight: 800; letter-spacing: .02em; cursor: pointer; box-shadow: 0 1px 4px #0006; }
+.deal-badge { white-space: nowrap; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); background: #ffb020; color: #1a1200; border: 0; border-radius: 99px; padding: 2px 12px; font: inherit; font-size: .72rem; font-weight: 800; letter-spacing: .02em; cursor: pointer; box-shadow: 0 1px 4px #0006; }
 .tilebox.deal-future .deal-badge { background: transparent; color: #ffb020; border: 1px solid #ffb020; backdrop-filter: blur(2px); }
 .deal-badge:active { transform: translateX(-50%) scale(.95); }
 .add-custom { display: block; margin: 0 0 8px; color: var(--accent); }
@@ -90,3 +90,14 @@ textarea { padding: 9px 10px; border: 1px solid #8884; border-radius: 8px; font:
 .sheet .pick-list { max-height: 170px; }
 .card.flash { animation: flash 3s ease-out; }
 @keyframes flash { 0%, 55% { box-shadow: 0 0 0 3px #ffb020, 0 0 22px #ffb02099; } 100% { box-shadow: 0 1px 3px #0001; } }
+.tilebox.deal-other .tile { border: 2px solid #9a8cff; box-shadow: 0 0 0 2px #9a8cff55, 0 0 14px #9a8cff66; }
+.tilebox.deal-other .deal-badge { background: #9a8cff; color: #120d33; padding: 2px 9px; }
+.tile .sub.wait { color: #ffe08a; text-transform: none; letter-spacing: 0; }
+.brand { display: inline-block; background: #8883; border-radius: 6px; padding: 0 6px; margin-right: 6px; font-size: .75rem; font-weight: 700; }
+.other-brands { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #9a8cff88; }
+.group-title { margin: 0 0 4px; color: #9a8cff; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+.choice { display: grid; gap: 6px; margin-top: 8px; justify-items: start; }
+.choice-btn { border: 1px solid #9a8cff88; background: transparent; color: inherit; border-radius: 8px; padding: 6px 10px; font: inherit; font-size: .85rem; cursor: pointer; text-align: left; margin: 2px 0 6px; }
+.choice .choice-btn { margin: 0; }
+.choice-btn.on { background: #9a8cff; color: #120d33; border-color: #9a8cff; font-weight: 700; }
+.nomain { margin: 6px 0; font-size: .9rem; }

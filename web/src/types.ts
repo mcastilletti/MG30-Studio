@@ -3,6 +3,8 @@ export interface Product {
   name: string;
   keywords: string[];
   excludes: string[];
+  /** Marche preferite: le sole proposte come offerta; le altre vanno in "Offerte altre marche". */
+  brands?: string[];
   maxPrice: number | null;
   unit: "kg" | "l" | "pz" | null;
 }
@@ -61,6 +63,8 @@ export interface Match {
   best: Offer | null;
   alternatives: Offer[];
   upcoming?: Offer[];
+  brands?: string[];
+  otherBrands?: Offer[];
   inList?: boolean;
   belowTarget: boolean;
 }
@@ -77,4 +81,7 @@ export interface ShoppingItem {
   notes?: string | null;
   photoUrl?: string | null;
   photoPath?: string | null;
+  /** Scelta sulle offerte di altre marche (solo finché la voce è in lista). */
+  altBrand?: "use" | "regular" | "wait" | null;
+  altOffer?: Partial<Offer> | null;
 }
